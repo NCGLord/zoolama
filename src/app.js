@@ -1,11 +1,10 @@
 // DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
 
-import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
 import { $ } from './ui/dom.js';
 import { state, persist } from './ui/app-state.js';
-import { tr, applyLang } from './ui/text.js';
+import { applyLang } from './ui/text.js';
 import { showToast, offerUpdate, defineToastActions } from './ui/toast.js';
 import { collectPhotos } from './ui/photo-cache.js';
 import { dispatchCart, setCartRenderer } from './ui/cart-store.js';
@@ -13,49 +12,7 @@ import { renderEntryMode } from './ui/entry.js';
 import { renderCart } from './ui/cart-view.js';
 import { renderHistory, undoFinish, undoDeleteTrip } from './ui/history-view.js';
 import { renderOptions } from './ui/compare-view.js';
-
-/* ---------- tabs ---------- */
-
-function renderTab() {
-  for (const b of document.querySelectorAll('[data-tab]')) {
-    const on = b.dataset.tab === state.tab;
-    b.setAttribute('aria-selected', on);
-    $(`panel-${b.dataset.tab}`).hidden = !on;
-  }
-}
-
-for (const b of document.querySelectorAll('[data-tab]')) {
-  b.addEventListener('click', () => {
-    persist({ ...state, tab: b.dataset.tab });
-    renderTab();
-  });
-}
-
-/* ---------- theme ---------- */
-
-const systemDark = matchMedia('(prefers-color-scheme: dark)');
-const themeMetas = [...document.querySelectorAll('meta[name="theme-color"]')].map((m) => [m, m.content]);
-
-function renderTheme() {
-  const root = document.documentElement;
-  if (state.theme) root.dataset.theme = state.theme;
-  else delete root.dataset.theme;
-
-  const shown = effectiveTheme(state.theme, systemDark.matches);
-  $('theme').dataset.showing = shown;
-  $('theme').setAttribute('aria-label', tr(shown === 'dark' ? 'themeToLight' : 'themeToDark'));
-
-  // A forced theme must also recolour the browser chrome, whatever the system says.
-  const paper = getComputedStyle(root).getPropertyValue('--paper').trim();
-  for (const [meta, systemColor] of themeMetas) meta.content = state.theme ? paper : systemColor;
-}
-
-$('theme').addEventListener('click', () => {
-  persist({ ...state, theme: toggledTheme(state.theme, systemDark.matches) });
-  renderTheme();
-});
-
-systemDark.addEventListener('change', renderTheme);
+import { renderTab, renderTheme } from './ui/shell.js';
 
 /* ---------- install ---------- */
 
