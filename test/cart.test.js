@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { initialCart, cartReducer, total, counts } from '../src/cart.js';
+import { initialCart, cartReducer, total, counts, referencedPhotos } from '../src/cart.js';
 
 const run = (...actions) => actions.reduce(cartReducer, initialCart());
 const add = (priceCents, name = '', qty) => ({ type: 'add', priceCents, name, qty });
@@ -70,4 +70,33 @@ test('the reducer never mutates the previous state', () => {
   assert.equal(cartReducer(before, { type: 'setQty', id: 1, qty: 5 }).items[0].qty, 5);
   assert.deepEqual(cartReducer(before, { type: 'clear' }).items, []);
   assert.deepEqual(before, snapshot);
+});
+
+test('add keeps the shelf-tag photo taken for the item', () => {
+  const s = run({ type: 'add', priceCents: 899, photoId: 'p1' });
+  assert.equal(s.items[0].photoId, 'p1');
+});
+
+test('an item added without a photo carries no photoId', () => {
+  assert.equal('photoId' in run(add(899)).items[0], false);
+});
+
+test('setPhoto attaches a photo to an existing item', () => {
+  const s = run(add(899), add(250), { type: 'setPhoto', id: 2, photoId: 'p2' });
+  assert.deepEqual(s.items.map((i) => i.photoId), [undefined, 'p2']);
+});
+
+test('removing or replacing a photo can be undone', () => {
+  const withPhoto = run(add(899), { type: 'setPhoto', id: 1, photoId: 'p1' });
+  const removed = cartReducer(withPhoto, { type: 'setPhoto', id: 1, photoId: null });
+  assert.equal('photoId' in removed.items[0], false);
+  assert.equal(cartReducer(removed, { type: 'undo' }).items[0].photoId, 'p1');
+  const replaced = cartReducer(withPhoto, { type: 'setPhoto', id: 1, photoId: 'p9' });
+  assert.equal(cartReducer(replaced, { type: 'undo' }).items[0].photoId, 'p1');
+});
+
+test('referencedPhotos lists photos on items and in the undo snapshot', () => {
+  const s = run(add(100), add(200), { type: 'setPhoto', id: 1, photoId: 'p1' }, { type: 'setPhoto', id: 2, photoId: 'p2' }, { type: 'remove', id: 2 });
+  assert.deepEqual([...referencedPhotos(s)].sort(), ['p1', 'p2']);
+  assert.deepEqual([...referencedPhotos(cartReducer(s, add(300)))], ['p1']);
 });
