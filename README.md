@@ -82,7 +82,8 @@ forever. New files the app references must also be added to `ASSETS`, and the te
 
 **CI:** every push runs `npm test` and `npm run e2e` on GitHub Actions (`.github/workflows/test-and-deploy.yml`).
 Only a `main` where both pass is published to GitHub Pages, whose source is set to *GitHub Actions*, so a failing
-test (a forgotten `npm run stamp` included) never reaches the phone.
+test (a forgotten `npm run stamp` included) never reaches the phone. What gets published is `npm run site`'s `_site/`:
+`sw.js`, the files it precaches and the font licence, never the tests, tools or docs.
 
 Icons are generated from `icons/*.svg` with `tools/icons.sh` (needs `rsvg-convert`).
 

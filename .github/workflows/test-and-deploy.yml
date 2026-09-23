@@ -71,10 +71,15 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # Only the app goes out: sw.js, what it precaches and the few extras in tools/sw-assets.mjs. Tests, tools, docs
+      # and package files stay in the repo.
+      - run: npm run site
       - uses: actions/configure-pages@v6
-      # The app is served straight from the repo root, as before; dotfiles are left out.
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: .
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v5
