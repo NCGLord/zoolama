@@ -3,7 +3,7 @@
 import { backupFileName, backupJson, mergeTrips, readBackup } from '../backup.js';
 import { counts, lineTotal, total } from '../cart.js';
 import { celebrates } from '../delight.js';
-import { monthlyGroups, storeNames, tripFromCart } from '../history.js';
+import { averageTripCents, monthlyGroups, monthlySeries, storeNames, storeStats, tripFromCart } from '../history.js';
 import { LOCALES } from '../i18n.js';
 import { formatMoney } from '../money.js';
 import { shareText } from '../share.js';
@@ -11,7 +11,7 @@ import { planNames, planReducer } from '../plan.js';
 import { loadHistory, saveHistory } from '../store.js';
 import { persist, state, storage } from './app-state.js';
 import { dispatchCart } from './cart-store.js';
-import { $, h, reducedMotion } from './dom.js';
+import { $, h, keepingFocus, reducedMotion } from './dom.js';
 import { setPlan } from './plan-view.js';
 import { rememberPrices } from './price-memory.js';
 import { shareList } from './share-sheet.js';
@@ -172,6 +172,7 @@ function tripView(trip, whenFormat) {
 
 function renderHistory() {
   rememberPrices(trips); // every change to the history comes through here
+  renderInsights();
   $('history-empty').hidden = trips.length > 0;
   $('export-history').hidden = trips.length === 0;
   // Nothing to export yet: the hint is about bringing a history over instead.
@@ -201,6 +202,68 @@ function renderHistory() {
     ),
   );
 }
+
+/* ---------- summary: spending by month and by store ---------- */
+
+let pickedMonth = null; // "year-month" of the bar tapped last; null means this month
+
+/** Six months of totals as bars (tap one to read it), the average trip, and each store's trips and total. */
+function renderInsights() {
+  $('insights').hidden = trips.length < 2;
+  if (trips.length < 2) return;
+  const money = (cents) => formatMoney(cents, state.lang);
+  const locale = LOCALES[state.lang];
+  const short = new Intl.DateTimeFormat(locale, { month: 'short' });
+  const long = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
+  const series = monthlySeries(trips, { now: Date.now() });
+  const key = (m) => `${m.year}-${m.month}`;
+  const picked = series.find((m) => key(m) === pickedMonth) ?? series.at(-1);
+  const max = Math.max(1, ...series.map((m) => m.totalCents));
+
+  keepingFocus(() => {
+    $('month-bars').replaceChildren(
+      ...series.map((m) => {
+        const date = new Date(m.year, m.month, 1);
+        const fill = h('span', { class: 'month-fill' });
+        fill.style.height = `${(m.totalCents / max) * 100}%`; // through the CSSOM: the CSP forbids style attributes
+        return h(
+          'button',
+          {
+            type: 'button',
+            class: 'month-bar',
+            'data-month': key(m),
+            'data-key': `month-${key(m)}`,
+            'aria-pressed': String(m === picked),
+            'aria-label': `${long.format(date)}: ${money(m.totalCents)}`,
+          },
+          h('span', { class: 'month-track' }, fill),
+          h('span', { class: 'month-label', text: short.format(date).replace('.', '') }),
+        );
+      }),
+    );
+  });
+  const month = long.format(new Date(picked.year, picked.month, 1));
+  $('month-value').textContent = tr('monthValue', { month, amount: money(picked.totalCents), n: picked.trips });
+  $('avg-trip').textContent = tr('avgTrip', { amount: money(averageTripCents(trips)) });
+  $('store-stats').replaceChildren(
+    ...storeStats(trips).map((s) =>
+      h(
+        'li',
+        {},
+        h('span', { class: 'store-name', text: s.name || tr('noStore') }),
+        h('span', { class: 'store-total', text: money(s.totalCents) }),
+        h('span', { class: 'store-line', text: tr('storeLine', { n: s.trips, avg: money(s.avgCents) }) }),
+      ),
+    ),
+  );
+}
+
+$('month-bars').addEventListener('click', (e) => {
+  const month = e.target.closest('[data-month]')?.dataset.month;
+  if (!month) return;
+  pickedMonth = month;
+  renderInsights();
+});
 
 /* ---------- backup ---------- */
 

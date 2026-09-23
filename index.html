@@ -165,6 +165,15 @@
 
       <section id="panel-history" class="panel" role="tabpanel" aria-labelledby="tab-history" hidden>
         <p id="history-empty" class="empty" data-i18n="historyEmpty">Nenhuma compra salva ainda.</p>
+        <details id="insights" class="insights" hidden>
+          <summary data-i18n="insights">Resumo</summary>
+          <h3 class="insights-head" data-i18n="monthsChart">Total por mês</h3>
+          <div id="month-bars" class="month-bars" role="group" data-i18n-aria-label="monthsChart"></div>
+          <p id="month-value" class="month-value" aria-live="polite"></p>
+          <p id="avg-trip" class="avg-trip"></p>
+          <h3 class="insights-head" data-i18n="byStore">Por loja</h3>
+          <ul id="store-stats" class="store-stats"></ul>
+        </details>
         <div id="history"></div>
         <div class="backup">
           <p id="backup-hint" data-i18n="backupHint">O histórico fica só neste aparelho. Exporte uma cópia para não perdê-lo.</p>

@@ -42,6 +42,7 @@ const PAIRS = [
   ['dear', 'paper', 4.5], // cart lines and the Compare message sit on the page itself
   ['good', 'paper', 4.5],
   ['focus', 'paper', 3],
+  ['primary', 'surface', 3], // the History bars (a graphic, so 3:1)
 ];
 
 for (const [name, theme] of [['light', light], ['dark', dark]]) {
