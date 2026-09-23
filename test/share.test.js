@@ -47,3 +47,10 @@ test('a line at its atacado price says so; below the tier it reads as usual', ()
   const text = shareText([{ name: 'Café', priceCents: 599, qty: 6, deal }], { lang: 'pt', title: 'T' });
   assert.equal(plain(text).split('\n')[1], '- Café: R$ 4,99 × 6 (atacado) = R$ 29,94');
 });
+
+test('a "leve N pague M" line shows the discount the way a receipt does; without one it reads as usual', () => {
+  const deal = { kind: 'multibuy', buy: 3, pay: 2 };
+  assert.equal(plain(lineEach({ priceCents: 350, qty: 3, deal }, 'pt')), 'R$ 3,50 × 3 − R$ 3,50 (leve 3 pague 2)');
+  assert.equal(plain(lineEach({ priceCents: 350, qty: 7, deal }, 'en')), 'R$3.50 × 7 − R$7.00 (3 for 2)');
+  assert.equal(plain(lineEach({ priceCents: 350, qty: 2, deal }, 'pt')), 'R$ 3,50 × 2');
+});

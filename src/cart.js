@@ -5,8 +5,9 @@
 // A weighed item (hortifruti, açougue) keeps its price per kg and weight in whole grams; its priceCents is the
 // line price and qty stays 1, so totals, budget and checkout treat it like any other line.
 // The cart may also carry receiptCents, the total printed on the till's receipt, noted in checkout mode.
-// A unit line may carry an offer (deal): an atacado tier, where from minQty units each costs eachCents. lineTotal
-// applies it, so totals, budget, checkout, sorting, sharing and History all see the same price.
+// A unit line may carry an offer (deal): an atacado tier, where from minQty units each costs eachCents, or "leve N
+// pague M", where every N units cost M. lineTotal applies it, so totals, budget, checkout, sorting, sharing and History
+// all see the same price.
 
 export function initialCart() {
   return { items: [], nextId: 1, undo: null };
@@ -108,6 +109,7 @@ function edit(state, id, patch) {
 /** What a line costs as noted, its offer applied. A weighed line's priceCents is already its price, at qty 1. */
 export function lineTotal({ priceCents, qty, deal }) {
   if (deal?.kind === 'tier' && qty >= deal.minQty) return deal.eachCents * qty;
+  if (deal?.kind === 'multibuy') return priceCents * (Math.floor(qty / deal.buy) * deal.pay + (qty % deal.buy));
   return priceCents * qty;
 }
 
@@ -116,6 +118,7 @@ const isPositive = (n) => Number.isSafeInteger(n) && n > 0;
 /**
  * An offer checked against the line's price, keeping only its known fields; null when it doesn't hold up.
  * {kind: 'tier', minQty, eachCents}: from minQty units (at least 2), each costs eachCents, below the price.
+ * {kind: 'multibuy', buy, pay}: "leve buy pague pay", every buy units cost pay of them, fewer than buy.
  */
 export function validDeal(deal, priceCents) {
   if (deal?.kind === 'tier') {
@@ -124,7 +127,21 @@ export function validDeal(deal, priceCents) {
       ? { kind: 'tier', minQty, eachCents }
       : null;
   }
+  if (deal?.kind === 'multibuy') {
+    const { buy, pay } = deal;
+    return isPositive(buy) && isPositive(pay) && pay < buy ? { kind: 'multibuy', buy, pay } : null;
+  }
   return null;
+}
+
+/** What the line's offer takes off its full price, in centavos. */
+export function dealSavings(item) {
+  return item.priceCents * item.qty - lineTotal(item);
+}
+
+/** With "leve N pague M", whether one more unit would cost nothing. */
+export function nextUnitFree(item) {
+  return item.deal?.kind === 'multibuy' && item.qty % item.deal.buy >= item.deal.pay;
 }
 
 /** The price of one unit as the line is priced now: the tier price once the quantity reaches it. */

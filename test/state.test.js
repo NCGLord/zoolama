@@ -139,3 +139,9 @@ test('a line\'s offer comes back when it holds up against the price, and is drop
   assert.deepEqual(restore({ cart: line(deal) }).cart.items[0].deal, deal);
   assert.equal('deal' in restore({ cart: line({ ...deal, eachCents: 600 }) }).cart.items[0], false);
 });
+
+test('a "leve N pague M" offer comes back with its line', () => {
+  const deal = { kind: 'multibuy', buy: 3, pay: 2 };
+  const cart = { items: [{ id: 1, name: '', priceCents: 350, qty: 3, deal }], nextId: 2, undo: null };
+  assert.deepEqual(restore({ cart }).cart.items[0].deal, deal);
+});

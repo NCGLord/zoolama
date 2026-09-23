@@ -246,6 +246,7 @@ test('a trip\'s lines always add up to its total', () => {
       { type: 'setPrice', id: 1, priceCents: 399 },
     ),
     cartOf({ type: 'add', priceCents: 599, qty: 6, deal: { kind: 'tier', minQty: 6, eachCents: 499 } }),
+    cartOf({ type: 'add', priceCents: 350, qty: 7, deal: { kind: 'multibuy', buy: 3, pay: 2 } }),
   ];
   for (const cart of carts) {
     const trip = tripFromCart(cart, { id: 't', at: 0 });

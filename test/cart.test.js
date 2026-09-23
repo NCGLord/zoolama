@@ -14,6 +14,7 @@ import {
   receiptCheck,
   validDeal,
   tierNudge,
+  nextUnitFree,
   sortItems,
 } from '../src/cart.js';
 
@@ -362,4 +363,29 @@ test('tierNudge says what reaching the tier costs and saves, until the line reac
   assert.equal(tierNudge(withTier(5).items[0]).extraCents, -1, 'taking 6 costs less than 5');
   assert.equal(tierNudge(withTier(6).items[0]), null);
   assert.equal(tierNudge(run(add(599)).items[0]), null);
+});
+
+/* ---------- leve N pague M ---------- */
+
+const multibuy = (buy, pay) => ({ kind: 'multibuy', buy, pay });
+const withMultibuy = (qty, deal = multibuy(3, 2)) => run({ type: 'add', priceCents: 350, qty, deal });
+
+test('"leve 3 pague 2" charges 2 of every 3 units, and the rest at full price', () => {
+  const totals = [1, 2, 3, 4, 6, 7].map((qty) => lineTotal(withMultibuy(qty).items[0]));
+  assert.deepEqual(totals, [350, 700, 700, 1050, 1400, 1750]);
+});
+
+test('a multibuy offer holds up only as N units for fewer than N', () => {
+  assert.deepEqual(validDeal(multibuy(3, 2), 350), multibuy(3, 2));
+  assert.deepEqual(validDeal(multibuy(4, 3), 1), multibuy(4, 3), 'any price');
+  for (const bad of [multibuy(3, 3), multibuy(3, 0), multibuy(1, 1), multibuy(3, 1.5), multibuy(2.5, 1)]) {
+    assert.equal(validDeal(bad, 350), null, JSON.stringify(bad));
+  }
+});
+
+test('nextUnitFree says when one more unit costs nothing', () => {
+  assert.deepEqual([2, 3, 5].map((qty) => nextUnitFree(withMultibuy(qty).items[0])), [true, false, true]);
+  assert.equal(nextUnitFree(withMultibuy(3, multibuy(4, 3)).items[0]), true);
+  assert.equal(nextUnitFree(withMultibuy(1, multibuy(4, 3)).items[0]), false);
+  assert.equal(nextUnitFree(run(add(350, '', 2)).items[0]), false);
 });

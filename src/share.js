@@ -2,12 +2,20 @@
 // the app's language. The cart, History and shared text all write a line the same way.
 
 import { formatMoney } from './money.js';
-import { lineTotal, total, counts, unitCents } from './cart.js';
+import { lineTotal, total, counts, unitCents, dealSavings } from './cart.js';
 import { t, formatKg } from './i18n.js';
 
-/** "R$ 4,50 × 2"; at an atacado price "R$ 4,99 × 6 (atacado)"; weighed "R$ 7,99/kg × 1,250 kg". */
+/**
+ * "R$ 4,50 × 2"; at an atacado price "R$ 4,99 × 6 (atacado)"; with a multibuy the discount as a receipt prints it,
+ * "R$ 3,50 × 3 − R$ 3,50 (leve 3 pague 2)"; weighed "R$ 7,99/kg × 1,250 kg".
+ */
 export function lineEach(item, lang) {
   if (item.perKgCents) return `${formatMoney(item.perKgCents, lang)}/kg × ${formatKg(item.grams, lang)}`;
+  if (item.deal?.kind === 'multibuy' && dealSavings(item) > 0) {
+    const { buy, pay } = item.deal;
+    const off = formatMoney(dealSavings(item), lang);
+    return `${formatMoney(item.priceCents, lang)} × ${item.qty} − ${off} (${t('dealMultibuy', lang, { buy, pay })})`;
+  }
   const each = unitCents(item);
   const offer = each !== item.priceCents ? ` (${t('dealTier', lang)})` : '';
   return `${formatMoney(each, lang)} × ${item.qty}${offer}`;
