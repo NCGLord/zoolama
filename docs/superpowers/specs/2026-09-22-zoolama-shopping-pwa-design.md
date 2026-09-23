@@ -19,6 +19,7 @@ Node 26, python3, git, `gh` (logged in as **NCGLord**, ssh), rsvg-convert and Im
 | Calculations | **Compare tool only**: 2+ options → cheapest per base unit, and the others shown as "+x%" |
 | Link | The winner card has an "Add to cart" button that adds its price at qty 1 |
 | Locale | **PT/EN toggle**. Currency is always BRL |
+| Theme | **Light/dark toggle** (added mid-build at the user's request): follows the system until tapped, then persists. An inline pre-paint script avoids a flash |
 
 **One call I made (easy to flip):** number *display* follows the chosen language: PT → `R$ 8,99`, EN → `R$8.99`.
 *Input* accepts either `,` or `.` in both modes.
@@ -68,7 +69,7 @@ docs/superpowers/specs/2026-09-22-zoolama-shopping-pwa-design.md   this design, 
 - **i18n**: the key sets must be identical across `pt` and `en` (enforced by a test). The toggle sets `<html lang>` and persists.
 
 ### UI (mobile-first; refine the visuals with `frontend-design` during implementation)
-- **Cart tab**: the price field is autofocused (`inputmode="decimal"`), with a qty stepper, an optional name and an Add button (Enter submits,
+- **Cart tab**: the price field (`inputmode="decimal"`) is refocused after each Add but not autofocused on load, so reopening the app to glance at the total doesn't pop the keyboard over it, with a qty stepper, an optional name and an Add button (Enter submits,
   then focus goes back to price for fast entry). Each line shows its name (or "Item N"), `price × qty`, the subtotal, ± buttons and delete.
   A sticky footer shows the total (`aria-live`), the line/unit counts and Clear (with undo).
 - **Compare tab**: two option cards to start (label?, price, quantity, unit `<select>`), plus "+ option" and Reset.
