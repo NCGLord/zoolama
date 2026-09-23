@@ -68,7 +68,7 @@ error. They are the only thing that needs an install, the pinned `@playwright/te
 
 ```sh
 npm ci && npx playwright install --only-shell chromium   # once
-npm run e2e                                             # serves the app on port 8799 by itself
+npm run e2e                                             # builds the site, serves it at :8799/zoolama/
 ```
 
 After changing **any precached file** (anything listed in `ASSETS` in `sw.js`), run:
