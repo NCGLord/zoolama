@@ -1,6 +1,7 @@
 // Pure cart reducer. Destructive actions (remove, clear, qty → 0, dropping a photo) keep a one-level
 // undo snapshot so the UI can offer "Undo" instead of a confirm dialog; any other action drops it.
 // An item may carry the photoId of its shelf-tag photo; the image itself lives in photos.js.
+// At the till (checkout mode) an item can be ticked, and carry what the till charged for the whole line.
 
 export function initialCart() {
   return { items: [], nextId: 1, undo: null };
@@ -33,6 +34,16 @@ export function cartReducer(state, action) {
       const hadPhoto = state.items.some((i) => i.id === action.id && i.photoId);
       return { ...state, items, undo: hadPhoto ? state.items : null };
     }
+    case 'toggleChecked':
+      return edit(state, action.id, { checked: !state.items.find((i) => i.id === action.id)?.checked });
+    case 'setCharged': {
+      const items = state.items.map((i) => {
+        if (i.id !== action.id) return i;
+        const { chargedCents, ...rest } = i;
+        return action.chargedCents == null ? rest : { ...rest, chargedCents: action.chargedCents, checked: true };
+      });
+      return { ...state, items, undo: null };
+    }
     case 'remove':
       return { ...state, items: items.filter((i) => i.id !== action.id), undo: items };
     case 'clear':
@@ -56,6 +67,20 @@ export function total(state) {
 export function referencedPhotos(state) {
   const items = [...state.items, ...(state.undo ?? [])];
   return new Set(items.map((i) => i.photoId).filter(Boolean));
+}
+
+/** Checkout progress and mismatches. The charged amount is a line total, so it also catches double scans. */
+export function checkSummary(state) {
+  const summary = { checked: 0, lines: state.items.length, mismatches: 0, overchargeCents: 0, inFavorCents: 0 };
+  for (const item of state.items) {
+    if (item.checked) summary.checked++;
+    if (item.chargedCents == null) continue;
+    const diff = item.chargedCents - item.priceCents * item.qty;
+    if (diff !== 0) summary.mismatches++;
+    if (diff > 0) summary.overchargeCents += diff;
+    if (diff < 0) summary.inFavorCents -= diff;
+  }
+  return summary;
 }
 
 export function counts(state) {

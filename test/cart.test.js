@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { initialCart, cartReducer, total, counts, referencedPhotos } from '../src/cart.js';
+import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary } from '../src/cart.js';
 
 const run = (...actions) => actions.reduce(cartReducer, initialCart());
 const add = (priceCents, name = '', qty) => ({ type: 'add', priceCents, name, qty });
@@ -99,4 +99,46 @@ test('referencedPhotos lists photos on items and in the undo snapshot', () => {
   const s = run(add(100), add(200), { type: 'setPhoto', id: 1, photoId: 'p1' }, { type: 'setPhoto', id: 2, photoId: 'p2' }, { type: 'remove', id: 2 });
   assert.deepEqual([...referencedPhotos(s)].sort(), ['p1', 'p2']);
   assert.deepEqual([...referencedPhotos(cartReducer(s, add(300)))], ['p1']);
+});
+
+test('toggleChecked ticks and unticks an item', () => {
+  const ticked = run(add(899), { type: 'toggleChecked', id: 1 });
+  assert.equal(ticked.items[0].checked, true);
+  assert.equal(cartReducer(ticked, { type: 'toggleChecked', id: 1 }).items[0].checked, false);
+});
+
+test('setCharged stores what the till charged for the line and ticks it', () => {
+  const s = run(add(2990), { type: 'setCharged', id: 1, chargedCents: 3150 });
+  assert.equal(s.items[0].chargedCents, 3150);
+  assert.equal(s.items[0].checked, true);
+});
+
+test('clearing the charged amount keeps the tick', () => {
+  const s = run(add(2990), { type: 'setCharged', id: 1, chargedCents: 3150 }, { type: 'setCharged', id: 1, chargedCents: null });
+  assert.equal('chargedCents' in s.items[0], false);
+  assert.equal(s.items[0].checked, true);
+});
+
+test('checkSummary counts ticks and sums overcharge and in-your-favour separately, on line totals', () => {
+  const s = run(
+    add(2990), // noted 29,90, charged 31,50: +1,60
+    add(450, '', 2), // noted 2 × 4,50 = 9,00, charged 13,50 (scanned three times): +4,50
+    add(899), // noted 8,99, charged 7,99: in your favour 1,00
+    add(100), // unticked
+    { type: 'setCharged', id: 1, chargedCents: 3150 },
+    { type: 'setCharged', id: 2, chargedCents: 1350 },
+    { type: 'setCharged', id: 3, chargedCents: 799 },
+  );
+  assert.deepEqual(checkSummary(s), { checked: 3, lines: 4, mismatches: 3, overchargeCents: 610, inFavorCents: 100 });
+});
+
+test('a charged amount equal to the noted line total is not a mismatch', () => {
+  const s = run(add(450, '', 2), { type: 'setCharged', id: 1, chargedCents: 900 });
+  assert.deepEqual(checkSummary(s), { checked: 1, lines: 1, mismatches: 0, overchargeCents: 0, inFavorCents: 0 });
+});
+
+test('clearing the cart and undoing brings the ticks and charged amounts back', () => {
+  const before = run(add(2990), { type: 'setCharged', id: 1, chargedCents: 3150 });
+  const restored = [{ type: 'clear' }, { type: 'undo' }].reduce(cartReducer, before);
+  assert.deepEqual(restored.items, before.items);
 });
