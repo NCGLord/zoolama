@@ -20,6 +20,7 @@ import { tr, tagPrice, applyLang, pricePlaceholder, unitLabel, signedMoney, each
 import { showToast, offerUpdate, defineToastActions } from './ui/toast.js';
 import { pendingPhotos, photoUrl, hydratePhotos, collectPhotos } from './ui/photo-cache.js';
 import { MAX_QTY, setCart, dispatchCart, setCartRenderer } from './ui/cart-store.js';
+import { shareList } from './ui/share-sheet.js';
 
 const COUNT_MS = 480; // total count-up
 
@@ -660,29 +661,6 @@ function undoFinish() {
   setTrips(trips.filter((t) => t.id !== lastFinishedId));
   dispatchCart({ type: 'undo' });
 }
-
-/** The phone's share sheet where there is one; otherwise copy the list. Closing the sheet is not an error. */
-async function shareList(text) {
-  if (navigator.share) {
-    try {
-      await navigator.share({ text });
-      return;
-    } catch (err) {
-      if (err?.name === 'AbortError') return;
-      // any other failure: fall back to copying
-    }
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast('copied');
-  } catch {
-    showToast('shareFailed');
-  }
-}
-
-$('share-cart').addEventListener('click', () =>
-  shareList(shareText(state.cart.items, { lang: state.lang, title: tr('shareCartTitle') })),
-);
 
 function tripTitle(trip) {
   const date = new Intl.DateTimeFormat(LOCALES[state.lang], { dateStyle: 'short' }).format(trip.at);
