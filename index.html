@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f3f5f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121417" media="(prefers-color-scheme: dark)" />
+    <title>Zoolama</title>
+    <link rel="preload" href="./fonts/barlow-condensed-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./src/app.js"></script>
+  </head>
+  <body>
+    <header class="bar">
+      <h1 class="brand">Zoolama</h1>
+      <div class="lang" role="group" data-i18n-aria-label="langLabel">
+        <button type="button" data-lang="pt" aria-pressed="true">PT</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="panel-cart" class="panel">
+        <form id="entry" class="entry" novalidate autocomplete="off">
+          <div class="entry-price">
+            <label for="price" data-i18n="price">Preço</label>
+            <div class="money-field">
+              <span aria-hidden="true">R$</span>
+              <input id="price" inputmode="decimal" enterkeyhint="done" placeholder="0,00" aria-describedby="price-error" />
+            </div>
+            <p id="price-error" class="field-error" aria-live="polite"></p>
+          </div>
+          <div class="entry-qty">
+            <label for="qty" data-i18n="qty">Qtd</label>
+            <div class="stepper">
+              <button type="button" data-step="-1" data-i18n-aria-label="oneLess">−</button>
+              <input id="qty" inputmode="numeric" value="1" />
+              <button type="button" data-step="1" data-i18n-aria-label="oneMore">+</button>
+            </div>
+          </div>
+          <input id="name" class="entry-name" enterkeyhint="done" data-i18n-placeholder="name" data-i18n-aria-label="name" />
+          <button class="primary" type="submit" data-i18n="add">Adicionar</button>
+        </form>
+        <p id="empty" class="empty" data-i18n="emptyCart"></p>
+        <ul id="lines" class="lines"></ul>
+      </section>
+    </main>
+
+    <div class="dock">
+      <div id="toast" class="toast" role="status" hidden>
+        <span id="toast-text"></span>
+        <button type="button" id="toast-undo" data-i18n="undo" hidden>Desfazer</button>
+      </div>
+      <footer class="tally">
+        <div class="tally-tag">
+          <span class="tally-label" data-i18n="total">Total</span>
+          <output id="total" class="tag-price" aria-live="polite"></output>
+        </div>
+        <div class="tally-meta">
+          <span id="count"></span>
+          <button type="button" id="clear" class="on-tag" data-i18n="clear">Limpar</button>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

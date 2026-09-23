@@ -1,0 +1,418 @@
+/* Zoolama — the aisle's own vocabulary: shelf-tag yellow, condensed price numerals, small raised cents. */
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  src: url('./fonts/barlow-condensed-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --paper: #f3f5f7;
+  --surface: #ffffff;
+  --ink: #1b1f24;
+  --muted: #5a6470;
+  --rule: #d3d9df;
+  --tag: #ffd60a;
+  --tag-ink: #1b1f24;
+  --dear: #c8102e;
+  --focus: #1d5fd1;
+  --num: 'Barlow Condensed', 'Avenir Next Condensed', 'Roboto Condensed', 'Arial Narrow', sans-serif-condensed,
+    sans-serif;
+  --text: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --radius: 6px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #121417;
+    --surface: #1b1e23;
+    --ink: #eceff2;
+    --muted: #9ba5b0;
+    --rule: #2e333a;
+    --tag-ink: #15171a;
+    --dear: #ff6b7a;
+    --focus: #7fa8ff;
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.4 var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- header ---------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.brand {
+  margin: 0;
+  font: 700 24px/1 var(--num);
+}
+
+.lang {
+  display: flex;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.lang button {
+  min-width: 44px;
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.lang button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+main {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ---------- entry ---------- */
+
+.entry {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 14px;
+  align-items: end;
+  padding: 14px 16px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+}
+
+.entry label {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.money-field {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  border-bottom: 2px solid var(--ink);
+  font-family: var(--num);
+  font-weight: 700;
+}
+
+.money-field span {
+  font-size: 22px;
+}
+
+.money-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 40px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.money-field input:focus-visible {
+  outline: none;
+}
+
+.money-field:focus-within {
+  border-bottom-color: var(--focus);
+}
+
+.money-field input[aria-invalid='true'] {
+  color: var(--dear);
+}
+
+.field-error {
+  min-height: 1.2em;
+  margin: 4px 0 0;
+  color: var(--dear);
+  font-size: 14px;
+}
+
+.entry-qty {
+  align-self: start;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stepper button {
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.stepper input {
+  width: 3ch;
+  border: 0;
+  background: transparent;
+  text-align: center;
+  font: 700 26px/1 var(--num);
+  font-variant-numeric: tabular-nums;
+}
+
+.entry-name {
+  min-width: 0;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+}
+
+.entry-name::placeholder,
+.line-name::placeholder {
+  color: var(--muted);
+}
+
+.primary {
+  min-height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 700;
+}
+
+/* ---------- cart lines ---------- */
+
+.empty {
+  margin: 0;
+  padding: 28px 16px;
+  color: var(--muted);
+}
+
+.lines {
+  margin: 0;
+  padding: 0 16px;
+  list-style: none;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'name sub'
+    'each ctl';
+  gap: 2px 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.line-name {
+  grid-area: name;
+  min-width: 0;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+}
+
+.line-sub {
+  grid-area: sub;
+  font: 700 26px/1 var(--num);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.line-each {
+  grid-area: each;
+  color: var(--muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.line-ctl {
+  grid-area: ctl;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.line-ctl .stepper span {
+  min-width: 2.5ch;
+  text-align: center;
+  font: 700 22px/1 var(--num);
+  font-variant-numeric: tabular-nums;
+}
+
+.remove {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+}
+
+/* ---------- dock: toast + tally ---------- */
+
+.dock {
+  position: relative;
+}
+
+.toast {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.toast button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--tag);
+  font-weight: 700;
+}
+
+.tally {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px 12px;
+  background: var(--tag);
+  color: var(--tag-ink);
+}
+
+.tally-tag {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tally-label {
+  font: 700 18px/1 var(--num);
+}
+
+.tally-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.on-tag {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius);
+  background: transparent;
+  font-weight: 600;
+}
+
+.on-tag:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* A shelf-tag price: currency small, reais large, cents small and raised. */
+.tag-price {
+  display: flex;
+  align-items: flex-start;
+  font-family: var(--num);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+  white-space: nowrap;
+}
+
+.tag-price .cur {
+  align-self: flex-end;
+  margin-right: 4px;
+  margin-bottom: 0.3em;
+  font-size: 0.34em;
+}
+
+.tag-price .cents {
+  margin-top: 0.08em;
+  font-size: 0.45em;
+}
+
+.tally .tag-price {
+  font-size: clamp(48px, 15vw, 64px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
