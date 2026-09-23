@@ -39,3 +39,30 @@ test('every manifest shortcut opens something the app knows, inside its scope', 
     assert.notEqual(launchState(s, new URL(url, 'https://example.test/app/').search), s, `${url} opens something`);
   }
 });
+
+/** Width and height from a WebP file's header (lossy, lossless or extended). */
+function webpSize(file) {
+  const b = readFileSync(file);
+  const chunk = b.toString('ascii', 12, 16);
+  if (chunk === 'VP8X') return [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)];
+  if (chunk === 'VP8L') {
+    const bits = b.readUInt32LE(21);
+    return [1 + (bits & 0x3fff), 1 + ((bits >> 14) & 0x3fff)];
+  }
+  if (chunk === 'VP8 ') return [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff];
+  throw new Error(`not a WebP file: ${file}`);
+}
+
+// Chrome shows these in its install sheet on phones: narrow, labelled, and within its size and ratio limits.
+test('every install screenshot exists, is the size the manifest says, and fits Chrome\'s install sheet', () => {
+  assert.ok(manifest.screenshots?.length, 'the manifest has screenshots');
+  for (const { src, sizes, type, form_factor, label } of manifest.screenshots) {
+    assert.equal(form_factor, 'narrow', src);
+    assert.equal(type, 'image/webp', src);
+    assert.ok(label, `${src} has a label`);
+    const [width, height] = webpSize(new URL(src, root));
+    assert.equal(sizes, `${width}x${height}`, src);
+    assert.ok(Math.min(width, height) >= 320 && Math.max(width, height) <= 3840, `${src}: 320–3840 px`);
+    assert.ok(Math.max(width, height) / Math.min(width, height) <= 2.3, `${src}: at most 2.3:1`);
+  }
+});

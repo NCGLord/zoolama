@@ -16,6 +16,14 @@ test('the site is the service worker, everything it precaches, and the font lice
   assert.equal(new Set(site).size, site.length, 'no file listed twice');
 });
 
+test('install screenshots are published for the install sheet, but never precached', () => {
+  const manifest = JSON.parse(readFileSync(new URL('manifest.webmanifest', ROOT), 'utf8'));
+  for (const { src } of manifest.screenshots ?? []) {
+    assert.ok(site.includes(src), `${src} is published`);
+    assert.ok(!assets.includes(src), `${src} is not in every phone's cache`);
+  }
+});
+
 test('nothing but the app is published: no tests, tools, docs or package files', () => {
   const privateDir = /^\.\/(test|e2e|tools|docs|\.github|node_modules)\//;
   const privateFile = /^\.\/(package(-lock)?\.json|README\.md|playwright\.config\.js)$/;

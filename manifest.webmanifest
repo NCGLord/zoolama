@@ -11,6 +11,29 @@
   "background_color": "#f4faef",
   "theme_color": "#f4faef",
   "categories": ["shopping", "finance"],
+  "screenshots": [
+    {
+      "src": "./screenshots/carrinho.webp",
+      "sizes": "780x1688",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Carrinho com o total da compra e o orçamento"
+    },
+    {
+      "src": "./screenshots/comparar.webp",
+      "sizes": "780x1688",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Comparar o preço por kg de dois pacotes"
+    },
+    {
+      "src": "./screenshots/conferir.webp",
+      "sizes": "780x1688",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Conferir no caixa, com o valor cobrado a mais"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Comparar preços",
