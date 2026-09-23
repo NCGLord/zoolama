@@ -83,11 +83,20 @@ body {
   height: 100%;
 }
 
+/* The app is a fixed frame: header, the scrolling <main>, and the dock (total + tabs). The page itself never scrolls,
+   bounces or pulls to refresh, so nothing can move the header or the tabs off screen; only <main> scrolls. */
+html {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
   background: var(--paper);
   color: var(--ink);
   font: 16px/1.4 var(--text);
