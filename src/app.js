@@ -249,18 +249,26 @@ function optionView(opt, i, removable) {
         ),
       ),
       h('label', {}, tr('quantity'), h('input', { class: 'qty-field', 'data-field': 'qty', inputmode: 'decimal', value: opt.qty, placeholder: '0' })),
-      h(
-        'label',
-        {},
-        tr('unit'),
-        h(
-          'select',
-          { class: 'unit-select', 'data-field': 'unit' },
-          ...Object.keys(UNITS).map((u) => h('option', { value: u, selected: u === opt.unit, text: unitLabel(u) })),
-        ),
-      ),
+      unitChoice(opt.unit, i),
     ),
     h('div', { class: 'option-result' }),
+  );
+}
+
+/** One tap per unit: g kg · ml L · un, with a gap between families (mass, volume, count). */
+function unitChoice(selected, i) {
+  return h(
+    'fieldset',
+    { class: 'unit-choice' },
+    h('legend', { class: 'visually-hidden', text: tr('unit') }),
+    ...Object.entries(UNITS).map(([u, { dim }], k, all) =>
+      h(
+        'label',
+        { class: k > 0 && all[k - 1][1].dim !== dim ? 'new-family' : null },
+        h('input', { type: 'radio', name: `unit-${i}`, value: u, checked: u === selected, 'data-field': 'unit' }),
+        h('span', { text: unitLabel(u) }),
+      ),
+    ),
   );
 }
 
@@ -301,13 +309,17 @@ function renderResults() {
   $('compare-msg').classList.toggle('error', Boolean(error));
 }
 
-$('options').addEventListener('input', (e) => {
+function onOptionInput(e) {
   const field = e.target.dataset.field;
   if (!field) return;
   const i = Number(e.target.closest('[data-index]').dataset.index);
   setCompare(state.compare.options.map((o, j) => (j === i ? { ...o, [field]: e.target.value } : o)));
   renderResults();
-});
+}
+
+// Radios fire 'change' everywhere but 'input' only in newer engines; handling both is harmless.
+$('options').addEventListener('input', onOptionInput);
+$('options').addEventListener('change', onOptionInput);
 
 $('options').addEventListener('click', (e) => {
   const action = e.target.closest('[data-action]')?.dataset.action;

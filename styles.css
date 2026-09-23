@@ -606,7 +606,7 @@ main {
 
 .option-fields {
   display: grid;
-  grid-template-columns: 1.4fr 1fr auto;
+  grid-template-columns: 1.4fr 1fr;
   gap: 12px;
   align-items: end;
 }
@@ -643,18 +643,78 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
-.unit-select {
-  min-height: 44px;
-  padding: 0 8px;
-  border: 1.5px solid var(--rule);
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--ink);
+/* Unit radios as one segmented row, like the PT|EN toggle. The input stays real (keyboard, screen
+   readers) but invisible; the span is what you see and tap. */
+.unit-choice {
+  display: flex;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
-.unit-select option {
-  background: var(--surface);
+.unit-choice label {
+  position: relative;
+  display: flex;
+  flex: 1;
+}
+
+.unit-choice input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.unit-choice span {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 44px;
+  border: 1.5px solid var(--rule);
+  border-left-width: 0;
   color: var(--ink);
+  font: 700 20px/1 var(--num);
+}
+
+.unit-choice label:first-of-type span,
+.unit-choice .new-family span {
+  border-left-width: 1.5px;
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.unit-choice label:has(+ .new-family) span,
+.unit-choice label:last-of-type span {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.unit-choice .new-family {
+  margin-left: 8px;
+}
+
+.unit-choice input:checked + span {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.option.winner .unit-choice input:checked + span {
+  color: var(--tag);
+}
+
+.unit-choice input:focus-visible + span {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .option-result {
