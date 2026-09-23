@@ -2,6 +2,7 @@
 // together (the language switch re-renders all of them, and two calls that would point up the module stack are
 // registered here) and boots them.
 
+import { launchState } from './launch.js';
 import { state, persist } from './ui/app-state.js';
 import { applyLang } from './ui/text.js';
 import { defineToastActions } from './ui/toast.js';
@@ -40,6 +41,11 @@ defineToastActions({
   undoDelete: { label: 'undo', run: () => undoDeleteTrip() },
   undoImport: { label: 'undo', run: () => undoImport() },
 });
+
+// A home-screen shortcut opens a tab or checkout mode; then the query goes, so a reload doesn't apply it again.
+const launched = launchState(state, location.search);
+if (launched !== state) persist(launched);
+if (location.search) window.history.replaceState(null, '', location.pathname);
 
 applyLang();
 renderTheme();
