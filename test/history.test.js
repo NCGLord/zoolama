@@ -245,9 +245,19 @@ test('a trip\'s lines always add up to its total', () => {
       { type: 'setCharged', id: 1, chargedCents: 1000 },
       { type: 'setPrice', id: 1, priceCents: 399 },
     ),
+    cartOf({ type: 'add', priceCents: 599, qty: 6, deal: { kind: 'tier', minQty: 6, eachCents: 499 } }),
   ];
   for (const cart of carts) {
     const trip = tripFromCart(cart, { id: 't', at: 0 });
     assert.equal(trip.items.reduce((sum, item) => sum + lineTotal(item), 0), trip.totalCents);
   }
+});
+
+test('a trip keeps each line\'s offer, and a malformed offer makes a trip one History can\'t trust', () => {
+  const deal = { kind: 'tier', minQty: 6, eachCents: 499 };
+  const trip = tripFromCart(cartOf({ type: 'add', priceCents: 599, qty: 6, deal }), { id: 't', at: 0 });
+  assert.deepEqual(trip.items[0].deal, deal);
+  assert.equal(isTrip(trip), true);
+  const broken = { ...trip, items: [{ ...trip.items[0], deal: { kind: 'tier', minQty: 6, eachCents: 700 } }] };
+  assert.equal(isTrip(broken), false);
 });

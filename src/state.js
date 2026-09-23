@@ -1,7 +1,7 @@
 // The saved state read back field by field. A value can be half-written, hand-edited or left by another version of
 // the app; whatever doesn't hold up falls back to its default, so one bad field can never blank the app mid-shop.
 
-import { initialCart } from './cart.js';
+import { initialCart, validDeal } from './cart.js';
 import { restorePlan } from './plan.js';
 import { UNITS } from './units.js';
 import { STRINGS } from './i18n.js';
@@ -22,12 +22,15 @@ const text = (s) => (typeof s === 'string' ? s : '');
 function restoreItem(item) {
   if (!isPositive(item?.id) || !isPositive(item.priceCents) || !isPositive(item.qty)) return null;
   const { id, priceCents, qty, perKgCents, grams, photoId, checked, chargedCents } = item;
+  const weighed = isPositive(perKgCents) && isPositive(grams);
+  const deal = weighed ? null : validDeal(item.deal, priceCents);
   return {
     id,
     name: text(item.name),
     priceCents,
     qty,
-    ...(isPositive(perKgCents) && isPositive(grams) ? { perKgCents, grams } : {}),
+    ...(weighed ? { perKgCents, grams } : {}),
+    ...(deal ? { deal } : {}),
     ...(typeof photoId === 'string' && photoId ? { photoId } : {}),
     ...(checked === true ? { checked } : {}),
     ...(isPositive(chargedCents) ? { chargedCents } : {}),

@@ -38,3 +38,12 @@ test('the shared cart follows the English number format and wording', () => {
     ),
   );
 });
+
+test('a line at its atacado price says so; below the tier it reads as usual', () => {
+  const deal = { kind: 'tier', minQty: 6, eachCents: 499 };
+  assert.equal(plain(lineEach({ priceCents: 599, qty: 6, deal }, 'pt')), 'R$ 4,99 × 6 (atacado a partir de 6)');
+  assert.equal(plain(lineEach({ priceCents: 599, qty: 6, deal }, 'en')), 'R$4.99 × 6 (bulk price from 6)');
+  assert.equal(plain(lineEach({ priceCents: 599, qty: 4, deal }, 'pt')), 'R$ 5,99 × 4');
+  const text = shareText([{ name: 'Café', priceCents: 599, qty: 6, deal }], { lang: 'pt', title: 'T' });
+  assert.equal(plain(text).split('\n')[1], '- Café: R$ 4,99 × 6 (atacado a partir de 6) = R$ 29,94');
+});

@@ -5,6 +5,8 @@
 // A weighed item (hortifruti, açougue) keeps its price per kg and weight in whole grams; its priceCents is the
 // line price and qty stays 1, so totals, budget and checkout treat it like any other line.
 // The cart may also carry receiptCents, the total printed on the till's receipt, noted in checkout mode.
+// A unit line may carry an offer (deal): an atacado tier, where from minQty units each costs eachCents. lineTotal
+// applies it, so totals, budget, checkout, sorting, sharing and History all see the same price.
 
 export function initialCart() {
   return { items: [], nextId: 1, undo: null };
@@ -23,6 +25,8 @@ export function cartReducer(state, action) {
         ...(weighed ? { perKgCents: action.perKgCents, grams: action.grams } : {}),
         ...(action.photoId ? { photoId: action.photoId } : {}),
       };
+      const deal = weighed ? null : validDeal(action.deal, item.priceCents);
+      if (deal) item.deal = deal;
       // Cart-level fields stay, except that the first item of a new trip drops the last trip's receipt total.
       const { receiptCents, ...rest } = state;
       const base = items.length ? state : rest;
@@ -52,9 +56,23 @@ export function cartReducer(state, action) {
       const item = state.items.find((i) => i.id === action.id);
       const price = action.priceCents;
       if (!item || !(Number.isSafeInteger(price) && price > 0)) return state;
-      return item.perKgCents
-        ? edit(state, action.id, { perKgCents: price, priceCents: linePriceCents(price, item.grams) })
-        : edit(state, action.id, { priceCents: price });
+      if (item.perKgCents) {
+        return edit(state, action.id, { perKgCents: price, priceCents: linePriceCents(price, item.grams) });
+      }
+      // An offer the new price no longer beats is dropped.
+      const { deal, ...rest } = item;
+      const kept = validDeal(deal, price);
+      const corrected = { ...rest, priceCents: price, ...(kept ? { deal: kept } : {}) };
+      return { ...state, items: state.items.map((i) => (i.id === action.id ? corrected : i)), undo: null };
+    }
+    case 'setDeal': {
+      const item = state.items.find((i) => i.id === action.id);
+      if (!item || item.perKgCents) return state;
+      const { deal: old, ...rest } = item;
+      const deal = action.deal === null ? null : validDeal(action.deal, item.priceCents);
+      if (action.deal !== null && !deal) return state;
+      const items = state.items.map((i) => (i.id === action.id ? { ...rest, ...(deal ? { deal } : {}) } : i));
+      return { ...state, items, undo: !deal && old ? state.items : null }; // removing an offer can be undone
     }
     case 'setReceipt': {
       const { receiptCents, ...rest } = state;
@@ -87,9 +105,48 @@ function edit(state, id, patch) {
   return { ...state, items: state.items.map((i) => (i.id === id ? { ...i, ...patch } : i)), undo: null };
 }
 
-/** What a line costs as noted. A weighed line's priceCents is already its price, at qty 1. */
-export function lineTotal(item) {
-  return item.priceCents * item.qty;
+/** What a line costs as noted, its offer applied. A weighed line's priceCents is already its price, at qty 1. */
+export function lineTotal({ priceCents, qty, deal }) {
+  if (deal?.kind === 'tier' && qty >= deal.minQty) return deal.eachCents * qty;
+  return priceCents * qty;
+}
+
+const isPositive = (n) => Number.isSafeInteger(n) && n > 0;
+
+/**
+ * An offer checked against the line's price, keeping only its known fields; null when it doesn't hold up.
+ * {kind: 'tier', minQty, eachCents}: from minQty units (at least 2), each costs eachCents, below the price.
+ */
+export function validDeal(deal, priceCents) {
+  if (deal?.kind === 'tier') {
+    const { minQty, eachCents } = deal;
+    return isPositive(minQty) && minQty >= 2 && isPositive(eachCents) && eachCents < priceCents
+      ? { kind: 'tier', minQty, eachCents }
+      : null;
+  }
+  return null;
+}
+
+/** The price of one unit as the line is priced now: the tier price once the quantity reaches it. */
+export function unitCents(item) {
+  return item.deal?.kind === 'tier' && item.qty >= item.deal.minQty ? item.deal.eachCents : item.priceCents;
+}
+
+/**
+ * What taking the tier's quantity would mean for a line below it: {qty, totalCents, savesCents, extraCents}, where
+ * savesCents is the saving on those units and extraCents what the line would cost on top of now (negative when more
+ * units cost less). null without a tier, or once the line has reached it.
+ */
+export function tierNudge(item) {
+  const { deal } = item;
+  if (deal?.kind !== 'tier' || item.qty >= deal.minQty) return null;
+  const totalCents = deal.eachCents * deal.minQty;
+  return {
+    qty: deal.minQty,
+    totalCents,
+    savesCents: (item.priceCents - deal.eachCents) * deal.minQty,
+    extraCents: totalCents - lineTotal(item),
+  };
 }
 
 /** What the till charged beyond the noted line total: > 0 overcharged, < 0 in your favour, 0 if not charged. */

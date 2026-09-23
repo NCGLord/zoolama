@@ -1,7 +1,7 @@
 // Finished shopping trips. A trip keeps what was bought (names, prices, quantities, weights) and what it cost,
 // but not the photos, which are large and whose job ends at the till.
 
-import { total, counts, checkSummary } from './cart.js';
+import { total, counts, checkSummary, validDeal } from './cart.js';
 
 export function tripFromCart(cart, { id, at, store = '' }) {
   const { overchargeCents } = checkSummary(cart);
@@ -9,11 +9,12 @@ export function tripFromCart(cart, { id, at, store = '' }) {
     id,
     at,
     store: store.trim(),
-    items: cart.items.map(({ name, priceCents, qty, perKgCents, grams }) => ({
+    items: cart.items.map(({ name, priceCents, qty, perKgCents, grams, deal }) => ({
       name,
       priceCents,
       qty,
       ...(perKgCents ? { perKgCents, grams } : {}),
+      ...(deal ? { deal } : {}), // it changes what the line cost
     })),
     totalCents: total(cart),
     units: counts(cart).units,
@@ -28,6 +29,7 @@ const isCount = (n) => Number.isSafeInteger(n) && n >= 0;
 function isTripItem(item) {
   if (typeof item?.name !== 'string' || !isPositive(item.priceCents) || !isPositive(item.qty)) return false;
   const weighed = item.perKgCents !== undefined || item.grams !== undefined;
+  if (item.deal !== undefined && (weighed || !validDeal(item.deal, item.priceCents))) return false;
   return !weighed || (isPositive(item.perKgCents) && isPositive(item.grams));
 }
 

@@ -12,6 +12,8 @@ import {
   chargedDiff,
   chargedTotal,
   receiptCheck,
+  validDeal,
+  tierNudge,
   sortItems,
 } from '../src/cart.js';
 
@@ -305,4 +307,59 @@ test('receiptCheck compares the receipt with the noted total and with what the l
   const explained = { receiptCents: 2200, notedCents: 2100, chargedCents: 2200, diffCents: 100, unexplainedCents: 0 };
   assert.deepEqual(check(charged, 2200), explained);
   assert.equal(check(charged, 2350).unexplainedCents, 150);
+});
+
+/* ---------- atacado: from N units, each costs less ---------- */
+
+const tier = (minQty, eachCents) => ({ kind: 'tier', minQty, eachCents });
+const withTier = (qty, deal = tier(6, 499)) => run({ type: 'add', priceCents: 599, qty, deal });
+
+test('a tier price applies to every unit once the quantity reaches it', () => {
+  assert.equal(lineTotal(withTier(5).items[0]), 2995); // 5 × 5,99
+  assert.equal(lineTotal(withTier(6).items[0]), 2994); // 6 × 4,99
+  assert.equal(lineTotal(withTier(12).items[0]), 5988);
+  assert.equal(total(withTier(6)), 2994);
+});
+
+test('an offer is kept only when it holds up against the price, and never on a weighed line', () => {
+  assert.deepEqual(withTier(1).items[0].deal, tier(6, 499));
+  for (const bad of [tier(1, 499), tier(6, 599), tier(6, 700), tier(2.5, 499), tier(6, 4.99), { kind: 'magic' }, 'x']) {
+    assert.equal('deal' in withTier(1, bad).items[0], false, JSON.stringify(bad));
+  }
+  assert.deepEqual(validDeal({ ...tier(6, 499), extra: 1 }, 599), tier(6, 499), 'only the known fields');
+  const weighed = run({ type: 'add', perKgCents: 799, grams: 1250, deal: tier(2, 500) });
+  assert.equal('deal' in weighed.items[0], false);
+});
+
+test('setDeal sets or replaces an offer; removing one can be undone; nonsense and weighed lines are left alone', () => {
+  const s = run(add(599, '', 3), { type: 'setDeal', id: 1, deal: tier(6, 499) });
+  assert.deepEqual(s.items[0].deal, tier(6, 499));
+  assert.deepEqual(cartReducer(s, { type: 'setDeal', id: 1, deal: tier(4, 549) }).items[0].deal, tier(4, 549));
+  const removed = cartReducer(s, { type: 'setDeal', id: 1, deal: null });
+  assert.equal('deal' in removed.items[0], false);
+  assert.deepEqual(cartReducer(removed, { type: 'undo' }).items[0].deal, tier(6, 499));
+  assert.equal(cartReducer(s, { type: 'setDeal', id: 1, deal: tier(6, 999) }), s);
+  const weighed = run({ type: 'add', perKgCents: 799, grams: 1250 });
+  assert.equal(cartReducer(weighed, { type: 'setDeal', id: 1, deal: tier(2, 1) }), weighed);
+});
+
+test('correcting the price drops a tier it no longer beats', () => {
+  const s = withTier(3);
+  assert.deepEqual(cartReducer(s, { type: 'setPrice', id: 1, priceCents: 649 }).items[0].deal, tier(6, 499));
+  assert.equal('deal' in cartReducer(s, { type: 'setPrice', id: 1, priceCents: 449 }).items[0], false);
+});
+
+test('checkout and sorting go by the tier price: a till that ignores it shows as an overcharge', () => {
+  const s = cartReducer(withTier(6), { type: 'setCharged', id: 1, chargedCents: 3594 }); // 6 × 5,99
+  assert.equal(checkSummary(s).overchargeCents, 600);
+  const lines = [...withTier(6).items, { id: 2, name: '', priceCents: 2995, qty: 1 }];
+  const sorted = sortItems(lines, { key: 'total', dir: 'desc' });
+  assert.deepEqual(sorted.map((r) => r.item.id), [2, 1]);
+});
+
+test('tierNudge says what reaching the tier costs and saves, until the line reaches it', () => {
+  assert.deepEqual(tierNudge(withTier(4).items[0]), { qty: 6, totalCents: 2994, savesCents: 600, extraCents: 598 });
+  assert.equal(tierNudge(withTier(5).items[0]).extraCents, -1, 'taking 6 costs less than 5');
+  assert.equal(tierNudge(withTier(6).items[0]), null);
+  assert.equal(tierNudge(run(add(599)).items[0]), null);
 });

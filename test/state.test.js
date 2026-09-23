@@ -132,3 +132,10 @@ test('the receipt total noted at the till comes back with the cart, unless it is
   assert.equal(restore({ cart: { ...cart, receiptCents: 500 } }).cart.receiptCents, 500);
   assert.equal('receiptCents' in restore({ cart: { ...cart, receiptCents: -1 } }).cart, false);
 });
+
+test('a line\'s offer comes back when it holds up against the price, and is dropped when it doesn\'t', () => {
+  const deal = { kind: 'tier', minQty: 6, eachCents: 499 };
+  const line = (d) => ({ items: [{ id: 1, name: '', priceCents: 599, qty: 3, deal: d }], nextId: 2, undo: null });
+  assert.deepEqual(restore({ cart: line(deal) }).cart.items[0].deal, deal);
+  assert.equal('deal' in restore({ cart: line({ ...deal, eachCents: 600 }) }).cart.items[0], false);
+});

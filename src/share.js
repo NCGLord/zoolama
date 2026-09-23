@@ -2,14 +2,15 @@
 // the app's language. The cart, History and shared text all write a line the same way.
 
 import { formatMoney } from './money.js';
-import { lineTotal, total, counts } from './cart.js';
+import { lineTotal, total, counts, unitCents } from './cart.js';
 import { t, formatKg } from './i18n.js';
 
-/** "R$ 4,50 × 2", or for a weighed item "R$ 7,99/kg × 1,250 kg". */
+/** "R$ 4,50 × 2"; at an atacado price "R$ 4,99 × 6 (atacado a partir de 6)"; weighed "R$ 7,99/kg × 1,250 kg". */
 export function lineEach(item, lang) {
-  return item.perKgCents
-    ? `${formatMoney(item.perKgCents, lang)}/kg × ${formatKg(item.grams, lang)}`
-    : `${formatMoney(item.priceCents, lang)} × ${item.qty}`;
+  if (item.perKgCents) return `${formatMoney(item.perKgCents, lang)}/kg × ${formatKg(item.grams, lang)}`;
+  const each = unitCents(item);
+  const offer = each !== item.priceCents ? ` (${t('dealTier', lang, { n: item.deal.minQty })})` : '';
+  return `${formatMoney(each, lang)} × ${item.qty}${offer}`;
 }
 
 export function shareText(items, { lang, title }) {
