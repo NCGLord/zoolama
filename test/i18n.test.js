@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { STRINGS, LOCALES, t, detectLang, formatPct } from '../src/i18n.js';
 
 const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
@@ -50,4 +51,17 @@ test('formatPct rounds to one decimal in the language format', () => {
   assert.equal(formatPct(50.3345, 'pt'), '50,3');
   assert.equal(formatPct(50.3345, 'en'), '50.3');
   assert.equal(formatPct(20, 'pt'), '20');
+});
+
+const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+
+test('every data-i18n key used in index.html exists', () => {
+  for (const [, key] of html.matchAll(/data-i18n(?:-placeholder|-aria-label)?="([^"]+)"/g)) {
+    assert.ok(key in STRINGS.pt, `index.html uses unknown key ${key}`);
+  }
+});
+
+test('data-i18n elements hold only text, since applyLang replaces their textContent', () => {
+  const clobbered = [...html.matchAll(/<(\w+)\s[^>]*?\bdata-i18n="([^"]+)"[^>]*>[^<]*<(?!\/\1>)/g)].map((m) => m[2]);
+  assert.deepEqual(clobbered, [], 'these elements would lose their child markup on a language switch');
 });
