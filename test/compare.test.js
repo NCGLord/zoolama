@@ -52,3 +52,10 @@ test('equal unit prices are all marked cheapest', () => {
     ],
   );
 });
+
+test('a pack typed as 1.000 g weighs a thousand grams, while 1.250 kg stays one and a quarter kilos', () => {
+  const { results } = compare([opt('10', '1.000', 'g'), opt('12', '1', 'kg'), opt('15', '1.250', 'kg')]);
+  assert.equal(results[0].unitPrice, 1000); // R$ 10,00/kg
+  assert.equal(results[0].isCheapest, true);
+  assert.equal(results[2].unitPrice, 1200); // R$ 12,00/kg
+});

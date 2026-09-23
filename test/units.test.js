@@ -15,6 +15,24 @@ test('parseQuantity treats the last separator as decimal when both appear', () =
   assert.equal(parseQuantity('1.000,5'), 1000.5);
 });
 
+test('with grouping, a lone separator before exactly three digits groups thousands, as in prices', () => {
+  const grouping = { grouping: true };
+  assert.equal(parseQuantity('1.000', grouping), 1000);
+  assert.equal(parseQuantity('1,000', grouping), 1000);
+  assert.equal(parseQuantity('1.000,5', grouping), 1000.5);
+  assert.equal(parseQuantity('0.500', grouping), 0.5);
+  assert.equal(parseQuantity('1.5', grouping), 1.5);
+});
+
+test('without grouping, three decimals stay decimals, the way scale labels print kg', () => {
+  assert.equal(parseQuantity('1.250'), 1.25);
+  assert.equal(parseQuantity('1.000'), 1);
+});
+
+test('g, ml and un group thousands; kg and L take decimals', () => {
+  assert.deepEqual(Object.keys(UNITS).filter((u) => UNITS[u].grouping), ['g', 'ml', 'un']);
+});
+
 test('parseQuantity rejects empty, non-numeric, zero and negative input', () => {
   for (const bad of ['', 'abc', '0', '0,000', '-2', null, undefined]) {
     assert.equal(parseQuantity(bad), null, `input ${JSON.stringify(bad)}`);

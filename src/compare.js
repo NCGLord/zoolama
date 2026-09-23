@@ -1,5 +1,5 @@
 import { parseMoney } from './money.js';
-import { parseQuantity, toBase } from './units.js';
+import { UNITS, parseQuantity, toBase } from './units.js';
 
 // Relative slack so float noise (e.g. 1/3-ish quotients) never splits a genuine tie.
 const TIE_EPSILON = 1e-9;
@@ -14,7 +14,7 @@ const TIE_EPSILON = 1e-9;
 export function compare(options) {
   const parsed = options.map(({ price, qty, unit }) => {
     const cents = parseMoney(price);
-    const amount = parseQuantity(qty);
+    const amount = parseQuantity(qty, { grouping: UNITS[unit]?.grouping });
     const base = amount === null ? null : toBase(amount, unit);
     return cents === null || base === null ? null : { dim: base.dim, unitPrice: cents / base.qty };
   });
