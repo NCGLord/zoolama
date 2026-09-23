@@ -1,4 +1,6 @@
-/* Zoolama — the aisle's own vocabulary: shelf-tag yellow, condensed price numerals, small raised cents. */
+/* Zoolama, "Feira": the hortifruti stall. Lettuce-green actions, a mango total tag and tomato for warnings,
+   on a fresh leafy white (deep green-black at night). Shelf-tag numerals and small raised cents throughout.
+   test/contrast.test.js checks every text/background pair below in both themes. */
 
 @font-face {
   font-family: 'Barlow Condensed';
@@ -8,16 +10,21 @@
 }
 
 :root {
-  --paper: #f3f5f7;
+  --paper: #f4faef;
   --surface: #ffffff;
-  --ink: #1b1f24;
-  --muted: #5a6470;
-  --rule: #d3d9df;
-  --tag: #ffd60a;
-  --tag-ink: #1b1f24;
-  --dear: #c8102e;
-  --good: #0a7d3b;
+  --ink: #1d2b1f;
+  --muted: #5c6b5e;
+  --rule: #d5e5cf;
+  --tag: #ffcf33;
+  --tag-ink: #1d2b1f;
+  --dear: #c43d1a;
+  --good: #237a3c;
   --focus: #1d5fd1;
+  --primary: #237a3c;
+  --primary-ink: #ffffff;
+  --pill: #237a3c;
+  --pill-ink: #ffffff;
+  --over: #c0391b;
   --num: 'Barlow Condensed', 'Avenir Next Condensed', 'Roboto Condensed', 'Arial Narrow', sans-serif-condensed,
     sans-serif;
   --text: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -28,29 +35,39 @@
 /* Dark follows the system unless the toggle forced light; the toggle can also force dark. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --paper: #121417;
-    --surface: #1b1e23;
-    --ink: #eceff2;
-    --muted: #9ba5b0;
-    --rule: #2e333a;
-    --tag-ink: #15171a;
-    --dear: #ff6b7a;
-    --good: #5fd08a;
+    --paper: #0e1a11;
+    --surface: #16261a;
+    --ink: #e8f4e2;
+    --muted: #9db59d;
+    --rule: #25392a;
+    --tag-ink: #14210f;
+    --dear: #ff7a59;
+    --good: #5fd07f;
     --focus: #7fa8ff;
+    --primary: #5fd07f;
+    --primary-ink: #0e1a11;
+    --pill: #5fd07f;
+    --pill-ink: #0e1a11;
+    --over: #c0391b;
     color-scheme: dark;
   }
 }
 
 :root[data-theme='dark'] {
-  --paper: #121417;
-  --surface: #1b1e23;
-  --ink: #eceff2;
-  --muted: #9ba5b0;
-  --rule: #2e333a;
-  --tag-ink: #15171a;
-  --dear: #ff6b7a;
-  --good: #5fd08a;
+  --paper: #0e1a11;
+  --surface: #16261a;
+  --ink: #e8f4e2;
+  --muted: #9db59d;
+  --rule: #25392a;
+  --tag-ink: #14210f;
+  --dear: #ff7a59;
+  --good: #5fd07f;
   --focus: #7fa8ff;
+  --primary: #5fd07f;
+  --primary-ink: #0e1a11;
+  --pill: #5fd07f;
+  --pill-ink: #0e1a11;
+  --over: #c0391b;
   color-scheme: dark;
 }
 
@@ -737,8 +754,8 @@ main {
   padding: 0 20px;
   border: 0;
   border-radius: var(--radius);
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--primary);
+  color: var(--primary-ink);
   font-weight: 700;
 }
 
@@ -866,12 +883,12 @@ main {
   border: 1.5px solid var(--rule);
   border-radius: 50%;
   background: transparent;
-  color: var(--surface);
+  color: var(--primary-ink);
 }
 
 .tick[aria-pressed='true'] {
-  border-color: var(--ink);
-  background: var(--ink);
+  border-color: var(--primary);
+  background: var(--primary);
 }
 
 .tick:not([aria-pressed='true']) .tick-mark {
@@ -1078,7 +1095,7 @@ main {
 
 /* Over budget, the whole tag turns red; the line under the total says by how much. */
 .tally.over {
-  background: #c8102e;
+  background: var(--over);
   color: #ffffff;
 }
 
@@ -1190,6 +1207,8 @@ main {
 /* The winning tag turns shelf-tag yellow; re-point the tokens so everything inside follows. */
 .option.winner {
   --ink: var(--tag-ink);
+  --primary: var(--tag-ink);
+  --primary-ink: var(--tag);
   --muted: #574b00;
   --rule: #c9a800;
   --focus: #1d5fd1;
@@ -1316,9 +1335,9 @@ main {
 }
 
 .unit-choice input:checked + span {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--surface);
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-ink);
 }
 
 .option.winner .unit-choice input:checked + span {
@@ -1490,8 +1509,8 @@ main {
 
 /* The active tab wears a little shelf tag; it pops in when tapped. */
 .tabs button[aria-selected='true'] .tab-icon {
-  background: var(--tag);
-  color: var(--tag-ink);
+  background: var(--pill);
+  color: var(--pill-ink);
   animation: tag-pop 200ms cubic-bezier(0.3, 1.4, 0.6, 1);
 }
 

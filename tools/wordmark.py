@@ -61,7 +61,7 @@ def svg():
           <path fill="currentColor" d="{rnd(zoo + ama)}" />
           <path fill="currentColor" fill-rule="evenodd" d="{LLAMA}" />
           <path d="{STRING}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
-          <path d="{TAG}" fill="#ffd60a" fill-rule="evenodd" stroke="#ffd60a" stroke-width="3" stroke-linejoin="round" transform="rotate(14 166 35)" />
+          <path d="{TAG}" fill="#ffcf33" fill-rule="evenodd" stroke="#ffcf33" stroke-width="3" stroke-linejoin="round" transform="rotate(14 166 35)" />
         </svg>"""
 
 
