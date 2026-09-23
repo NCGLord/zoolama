@@ -30,6 +30,12 @@ Offline supermarket helper for your phone:
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and
 no dependencies. Your data stays in the phone's browser storage.
 
+**Look:** the *Feira* theme (a hortifruti stall: lettuce-green actions, a mango total tag, tomato for warnings), in
+light and dark, plus small moments of joy. The total counts up, finishing a trip within budget throws little
+price tags, checkout ticks snap (with a haptic tick on Android), the cheapest option in Compare flips like a
+shelf tag, and past trips look like torn receipts. All motion switches off when the phone asks for reduced
+motion, and `test/contrast.test.js` keeps every text colour readable in both themes.
+
 **App:** <https://ncglord.github.io/zoolama/>
 
 ## Install on your phone
