@@ -11,8 +11,10 @@ Offline supermarket helper for your phone:
 - **Fix a price, add an atacado price**: tap a line's arithmetic (*R$ 4,50 × 2*) to open its sheet: correct the
   price (per kg on a weighed line; quantity, photo and checkout marks stay) or note an atacarejo price — *a partir de
   6 un, R$ 4,99* — which applies to every unit once the line reaches it. Below it, the line says what taking that many
-  would cost and save (*Levando 6: R$ 4,99 cada, economiza R$ 6,00*); tap that to take them. The **%** key beside the
-  quantity notes such a price while adding an item.
+  would cost and save (*Levando 6: R$ 4,99 cada, economiza R$ 6,00*); tap that to take them. Or a *leve 3 pague 2*:
+  the line shows the discount as a receipt prints it (*R$ 3,50 × 3 − R$ 3,50*), says when one more is free, and at the
+  till notes that the discount may come at the end of the receipt. The **%** key beside the quantity notes either
+  offer while adding an item.
 - **Sort**: order the cart by *Adicionado* (when added), *Valor* (line total) or *Nome*; tap the active one again to
   flip ascending/descending. The choice is remembered and applies in checkout mode too.
 - **Weighed items**: switch the entry to *Peso*, type the price per kg and the weight from the scale label

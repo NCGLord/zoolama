@@ -1,6 +1,6 @@
-// One sheet for what a line costs: its price (per kg for a weighed line) and its atacado offer — from N units, each
-// for less. Opened from a cart line's arithmetic, or from the entry form's % key to note an offer before adding; there
-// the price is the entry form's, so the sheet asks only for the offer and hands it back.
+// One sheet for what a line costs: its price (per kg for a weighed line) and its offer — an atacado price from N units,
+// or "leve N pague M". Opened from a cart line's arithmetic, or from the entry form's % key to note an offer before
+// adding; there the price is the entry form's, so the sheet asks only for the offer and hands it back.
 
 import { validDeal } from '../cart.js';
 import { formatMoney, parseMoney } from '../money.js';
@@ -19,9 +19,15 @@ function show({ title, priceCents, perKg = false, deal = null }) {
   $('price-row').hidden = priceCents === undefined;
   $('sheet-price-label').textContent = tr(perKg ? 'pricePerKg' : 'price');
   $('sheet-price').value = priceCents === undefined ? '' : bare(priceCents);
-  $('deal-fields').hidden = perKg; // weighed lines have no atacado price
-  $('deal-min').value = deal ? String(deal.minQty) : '';
-  $('deal-each').value = deal ? bare(deal.eachCents) : '';
+  $('deal-fields').hidden = perKg; // weighed lines have no offers
+  const tier = deal?.kind === 'tier' ? deal : null;
+  const multibuy = deal?.kind === 'multibuy' ? deal : null;
+  document.querySelector(`input[name="deal-kind"][value="${multibuy ? 'multibuy' : 'tier'}"]`).checked = true;
+  $('deal-min').value = tier ? String(tier.minQty) : '';
+  $('deal-each').value = tier ? bare(tier.eachCents) : '';
+  $('deal-buy').value = multibuy ? String(multibuy.buy) : '';
+  $('deal-pay').value = multibuy ? String(multibuy.pay) : '';
+  renderKind();
   $('deal-remove').hidden = !deal;
   $('line-error').textContent = '';
   $('line-sheet').showModal();
@@ -30,7 +36,12 @@ function show({ title, priceCents, perKg = false, deal = null }) {
 /** Corrects a cart line's price and offer. `n` is its number, for the title of an unnamed line. */
 function openLineSheet(item, n) {
   target = { id: item.id };
-  show({ title: item.name || tr('itemN', { n }), priceCents: item.perKgCents ?? item.priceCents, perKg: Boolean(item.perKgCents), deal: item.deal });
+  show({
+    title: item.name || tr('itemN', { n }),
+    priceCents: item.perKgCents ?? item.priceCents,
+    perKg: Boolean(item.perKgCents),
+    deal: item.deal,
+  });
   $('sheet-price').select();
 }
 
@@ -38,16 +49,35 @@ function openLineSheet(item, n) {
 function openOfferSheet(deal, onSave) {
   target = { onSave };
   show({ title: tr('deal'), deal });
-  $('deal-min').focus();
+  $(deal?.kind === 'multibuy' ? 'deal-buy' : 'deal-min').focus();
 }
 
-/** The typed offer: null when both fields are empty, undefined when it doesn't hold up against `priceCents`. */
+const dealKind = () => document.querySelector('input[name="deal-kind"]:checked').value;
+
+function renderKind() {
+  $('tier-fields').hidden = dealKind() !== 'tier';
+  $('multibuy-fields').hidden = dealKind() !== 'multibuy';
+}
+
+$('deal-fields').addEventListener('change', (e) => {
+  if (e.target.name === 'deal-kind') renderKind();
+});
+
+/**
+ * The typed offer of the chosen kind: {deal} (null when its fields are empty), or {error} with the reason it doesn't
+ * hold up against `priceCents`.
+ */
 function readDeal(priceCents) {
-  const min = $('deal-min').value.trim();
-  const each = $('deal-each').value.trim();
-  if (!min && !each) return null;
-  const deal = { kind: 'tier', minQty: Number(min), eachCents: parseMoney(each) };
-  return validDeal(deal, priceCents) ?? undefined;
+  if (dealKind() === 'multibuy') {
+    const [buy, pay] = [$('deal-buy').value.trim(), $('deal-pay').value.trim()];
+    if (!buy && !pay) return { deal: null };
+    const deal = validDeal({ kind: 'multibuy', buy: Number(buy), pay: Number(pay) }, priceCents);
+    return deal ? { deal } : { error: 'invalidMultibuy' };
+  }
+  const [min, each] = [$('deal-min').value.trim(), $('deal-each').value.trim()];
+  if (!min && !each) return { deal: null };
+  const deal = validDeal({ kind: 'tier', minQty: Number(min), eachCents: parseMoney(each) }, priceCents);
+  return deal ? { deal } : { error: 'invalidDeal' };
 }
 
 // method="dialog" closes the sheet on submit; stop that only when something can't be saved.
@@ -58,16 +88,15 @@ $('line-form').addEventListener('submit', (e) => {
   };
   if (target.onSave) {
     // The price isn't known yet: check the offer's own shape now, and against the price at Add.
-    const deal = readDeal(Infinity);
-    if (deal === undefined) return fail('invalidDeal');
-    return target.onSave(deal);
+    const { deal, error } = readDeal(Infinity);
+    return error ? fail(error) : target.onSave(deal);
   }
   const item = state.cart.items.find((i) => i.id === target.id);
   const priceCents = parseMoney($('sheet-price').value);
   if (!item) return;
   if (priceCents === null) return fail('invalidPrice');
-  const deal = item.perKgCents ? null : readDeal(priceCents);
-  if (deal === undefined) return fail('invalidDeal');
+  const { deal, error } = item.perKgCents ? { deal: null } : readDeal(priceCents);
+  if (error) return fail(error);
   dispatchCart({ type: 'setPrice', id: item.id, priceCents });
   if (!item.perKgCents) dispatchCart({ type: 'setDeal', id: item.id, deal });
 });

@@ -250,13 +250,26 @@
           </div>
         </div>
         <fieldset id="deal-fields" class="deal-fields">
-          <legend data-i18n="deal">Preço de atacado</legend>
-          <label for="deal-min" data-i18n="tierFrom">A partir de (un)</label>
-          <label for="deal-each" data-i18n="tierEach">Preço cada</label>
-          <input id="deal-min" class="deal-min" inputmode="numeric" enterkeyhint="next" autocomplete="off" />
-          <div class="money-field">
-            <span aria-hidden="true">R$</span>
-            <input id="deal-each" inputmode="decimal" enterkeyhint="done" autocomplete="off" />
+          <legend data-i18n="deal">Promoção</legend>
+          <fieldset class="unit-choice deal-kind">
+            <legend class="visually-hidden" data-i18n="dealKind">Tipo de promoção</legend>
+            <label><input type="radio" name="deal-kind" value="tier" checked /><span data-i18n="kindTier">Atacado</span></label>
+            <label><input type="radio" name="deal-kind" value="multibuy" /><span data-i18n="kindMultibuy">Leve e pague</span></label>
+          </fieldset>
+          <div id="tier-fields" class="deal-row">
+            <label for="deal-min" data-i18n="tierFrom">A partir de (un)</label>
+            <label for="deal-each" data-i18n="tierEach">Preço cada</label>
+            <input id="deal-min" class="deal-num" inputmode="numeric" enterkeyhint="next" autocomplete="off" />
+            <div class="money-field">
+              <span aria-hidden="true">R$</span>
+              <input id="deal-each" inputmode="decimal" enterkeyhint="done" autocomplete="off" />
+            </div>
+          </div>
+          <div id="multibuy-fields" class="deal-row" hidden>
+            <label for="deal-buy" data-i18n="buyN">Leve</label>
+            <label for="deal-pay" data-i18n="payN">Pague</label>
+            <input id="deal-buy" class="deal-num" inputmode="numeric" enterkeyhint="next" autocomplete="off" />
+            <input id="deal-pay" class="deal-num" inputmode="numeric" enterkeyhint="done" autocomplete="off" />
           </div>
         </fieldset>
         <p id="line-error" class="field-error" aria-live="polite"></p>

@@ -253,6 +253,7 @@ $('lines').addEventListener('click', (e) => {
   }
   if (action === 'edit-price') openLineSheet(item, state.cart.items.indexOf(item) + 1);
   if (action === 'take-tier') dispatchCart({ type: 'setQty', id, qty: item.deal.minQty });
+  if (action === 'take-free') dispatchCart({ type: 'setQty', id, qty: Math.min(MAX_QTY, item.qty + 1) });
   if (action === 'inc') dispatchCart({ type: 'setQty', id, qty: Math.min(MAX_QTY, item.qty + 1) });
   if (action === 'dec' && item.qty > 1) dispatchCart({ type: 'setQty', id, qty: item.qty - 1 });
   if (action === 'remove' || (action === 'dec' && item.qty === 1)) {

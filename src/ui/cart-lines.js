@@ -1,6 +1,6 @@
 // A cart line as it looks while shopping (editable) and at the till (tick, what the till charged).
 
-import { chargedDiff, lineTotal, tierNudge } from '../cart.js';
+import { chargedDiff, dealSavings, lineTotal, nextUnitFree, tierNudge } from '../cart.js';
 import { priceRise } from '../history.js';
 import { formatKg, formatPct } from '../i18n.js';
 import { formatMoney } from '../money.js';
@@ -63,13 +63,26 @@ function priceControl(item) {
   const label = tr(item.perKgCents ? 'editPricePerKg' : 'editPrice');
   return h(
     'button',
-    { type: 'button', class: 'line-each', 'data-action': 'edit-price', 'data-key': `each-${item.id}`, 'aria-label': `${label}: ${eachText(item)}` },
+    {
+      type: 'button',
+      class: 'line-each',
+      'data-action': 'edit-price',
+      'data-key': `each-${item.id}`,
+      'aria-label': `${label}: ${eachText(item)}`,
+    },
     eachText(item),
   );
 }
 
-/** Below an atacado tier: what taking its quantity would cost and save. Tapping it takes that many. */
+/**
+ * What one tap could get a line: below an atacado tier, taking the tier's quantity (and what that costs and saves);
+ * with "leve N pague M", the unit that would come free. Tapping it takes them.
+ */
 function tierNudgeView(item) {
+  if (nextUnitFree(item)) {
+    const attrs = { type: 'button', class: 'tier-nudge', 'data-action': 'take-free', 'data-key': `free-${item.id}` };
+    return h('button', attrs, tr('nextFree'));
+  }
   const nudge = tierNudge(item);
   if (!nudge) return '';
   const money = (cents) => formatMoney(cents, state.lang);
@@ -77,7 +90,8 @@ function tierNudgeView(item) {
     nudge.extraCents > 0
       ? tr('tierNudge', { n: nudge.qty, each: money(item.deal.eachCents), saves: money(nudge.savesCents) })
       : tr('tierCheaper', { n: nudge.qty, total: money(nudge.totalCents) });
-  return h('button', { type: 'button', class: 'tier-nudge', 'data-action': 'take-tier', 'data-key': `tier-${item.id}` }, text);
+  const attrs = { type: 'button', class: 'tier-nudge', 'data-action': 'take-tier', 'data-key': `tier-${item.id}` };
+  return h('button', attrs, text);
 }
 
 function editLineView(item, n) {
@@ -143,6 +157,10 @@ function checkLineView(item, n) {
   } else {
     detail = h('span', { class: 'line-each', text: eachText(item) });
   }
+  // Receipts often print a "leve N pague M" discount at the end, not on its line: say so before it reads as an
+  // overcharge.
+  const multibuyOff = item.deal?.kind === 'multibuy' && dealSavings(item) > 0;
+  const note = multibuyOff ? h('span', { class: 'line-note', text: tr('multibuyReceipt') }) : '';
   return h(
     'li',
     { class: `line check${item.checked ? ' checked' : ''}`, 'data-id': id, 'data-action': 'toggle-check' },
@@ -173,6 +191,7 @@ function checkLineView(item, n) {
       },
       '≠',
     ),
+    note,
   );
 }
 

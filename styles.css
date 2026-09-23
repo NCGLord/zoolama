@@ -1144,23 +1144,29 @@ main {
 }
 
 .deal-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 12px;
-  align-items: end;
   margin: 0 0 4px;
   padding: 0;
   border: 0;
 }
 
-.deal-fields legend {
-  grid-column: 1 / -1;
+.deal-fields > legend {
   margin-bottom: 6px;
   padding: 0;
   font-weight: 700;
 }
 
-.deal-min {
+.deal-kind {
+  margin-bottom: 10px;
+}
+
+.deal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  align-items: end;
+}
+
+.deal-num {
   width: 100%;
   padding: 0;
   border: 0;
@@ -1173,6 +1179,12 @@ main {
 .deal-fields .money-field input,
 .sheet-field .money-field input {
   font-size: 26px;
+}
+
+.line-note {
+  grid-column: 3 / -1; /* under the name: a checkout line has the tick and the photo before it */
+  color: var(--muted);
+  font-size: 13px;
 }
 
 /* ---------- receipt check ---------- */

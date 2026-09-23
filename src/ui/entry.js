@@ -45,9 +45,12 @@ function renderEntryMode() {
 function renderEntryDeal() {
   const shown = entryDeal && entryMode !== 'weight';
   $('entry-deal').hidden = !shown;
-  $('entry-deal-text').textContent = shown
-    ? tr('dealPending', { n: entryDeal.minQty, each: formatMoney(entryDeal.eachCents, state.lang) })
-    : '';
+  if (!shown) $('entry-deal-text').textContent = '';
+  else if (entryDeal.kind === 'multibuy') $('entry-deal-text').textContent = tr('dealPendingMultibuy', entryDeal);
+  else {
+    const each = formatMoney(entryDeal.eachCents, state.lang);
+    $('entry-deal-text').textContent = tr('dealPending', { n: entryDeal.minQty, each });
+  }
 }
 
 $('entry-offer').addEventListener('click', () =>
