@@ -1,6 +1,6 @@
 // DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
 
-import { parseMoney, formatMoney, formatMoneyParts } from './money.js';
+import { parseMoney, formatMoney } from './money.js';
 import {
   cartReducer,
   total,
@@ -17,7 +17,7 @@ import { UNITS, BASE_UNIT, parseGrams } from './units.js';
 import { t, formatPct, formatKg, LOCALES } from './i18n.js';
 import { loadHistory, saveHistory } from './store.js';
 import { tripFromCart, monthlyGroups, storeNames } from './history.js';
-import { lineEach, shareText } from './share.js';
+import { shareText } from './share.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
@@ -26,12 +26,11 @@ import { budgetStatus } from './budget.js';
 import { tweenCents, celebrates, newWinners } from './delight.js';
 import { $, reducedMotion, h, keepingFocus, icon, replay } from './ui/dom.js';
 import { storage, blankOption, initialCompare, state, persist } from './ui/app-state.js';
+import { tr, tagPrice, applyLang, pricePlaceholder, unitLabel, signedMoney, eachText } from './ui/text.js';
 
 const TOAST_MS = 5000;
 const COUNT_MS = 480; // total count-up
 const MAX_QTY = 999;
-
-const tr = (key, params) => t(key, state.lang, params);
 
 function setCart(cart) {
   persist({ ...state, cart });
@@ -53,35 +52,7 @@ function dispatchCart(action) {
   collectPhotos();
 }
 
-/* ---------- rendering helpers ---------- */
-
-function tagPrice(el, cents) {
-  const p = formatMoneyParts(cents, state.lang);
-  el.replaceChildren(
-    h('span', { class: 'cur', text: p.currency }),
-    h('span', { class: 'whole', text: p.whole }),
-    h('span', { class: 'cents', text: p.decimal + p.fraction }),
-  );
-  el.setAttribute('aria-label', formatMoney(cents, state.lang));
-}
-
-function applyLang() {
-  document.documentElement.lang = LOCALES[state.lang];
-  for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = tr(el.dataset.i18n);
-  for (const el of document.querySelectorAll('[data-i18n-placeholder]')) el.placeholder = tr(el.dataset.i18nPlaceholder);
-  for (const el of document.querySelectorAll('[data-i18n-aria-label]')) {
-    el.setAttribute('aria-label', tr(el.dataset.i18nAriaLabel));
-  }
-  for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', b.dataset.lang === state.lang);
-  $('price').placeholder = pricePlaceholder();
-}
-
-const pricePlaceholder = () => formatMoney(0, state.lang).replace(/^\D+/, '');
-const unitLabel = (unit) => (unit === 'un' ? tr('unitCount') : unit);
-
 /* ---------- cart ---------- */
-
-const signedMoney = (cents) => `${cents > 0 ? '+' : '−'}${formatMoney(Math.abs(cents), state.lang)}`;
 
 function photoCell(item) {
   return item.photoId
@@ -98,8 +69,6 @@ function photoCell(item) {
 }
 
 const lineView = (item, n) => (state.checking ? checkLineView(item, n) : editLineView(item, n));
-
-const eachText = (item) => lineEach(item, state.lang);
 
 // Which line has a field open, and which tick just snapped. The line views read these; the #lines handlers set them.
 const editing = {
