@@ -32,6 +32,27 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
   tabs[next].click();
 });
 
+/* ---------- sheets ---------- */
+
+const outside = (el, e) => {
+  const r = el.getBoundingClientRect();
+  return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+};
+
+// A tap on the dimmed backdrop closes a sheet, the same as Cancel. Taps on the backdrop and on the sheet's own padding
+// both land on the <dialog>, so only its box tells them apart; and the press must start outside too, so a drag out
+// of a field never closes it.
+for (const sheet of document.querySelectorAll('dialog.sheet')) {
+  let pressedOutside = false;
+  sheet.addEventListener('pointerdown', (e) => {
+    pressedOutside = e.target === sheet && outside(sheet, e);
+  });
+  sheet.addEventListener('click', (e) => {
+    if (pressedOutside && e.target === sheet && outside(sheet, e)) sheet.close();
+    pressedOutside = false;
+  });
+}
+
 /* ---------- theme ---------- */
 
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
