@@ -11,16 +11,16 @@ import { shareText } from './share.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
-import { shrinkPhoto, newPhotoId, savePhoto, getPhoto } from './photos.js';
 import { budgetStatus } from './budget.js';
 import { tweenCents, celebrates, newWinners } from './delight.js';
 import { $, reducedMotion, h, keepingFocus, icon, replay } from './ui/dom.js';
 import { storage, blankOption, initialCompare, state, persist } from './ui/app-state.js';
 import { tr, tagPrice, applyLang, pricePlaceholder, unitLabel, signedMoney, eachText } from './ui/text.js';
 import { showToast, offerUpdate, defineToastActions } from './ui/toast.js';
-import { pendingPhotos, photoUrl, hydratePhotos, collectPhotos } from './ui/photo-cache.js';
+import { hydratePhotos, collectPhotos } from './ui/photo-cache.js';
 import { MAX_QTY, setCart, dispatchCart, setCartRenderer } from './ui/cart-store.js';
 import { shareList } from './ui/share-sheet.js';
+import { entryPhotoId, entryPhotoAdded, takePhoto, openViewer } from './ui/photos-ui.js';
 
 const COUNT_MS = 480; // total count-up
 
@@ -495,96 +495,6 @@ $('exit-check').addEventListener('click', () => {
 $('clear').addEventListener('click', () => {
   dispatchCart({ type: 'clear' });
   showToast('cleared', { action: 'undo' });
-});
-
-/* ---------- shelf-tag photos ---------- */
-
-let entryPhotoId = null;
-let photoTarget = null; // 'entry', or the id of the cart item being photographed
-let viewing = null; // id of the item open in the viewer
-
-function takePhoto(target) {
-  photoTarget = target;
-  $('photo-input').click();
-}
-
-function renderEntryPhoto() {
-  const img = $('entry-photo-img');
-  img.hidden = !entryPhotoId;
-  if (entryPhotoId) photoUrl(entryPhotoId).then((url) => url && (img.src = url));
-  $('entry-photo').dataset.i18nAriaLabel = entryPhotoId ? 'retakePhoto' : 'takePhoto';
-  $('entry-photo').setAttribute('aria-label', tr($('entry-photo').dataset.i18nAriaLabel));
-}
-
-/** The entry's photo went into the cart with its item: the cart keeps it now, and the next item starts without one. */
-function entryPhotoAdded() {
-  pendingPhotos.delete(entryPhotoId);
-  entryPhotoId = null;
-  renderEntryPhoto();
-}
-
-$('entry-photo').addEventListener('click', () => takePhoto('entry'));
-
-$('photo-input').addEventListener('change', async (e) => {
-  const file = e.target.files?.[0];
-  e.target.value = ''; // so picking the same file again still fires change
-  const target = photoTarget;
-  photoTarget = null;
-  if (!file || target === null) return;
-
-  const id = newPhotoId();
-  pendingPhotos.add(id);
-  try {
-    await savePhoto(id, await shrinkPhoto(file));
-  } catch {
-    pendingPhotos.delete(id);
-    showToast('photoError');
-    return;
-  }
-  if (target === 'entry') {
-    if (entryPhotoId) pendingPhotos.delete(entryPhotoId); // a retake orphans the previous shot
-    entryPhotoId = id; // stays pending until Add
-    renderEntryPhoto();
-    collectPhotos();
-  } else {
-    dispatchCart({ type: 'setPhoto', id: target, photoId: id });
-    pendingPhotos.delete(id);
-  }
-});
-
-async function openViewer(item) {
-  viewing = item.id;
-  const n = state.cart.items.findIndex((i) => i.id === item.id) + 1;
-  const [url, photo] = await Promise.all([photoUrl(item.photoId), getPhoto(item.photoId).catch(() => null)]);
-  $('viewer-img').src = url ?? '';
-  $('viewer-img').alt = tr('photoOf');
-  $('viewer-title').textContent = item.name || tr('itemN', { n });
-  // A weighed item's shelf tag shows R$/kg, so the viewer does too.
-  tagPrice($('viewer-price'), item.perKgCents ?? item.priceCents);
-  if (item.perKgCents) {
-    $('viewer-price').append(h('span', { class: 'per', text: '/kg' }));
-    $('viewer-price').setAttribute('aria-label', `${formatMoney(item.perKgCents, state.lang)}/kg`);
-  }
-  const diff = chargedDiff(item);
-  $('viewer-charged').hidden = diff === 0;
-  $('viewer-charged').className = `viewer-charged ${diff > 0 ? 'dear' : 'good'}`;
-  $('viewer-charged').textContent = diff
-    ? `${tr('chargedLine', { amount: formatMoney(item.chargedCents, state.lang) })} (${signedMoney(diff)})`
-    : '';
-  const when = photo && new Intl.DateTimeFormat(LOCALES[state.lang], { dateStyle: 'short', timeStyle: 'short' }).format(photo.takenAt);
-  $('viewer-when').textContent = when ? tr('photoTakenAt', { when }) : '';
-  $('viewer').showModal();
-}
-
-$('viewer-retake').addEventListener('click', () => {
-  $('viewer').close();
-  takePhoto(viewing);
-});
-
-$('viewer-remove').addEventListener('click', () => {
-  $('viewer').close();
-  dispatchCart({ type: 'setPhoto', id: viewing, photoId: null });
-  showToast('photoRemoved', { action: 'undo' });
 });
 
 /* ---------- trip history ---------- */
