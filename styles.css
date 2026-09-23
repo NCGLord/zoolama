@@ -1255,6 +1255,17 @@ main {
   background: var(--tag);
 }
 
+.option.flip {
+  transform-origin: top center;
+  animation: tag-flip 560ms cubic-bezier(0.3, 1.25, 0.5, 1);
+}
+
+@keyframes tag-flip {
+  from {
+    transform: perspective(800px) rotateX(-80deg);
+  }
+}
+
 .option-head {
   display: flex;
   align-items: center;

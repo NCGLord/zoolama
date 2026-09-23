@@ -956,9 +956,12 @@ function unitChoice(selected, i) {
 }
 
 /** Rebuilds the cards; only for structural changes, never while the user is typing in one. */
+let lastWinners = null; // cheapest option indexes at the last look; null = don't flip on this render
+
 function renderOptions() {
   const { options } = state.compare;
   $('options').replaceChildren(...options.map((opt, i) => optionView(opt, i, options.length > 2)));
+  lastWinners = null; // rebuilt cards (add, remove, reset, language) are not a new winner
   renderResults();
 }
 
@@ -986,6 +989,14 @@ function renderResults() {
     }
     box.replaceChildren(...kids);
   });
+
+  // A newly cheapest tag turns over on its hinge, like a shelf tag being flipped.
+  const winners = new Set(results.flatMap((r, i) => (r?.isCheapest ? [i] : [])));
+  if (lastWinners) {
+    const cards = document.querySelectorAll('#options .option');
+    for (const i of newWinners(lastWinners, winners)) replay(cards[i], 'flip');
+  }
+  lastWinners = winners;
 
   const valid = results.filter(Boolean).length;
   $('compare-msg').textContent = error ? tr(error) : valid < 2 ? tr('compareHint') : '';
