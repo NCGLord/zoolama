@@ -123,6 +123,14 @@
         </button>
         <p id="empty" class="empty" data-i18n="emptyCart"></p>
         <ul id="lines" class="lines"></ul>
+        <button type="button" id="finish" class="primary finish-btn" hidden>
+          <span data-i18n="finishTrip">Finalizar compra</span>
+        </button>
+      </section>
+
+      <section id="panel-history" class="panel" role="tabpanel" aria-labelledby="tab-history" hidden>
+        <p id="history-empty" class="empty" data-i18n="historyEmpty">Nenhuma compra salva ainda.</p>
+        <div id="history"></div>
       </section>
 
       <section id="panel-compare" class="panel" role="tabpanel" aria-labelledby="tab-compare" hidden>
@@ -154,6 +162,23 @@
           <form method="dialog"><button class="primary" data-i18n="close">Fechar</button></form>
         </div>
       </div>
+    </dialog>
+
+    <dialog id="finish-sheet" class="sheet" aria-labelledby="finish-title">
+      <form id="finish-form" method="dialog" novalidate>
+        <h2 id="finish-title" data-i18n="finishTrip">Finalizar compra</h2>
+        <div class="finish-total">
+          <output id="finish-total" class="tag-price"></output>
+          <span id="finish-count"></span>
+        </div>
+        <label for="finish-store" data-i18n="storeOptional">Loja (opcional)</label>
+        <input id="finish-store" class="finish-store" list="store-names" autocomplete="off" enterkeyhint="done" />
+        <datalist id="store-names"></datalist>
+        <div class="sheet-actions">
+          <button type="button" id="finish-cancel" class="secondary" data-i18n="cancel">Cancelar</button>
+          <button type="submit" class="primary" autofocus data-i18n="saveTrip">Salvar compra</button>
+        </div>
+      </form>
     </dialog>
 
     <dialog id="budget-sheet" class="sheet" aria-labelledby="budget-title">
@@ -228,6 +253,12 @@
             </svg>
           </span>
           <span data-i18n="tabCompare">Comparar</span>
+        </button>
+        <button type="button" role="tab" id="tab-history" aria-controls="panel-history" data-tab="history">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3-2 1.3Z" /><path d="M9 8h6M9 11.5h6M9 15h3.5" /></svg>
+          </span>
+          <span data-i18n="tabHistory">Histórico</span>
         </button>
       </nav>
     </div>

@@ -5,7 +5,8 @@ import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary
 import { compare } from './compare.js';
 import { UNITS, BASE_UNIT, parseGrams } from './units.js';
 import { t, detectLang, formatPct, formatKg, LOCALES } from './i18n.js';
-import { load, save } from './store.js';
+import { load, save, loadHistory, saveHistory } from './store.js';
+import { tripFromCart, monthlyGroups, storeNames } from './history.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
@@ -281,6 +282,7 @@ function renderCart() {
   const { units } = counts(cart);
   $('count').textContent = tr('itemsCount', { n: units });
   $('clear').disabled = cart.items.length === 0;
+  $('finish').hidden = cart.items.length === 0;
   renderBadge(units);
 }
 
@@ -632,6 +634,127 @@ $('viewer-remove').addEventListener('click', () => {
   showToast('photoRemoved', { action: 'undo' });
 });
 
+/* ---------- trip history ---------- */
+
+let history = loadHistory(storage);
+let lastFinishedId = null; // trip saved by the latest Finalizar, for its Undo
+let lastDeleted = null; // { trip, index } for the latest delete's Undo
+
+function setHistory(next) {
+  history = next;
+  const saved = saveHistory(storage, history);
+  renderHistory();
+  return saved;
+}
+
+$('finish').addEventListener('click', () => {
+  tagPrice($('finish-total'), total(state.cart));
+  $('finish-count').textContent = tr('itemsCount', { n: counts(state.cart).units });
+  $('store-names').replaceChildren(...storeNames(history).map((name) => h('option', { value: name })));
+  $('finish-store').value = '';
+  $('finish-sheet').showModal();
+});
+
+$('finish-cancel').addEventListener('click', () => $('finish-sheet').close());
+
+$('finish-form').addEventListener('submit', () => {
+  const trip = tripFromCart(state.cart, { id: crypto.randomUUID(), at: Date.now(), store: $('finish-store').value });
+  if (!setHistory([trip, ...history])) {
+    history = history.filter((t) => t.id !== trip.id); // not stored: keep the cart, don't pretend
+    renderHistory();
+    showToast('tripNotSaved');
+    return;
+  }
+  lastFinishedId = trip.id;
+  persist({ ...state, checking: false });
+  dispatchCart({ type: 'clear' }); // photos stay while Undo can still bring the cart back
+  showToast('tripSaved', { action: 'undoFinish' });
+});
+
+function undoFinish() {
+  setHistory(history.filter((t) => t.id !== lastFinishedId));
+  dispatchCart({ type: 'undo' });
+}
+
+$('history').addEventListener('click', (e) => {
+  if (e.target.closest('[data-action]')?.dataset.action !== 'delete-trip') return;
+  const id = e.target.closest('[data-trip]').dataset.trip;
+  const index = history.findIndex((t) => t.id === id);
+  lastDeleted = { trip: history[index], index };
+  setHistory(history.filter((t) => t.id !== id));
+  showToast('tripDeleted', { action: 'undoDelete' });
+});
+
+function undoDeleteTrip() {
+  if (!lastDeleted) return;
+  const next = [...history];
+  next.splice(lastDeleted.index, 0, lastDeleted.trip);
+  lastDeleted = null;
+  setHistory(next);
+}
+
+function tripView(trip, whenFormat) {
+  const amount = (cents) => formatMoney(cents, state.lang);
+  return h(
+    'details',
+    { class: 'trip', 'data-trip': trip.id },
+    h(
+      'summary',
+      {},
+      h('span', { class: 'trip-store', text: trip.store || tr('tripUnnamed') }),
+      h('span', { class: 'trip-total', text: amount(trip.totalCents) }),
+      h(
+        'span',
+        { class: 'trip-meta' },
+        h('span', { text: whenFormat.format(trip.at) }),
+        h('span', { text: tr('itemsCount', { n: trip.units }) }),
+        trip.overchargeCents ? h('span', { class: 'over', text: tr('overcharged', { amount: amount(trip.overchargeCents) }) }) : '',
+      ),
+    ),
+    h(
+      'ul',
+      { class: 'trip-items' },
+      ...trip.items.map((item, i) =>
+        h(
+          'li',
+          {},
+          h('span', { text: item.name || tr('itemN', { n: i + 1 }) }),
+          h('span', { class: 'each', text: eachText(item) }),
+          h('span', { class: 'sub', text: amount(item.priceCents * item.qty) }),
+        ),
+      ),
+    ),
+    h('button', { type: 'button', class: 'secondary trip-delete', 'data-action': 'delete-trip' }, tr('deleteTrip')),
+  );
+}
+
+function renderHistory() {
+  $('history-empty').hidden = history.length > 0;
+  const locale = LOCALES[state.lang];
+  const monthFormat = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
+  const whenFormat = new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const open = new Set([...document.querySelectorAll('.trip[open]')].map((d) => d.dataset.trip));
+  $('history').replaceChildren(
+    ...monthlyGroups(history).map((group) =>
+      h(
+        'section',
+        { class: 'month' },
+        h(
+          'h2',
+          { class: 'month-head' },
+          h('span', { text: monthFormat.format(new Date(group.year, group.month, 1)) }),
+          h('span', { class: 'month-total', text: formatMoney(group.totalCents, state.lang) }),
+        ),
+        ...group.trips.map((trip) => {
+          const view = tripView(trip, whenFormat);
+          view.open = open.has(trip.id); // keep expanded trips expanded across re-renders
+          return view;
+        }),
+      ),
+    ),
+  );
+}
+
 /* ---------- compare ---------- */
 
 function setCompare(options) {
@@ -852,9 +975,12 @@ let toastAction = null;
 let updatePending = false;
 
 // The toast's one button; its label is the i18n key of the same name.
+// The toast's one button: what it runs, and the i18n key of its label.
 const TOAST_ACTIONS = {
-  undo: () => dispatchCart({ type: 'undo' }),
-  update: () => location.reload(),
+  undo: { label: 'undo', run: () => dispatchCart({ type: 'undo' }) },
+  update: { label: 'update', run: () => location.reload() },
+  undoFinish: { label: 'undo', run: () => undoFinish() },
+  undoDelete: { label: 'undo', run: () => undoDeleteTrip() },
 };
 
 function showToast(key, { action = null, persist = false } = {}) {
@@ -864,8 +990,8 @@ function showToast(key, { action = null, persist = false } = {}) {
   const button = $('toast-action');
   button.hidden = !action;
   if (action) {
-    button.dataset.i18n = action;
-    button.textContent = tr(action);
+    button.dataset.i18n = TOAST_ACTIONS[action].label;
+    button.textContent = tr(button.dataset.i18n);
   }
   $('toast').hidden = false;
   clearTimeout(toastTimer);
@@ -881,7 +1007,7 @@ function hideToast() {
 $('toast-action').addEventListener('click', () => {
   const action = toastAction;
   hideToast();
-  TOAST_ACTIONS[action]?.();
+  TOAST_ACTIONS[action]?.run();
 });
 
 /* ---------- language ---------- */
@@ -894,6 +1020,7 @@ for (const b of document.querySelectorAll('[data-lang]')) {
     renderEntryMode();
     renderCart();
     renderOptions();
+    renderHistory();
   });
 }
 
@@ -905,6 +1032,7 @@ renderCart();
 renderOptions();
 renderTab();
 renderEntryMode();
+renderHistory();
 renderInstall();
 collectPhotos();
 navigator.storage?.persist?.().catch(() => {});

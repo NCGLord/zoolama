@@ -13,6 +13,9 @@ Offline supermarket helper for your phone:
 - **Checkout (Conferir no caixa)**: at the till, tick each item as it's scanned. If the till charges a different
   amount for a line, tap ≠ and type it: the app shows the difference, the total overcharge (and the lower-price
   rule), and anything charged in your favour.
+- **Trip history (Histórico)**: *Finalizar compra* under the cart saves the trip (date, optional store, items,
+  total, and any overcharge found at the till) and clears the cart, with Undo. The Histórico tab lists trips by
+  month with monthly totals; tap one to see its items or delete it.
 - **Budget**: tap *+ Orçamento* under the total to set a limit. The tag shows what's left, and turns red with the
   amount over when you pass it. The budget stays when you clear the cart.
 - **Compare (Comparar)**: enter two or more options (e.g. 1 kg for R$ 8,99 vs 5 kg for R$ 29,90) to see the
