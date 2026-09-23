@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate the header wordmark inside index.html.
+"""Regenerate the header wordmark inside index.html, and the app icon sources built from its llama.
 
 The letters of "Zoo" and "ama" are real Barlow Condensed Bold outlines taken from the vendored
 font, so the logo draws instantly and never waits on the font. The "l" is hand-drawn as a llama
@@ -7,7 +7,7 @@ whose neck is the letter's stem. Everything is in one coordinate space: 100 unit
 at y=100.
 
 Needs fonttools and brotli (for woff2):  pip install fonttools brotli
-Run from anywhere:  python3 tools/wordmark.py   then  npm run stamp
+Run from anywhere:  python3 tools/wordmark.py   then  tools/icons.sh  and  npm run stamp
 """
 
 import re
@@ -20,6 +20,7 @@ from fontTools.ttLib import TTFont
 ROOT = Path(__file__).resolve().parent.parent
 FONT = ROOT / "fonts" / "barlow-condensed-700.woff2"
 INDEX = ROOT / "index.html"
+ICONS = ROOT / "icons"
 SIZE, BASELINE = 100, 100
 
 # The llama "l": stem (neck) from the baseline up, banana ears, head looking right over "ama".
@@ -64,13 +65,41 @@ def svg():
         </svg>"""
 
 
+def icon_svg(maskable):
+    """The llama alone on shelf-tag yellow, rising from the bottom edge. Ink tag instead of yellow, so
+    it shows on the yellow ground; the eye and tag hole are cut out, so the yellow shows through.
+    Maskable (full bleed) keeps the head inside the 40% safe circle; the neck may run off the edge."""
+    ground = (
+        '<rect width="512" height="512" fill="#ffd60a" />'
+        if maskable
+        else '<clipPath id="r"><rect width="512" height="512" rx="112" /></clipPath>'
+        '<rect width="512" height="512" rx="112" fill="#ffd60a" />'
+    )
+    clip = "" if maskable else ' clip-path="url(#r)"'
+    ink = "#1b1f24"
+    # Map the llama's head/neck junction to just above centre, at 4.5x, so the neck bleeds off the bottom.
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  {ground}
+  <g{clip}>
+    <g transform="translate(256 222) scale(4.5) translate(-155.5 -15)">
+      <path fill="{ink}" fill-rule="evenodd" d="{LLAMA.replace('V100Z', 'V140Z').replace('M132.6 100V33', 'M132.6 140V33')}" />
+      <path d="{STRING}" stroke="{ink}" stroke-width="2.2" stroke-linecap="round" />
+      <path d="{TAG}" fill="{ink}" fill-rule="evenodd" stroke="{ink}" stroke-width="3" stroke-linejoin="round" transform="rotate(14 166 35)" />
+    </g>
+  </g>
+</svg>
+"""
+
+
 def main():
     html = INDEX.read_text()
     block = re.compile(r"(<!-- wordmark:start -->)(.*?)(\s*<!-- wordmark:end -->)", re.S)
     if not block.search(html):
         raise SystemExit("index.html has no <!-- wordmark:start --> … <!-- wordmark:end --> block")
     INDEX.write_text(block.sub(lambda m: f"{m.group(1)}\n        {svg()}{m.group(3)}", html))
-    print("index.html wordmark updated — now run: npm run stamp")
+    (ICONS / "icon.svg").write_text(icon_svg(maskable=False))
+    (ICONS / "icon-maskable.svg").write_text(icon_svg(maskable=True))
+    print("index.html wordmark and icons/*.svg updated — now run: tools/icons.sh && npm run stamp")
 
 
 if __name__ == "__main__":

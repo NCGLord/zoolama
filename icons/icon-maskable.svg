@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Full bleed: Android masks it to its own shape, iOS rounds it; the tag stays inside the 40% safe circle. -->
   <rect width="512" height="512" fill="#ffd60a" />
-  <g transform="rotate(-35 256 256)">
-    <path d="M176 176H400V336H176L112 256Z" fill="#1b1f24" stroke="#1b1f24" stroke-width="28" stroke-linejoin="round" />
-    <circle cx="170" cy="256" r="20" fill="#ffd60a" />
-    <rect x="222" y="222" width="140" height="26" rx="13" fill="#ffd60a" />
-    <rect x="222" y="266" width="92" height="26" rx="13" fill="#ffd60a" />
+  <g>
+    <g transform="translate(256 222) scale(4.5) translate(-155.5 -15)">
+      <path fill="#1b1f24" fill-rule="evenodd" d="M132.6 140V33C132.6 21 133.4 11 135.2 3L134.2 -11Q134.6 -18 139 -12.5L141.6 -2.5L143.6 -11.5Q145.2 -17.5 148.6 -11.5L148.8 -2.5C158 -4.5 171 -1 176.5 5.5C179.8 9.5 177.6 16 170.5 16C161.5 16 154 17 150.4 22.5C147.6 26 147.6 29.5 147.6 34V140ZM155.3 4a2.7 2.7 0 1 0 5.4 0a2.7 2.7 0 1 0 -5.4 0Z" />
+      <path d="M147.6 29.5 157.5 33.5" stroke="#1b1f24" stroke-width="2.2" stroke-linecap="round" />
+      <path d="M160 28H179V42H160L154 35ZM157.9 35a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0 -7.2 0Z" fill="#1b1f24" fill-rule="evenodd" stroke="#1b1f24" stroke-width="3" stroke-linejoin="round" transform="rotate(14 166 35)" />
+    </g>
   </g>
 </svg>
