@@ -5,8 +5,9 @@
   "description": "Offline supermarket cart and unit-price comparison (PWA).",
   "scripts": {
     "test": "node --test",
+    "e2e": "playwright test",
     "stamp": "node tools/stamp-sw.mjs",
-    "e2e": "playwright test"
+    "site": "node tools/site.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0"
