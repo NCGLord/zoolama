@@ -3,7 +3,8 @@
 Offline supermarket helper for your phone:
 
 - **Cart (Carrinho)**: type a price, tap Add, and watch the running total. The cart survives closing the
-  app, restarting the phone, or losing signal.
+  app, restarting the phone, or losing signal. While the keyboard is up, the total shrinks to one slim row, so the
+  form stays in view above it.
 - **Price memory**: the name field suggests items from past trips, and once a name matches it shows what that item
   cost last time, where and when (*Última vez: R$ 4,29 · Assaí, 12/09*), adding *+7% desde a última vez* when the
   price you type is higher; a cart line that costs more than last time says so too. Weighed items are remembered by

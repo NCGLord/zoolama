@@ -37,3 +37,25 @@ test('the keyboard shrinks the page instead of panning it, so the frame stays in
   expect({ top, bottom }).toEqual({ top: 0, bottom: height });
   await expect(page.locator('#price')).toBeInViewport();
 });
+
+test('while the keyboard is up the total shrinks to one slim row, and comes back when it goes', async ({
+  app: page,
+}) => {
+  const tally = page.locator('#tally');
+  const full = (await tally.boundingBox()).height;
+
+  await page.locator('#price').focus(); // a focused field at full height: a hardware keyboard, or none
+  await expect(page.locator('html')).not.toHaveAttribute('data-keyboard', 'open');
+
+  await page.setViewportSize({ width: 390, height: 470 }); // what the keyboard does to the page
+  await expect(page.locator('html')).toHaveAttribute('data-keyboard', 'open');
+  await expect(page.locator('#total')).toBeVisible();
+  await expect(page.locator('#clear')).toBeHidden();
+  expect((await tally.boundingBox()).height).toBeLessThan(full / 2);
+
+  await page.locator('#price').blur();
+  await expect(page.locator('html')).not.toHaveAttribute('data-keyboard', 'open');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('#clear')).toBeVisible();
+  expect((await tally.boundingBox()).height).toBe(full);
+});

@@ -1492,6 +1492,28 @@ button.line-each {
   font-size: clamp(48px, 15vw, 64px);
 }
 
+/* While the keyboard is up (src/ui/shell.js), the tag shrinks to one slim row: the total stays in view, the count,
+   budget and Clear wait until it's down, and the list keeps the room. Over budget, the tag still turns red. */
+:root[data-keyboard='open'] .tally {
+  align-items: center;
+  padding: 4px 16px;
+}
+
+:root[data-keyboard='open'] .tally-tag {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+}
+
+:root[data-keyboard='open'] .tally .tag-price {
+  font-size: 30px;
+}
+
+:root[data-keyboard='open'] .budget-line,
+:root[data-keyboard='open'] .tally-meta {
+  display: none;
+}
+
 /* ---------- compare ---------- */
 
 .options {

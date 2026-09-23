@@ -1,5 +1,7 @@
-// The app's frame: the bottom tabs, and the light/dark theme (with the browser chrome coloured to match).
+// The app's frame: the bottom tabs, sheets, the light/dark theme (with the browser chrome coloured to match), and
+// whether the on-screen keyboard is up.
 
+import { keyboardOpen, tallestHeight } from '../keyboard.js';
 import { rovingIndex } from '../tabs.js';
 import { effectiveTheme, toggledTheme } from '../theme.js';
 import { persist, state } from './app-state.js';
@@ -52,6 +54,28 @@ for (const sheet of document.querySelectorAll('dialog.sheet')) {
     pressedOutside = false;
   });
 }
+
+/* ---------- keyboard ---------- */
+
+// While the keyboard is up, <html data-keyboard="open"> lets the total tag shrink to one row (see styles.css), so the
+// list keeps the room the keyboard leaves. Width is the layout's, so pinch-zooming doesn't count as turning.
+const view = window.visualViewport ?? window;
+const TEXT_FIELD = 'input:not([type="radio"], [type="checkbox"], [type="file"]), textarea';
+const isTextField = (el) => el?.matches?.(TEXT_FIELD) ?? false;
+let seen = null;
+
+function renderKeyboard() {
+  const height = view.height ?? innerHeight;
+  seen = tallestHeight(seen, { width: innerWidth, height });
+  const open = keyboardOpen({ editing: isTextField(document.activeElement), height, tallest: seen.height });
+  if (open) document.documentElement.dataset.keyboard = 'open';
+  else delete document.documentElement.dataset.keyboard;
+}
+
+view.addEventListener('resize', renderKeyboard);
+document.addEventListener('focusin', renderKeyboard);
+document.addEventListener('focusout', renderKeyboard);
+renderKeyboard(); // the height before any keyboard: the one to compare with
 
 /* ---------- theme ---------- */
 
