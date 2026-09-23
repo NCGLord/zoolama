@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { KEY, HISTORY_KEY, load, save, loadHistory, saveHistory } from '../src/store.js';
 
 class FakeStorage {
@@ -76,4 +77,9 @@ test('unreadable trip history is backed up and starts empty', () => {
 
 test('saveHistory reports false instead of throwing when storage is full', () => {
   assert.equal(saveHistory(throwing('setItem'), [trip]), false);
+});
+
+test('the pre-paint theme script in index.html reads the key the app saves under', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  assert.ok(html.includes(`localStorage.getItem('${KEY}')`), `index.html should read '${KEY}' before first paint`);
 });
