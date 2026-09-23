@@ -1,5 +1,6 @@
 // Small pure helpers behind the app's moments of joy (count-up, celebration, winner flip).
-// The DOM side lives in app.js and is skipped entirely when the phone asks for reduced motion.
+// The DOM side lives in src/ui/ (cart-view, history-view, compare-view) and is skipped entirely when the phone asks
+// for reduced motion.
 
 export const easeOutCubic = (t) => 1 - (1 - t) ** 3;
 

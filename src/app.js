@@ -1,4 +1,6 @@
-// DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
+// The entry point. Business rules live in src/*.js and the screen in src/ui/*.js; this file only wires the views
+// together (the language switch re-renders all of them, and two calls that would point up the module stack are
+// registered here) and boots them.
 
 import { state, persist } from './ui/app-state.js';
 import { applyLang } from './ui/text.js';
