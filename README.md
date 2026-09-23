@@ -45,6 +45,9 @@ forever. New files the app references must also be added to `ASSETS`, and the te
 
 Icons are generated from `icons/*.svg` with `tools/icons.sh` (needs `rsvg-convert`).
 
+The header wordmark (the llama in *Zoolama*) is generated into `index.html` by `tools/wordmark.py`. It uses the
+font's real letter outlines and needs `pip install fonttools brotli`. Run `npm run stamp` afterwards.
+
 ## Layout
 
 | Path | What |
@@ -52,7 +55,7 @@ Icons are generated from `icons/*.svg` with `tools/icons.sh` (needs `rsvg-conver
 | `src/money.js`, `units.js`, `compare.js`, `cart.js`, `store.js`, `i18n.js`, `theme.js` | Pure logic, unit-tested |
 | `src/app.js` | DOM wiring only |
 | `sw.js` | Service worker: atomic precache, cache-first |
-| `tools/` | `stamp-sw.mjs`, `sw-assets.mjs`, `icons.sh` |
+| `tools/` | `stamp-sw.mjs`, `sw-assets.mjs`, `icons.sh`, `wordmark.py` |
 | `docs/superpowers/specs/` | Design spec |
 
 The price font is Barlow Condensed Bold (SIL OFL 1.1, see `fonts/OFL.txt`).
