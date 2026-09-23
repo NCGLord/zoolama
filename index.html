@@ -21,7 +21,7 @@
     </header>
 
     <main>
-      <section id="panel-cart" class="panel">
+      <section id="panel-cart" class="panel" role="tabpanel" aria-labelledby="tab-cart">
         <form id="entry" class="entry" novalidate autocomplete="off">
           <div class="entry-price">
             <label for="price" data-i18n="price">Preço</label>
@@ -45,6 +45,15 @@
         <p id="empty" class="empty" data-i18n="emptyCart"></p>
         <ul id="lines" class="lines"></ul>
       </section>
+
+      <section id="panel-compare" class="panel" role="tabpanel" aria-labelledby="tab-compare" hidden>
+        <ol id="options" class="options"></ol>
+        <p id="compare-msg" class="compare-msg" aria-live="polite"></p>
+        <div class="compare-actions">
+          <button type="button" id="add-option" class="secondary" data-i18n="addOption">+ Opção</button>
+          <button type="button" id="reset-compare" class="secondary" data-i18n="reset">Recomeçar</button>
+        </div>
+      </section>
     </main>
 
     <div class="dock">
@@ -62,6 +71,10 @@
           <button type="button" id="clear" class="on-tag" data-i18n="clear">Limpar</button>
         </div>
       </footer>
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" id="tab-cart" aria-controls="panel-cart" data-tab="cart" data-i18n="tabCart">Carrinho</button>
+        <button type="button" role="tab" id="tab-compare" aria-controls="panel-compare" data-tab="compare" data-i18n="tabCompare">Comparar</button>
+      </nav>
     </div>
   </body>
 </html>

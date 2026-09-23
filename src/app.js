@@ -2,7 +2,9 @@
 
 import { parseMoney, formatMoney, formatMoneyParts } from './money.js';
 import { initialCart, cartReducer, total, counts } from './cart.js';
-import { t, detectLang } from './i18n.js';
+import { compare } from './compare.js';
+import { UNITS, BASE_UNIT } from './units.js';
+import { t, detectLang, formatPct } from './i18n.js';
 import { load, save } from './store.js';
 
 const $ = (id) => document.getElementById(id);
@@ -18,10 +20,15 @@ const storage = (() => {
   }
 })();
 
+const blankOption = (unit = 'g') => ({ label: '', price: '', qty: '', unit });
+const initialCompare = () => ({ options: [blankOption(), blankOption()] });
+
 const saved = load(storage);
 let state = {
   cart: saved?.cart ?? initialCart(),
+  compare: saved?.compare ?? initialCompare(),
   lang: saved?.lang ?? detectLang(navigator.language),
+  tab: saved?.tab ?? 'cart',
 };
 
 const tr = (key, params) => t(key, state.lang, params);
@@ -74,8 +81,11 @@ function applyLang() {
     el.setAttribute('aria-label', tr(el.dataset.i18nAriaLabel));
   }
   for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', b.dataset.lang === state.lang);
-  $('price').placeholder = formatMoneyParts(0, state.lang).decimal === ',' ? '0,00' : '0.00';
+  $('price').placeholder = pricePlaceholder();
 }
+
+const pricePlaceholder = () => formatMoney(0, state.lang).replace(/^\D+/, '');
+const unitLabel = (unit) => (unit === 'un' ? tr('unitCount') : unit);
 
 /* ---------- cart ---------- */
 
@@ -181,6 +191,146 @@ $('clear').addEventListener('click', () => {
   showToast('cleared', { undo: true });
 });
 
+/* ---------- compare ---------- */
+
+function setCompare(options) {
+  persist({ ...state, compare: { ...state.compare, options } });
+}
+
+function optionView(opt, i, removable) {
+  return h(
+    'li',
+    { class: 'option', 'data-index': i },
+    h(
+      'div',
+      { class: 'option-head' },
+      h('span', { class: 'option-title', text: tr('optionN', { n: i + 1 }) }),
+      removable
+        ? h('button', { type: 'button', class: 'remove', 'data-action': 'remove-option', 'aria-label': tr('removeOption') }, '✕')
+        : '',
+    ),
+    h('input', { class: 'option-label', 'data-field': 'label', value: opt.label, placeholder: tr('label'), 'aria-label': tr('label') }),
+    h(
+      'div',
+      { class: 'option-fields' },
+      h(
+        'label',
+        {},
+        tr('price'),
+        h(
+          'span',
+          { class: 'money-field' },
+          h('span', { 'aria-hidden': 'true', text: 'R$' }),
+          h('input', { 'data-field': 'price', 'data-key': `price-${i}`, inputmode: 'decimal', value: opt.price, placeholder: pricePlaceholder() }),
+        ),
+      ),
+      h('label', {}, tr('quantity'), h('input', { class: 'qty-field', 'data-field': 'qty', inputmode: 'decimal', value: opt.qty, placeholder: '0' })),
+      h(
+        'label',
+        {},
+        tr('unit'),
+        h(
+          'select',
+          { class: 'unit-select', 'data-field': 'unit' },
+          ...Object.keys(UNITS).map((u) => h('option', { value: u, selected: u === opt.unit, text: unitLabel(u) })),
+        ),
+      ),
+    ),
+    h('div', { class: 'option-result' }),
+  );
+}
+
+/** Rebuilds the cards; only for structural changes, never while the user is typing in one. */
+function renderOptions() {
+  const { options } = state.compare;
+  $('options').replaceChildren(...options.map((opt, i) => optionView(opt, i, options.length > 2)));
+  renderResults();
+}
+
+/** Updates only the result areas, so typing never loses focus. */
+function renderResults() {
+  const { options } = state.compare;
+  const { error, results } = compare(options);
+  document.querySelectorAll('#options .option').forEach((li, i) => {
+    const r = results[i];
+    li.classList.toggle('winner', Boolean(r?.isCheapest));
+    const box = li.querySelector('.option-result');
+    if (!r) return box.replaceChildren();
+
+    const price = h('output', { class: 'tag-price' });
+    tagPrice(price, Math.round(r.unitPrice));
+    const per = BASE_UNIT[UNITS[options[i].unit].dim];
+    const kids = [h('span', { class: 'unit-price' }, price, h('span', { class: 'per', text: `/${unitLabel(per)}` }))];
+    if (r.isCheapest) {
+      kids.push(
+        h('span', { class: 'verdict', text: tr('cheapest') }),
+        h('button', { type: 'button', class: 'add-winner', 'data-action': 'add-to-cart', text: tr('addToCart') }),
+      );
+    } else if (r.pctMore !== null) {
+      kids.push(h('span', { class: 'verdict dear', text: tr('pctMore', { pct: formatPct(r.pctMore, state.lang) }) }));
+    }
+    box.replaceChildren(...kids);
+  });
+
+  const valid = results.filter(Boolean).length;
+  $('compare-msg').textContent = error ? tr(error) : valid < 2 ? tr('compareHint') : '';
+  $('compare-msg').classList.toggle('error', Boolean(error));
+}
+
+$('options').addEventListener('input', (e) => {
+  const field = e.target.dataset.field;
+  if (!field) return;
+  const i = Number(e.target.closest('[data-index]').dataset.index);
+  setCompare(state.compare.options.map((o, j) => (j === i ? { ...o, [field]: e.target.value } : o)));
+  renderResults();
+});
+
+$('options').addEventListener('click', (e) => {
+  const action = e.target.closest('[data-action]')?.dataset.action;
+  const i = Number(e.target.closest('[data-index]')?.dataset.index);
+  const opt = state.compare.options[i];
+  if (!opt) return;
+  if (action === 'remove-option') {
+    setCompare(state.compare.options.filter((_, j) => j !== i));
+    renderOptions();
+    $('add-option').focus();
+  }
+  if (action === 'add-to-cart') {
+    const name = [opt.label.trim(), `${opt.qty.trim()} ${unitLabel(opt.unit)}`].filter(Boolean).join(' ');
+    dispatchCart({ type: 'add', priceCents: parseMoney(opt.price), name });
+    showToast('addedToCart');
+  }
+});
+
+$('add-option').addEventListener('click', () => {
+  const { options } = state.compare;
+  setCompare([...options, blankOption(options.at(-1)?.unit)]);
+  renderOptions();
+  document.querySelector(`[data-key="price-${options.length}"]`)?.focus();
+});
+
+$('reset-compare').addEventListener('click', () => {
+  setCompare(initialCompare().options);
+  renderOptions();
+});
+
+/* ---------- tabs ---------- */
+
+function renderTab() {
+  for (const b of document.querySelectorAll('[data-tab]')) {
+    const on = b.dataset.tab === state.tab;
+    b.setAttribute('aria-selected', on);
+    $(`panel-${b.dataset.tab}`).hidden = !on;
+  }
+}
+
+for (const b of document.querySelectorAll('[data-tab]')) {
+  b.addEventListener('click', () => {
+    persist({ ...state, tab: b.dataset.tab });
+    renderTab();
+  });
+}
+
 /* ---------- toast ---------- */
 
 let toastTimer;
@@ -210,6 +360,7 @@ for (const b of document.querySelectorAll('[data-lang]')) {
     persist({ ...state, lang: b.dataset.lang });
     applyLang();
     renderCart();
+    renderOptions();
   });
 }
 
@@ -217,4 +368,6 @@ for (const b of document.querySelectorAll('[data-lang]')) {
 
 applyLang();
 renderCart();
+renderOptions();
+renderTab();
 navigator.storage?.persist?.().catch(() => {});
