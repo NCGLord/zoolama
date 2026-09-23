@@ -68,8 +68,18 @@ function edit(state, id, patch) {
   return { ...state, items: state.items.map((i) => (i.id === id ? { ...i, ...patch } : i)), undo: null };
 }
 
+/** What a line costs as noted. A weighed line's priceCents is already its price, at qty 1. */
+export function lineTotal(item) {
+  return item.priceCents * item.qty;
+}
+
+/** What the till charged beyond the noted line total: > 0 overcharged, < 0 in your favour, 0 if not charged. */
+export function chargedDiff(item) {
+  return item.chargedCents == null ? 0 : item.chargedCents - lineTotal(item);
+}
+
 export function total(state) {
-  return state.items.reduce((sum, i) => sum + i.priceCents * i.qty, 0);
+  return state.items.reduce((sum, i) => sum + lineTotal(i), 0);
 }
 
 /** Every photo something still points to, including the undo snapshot, so Undo can bring it back. */
@@ -83,8 +93,7 @@ export function checkSummary(state) {
   const summary = { checked: 0, lines: state.items.length, mismatches: 0, overchargeCents: 0, inFavorCents: 0 };
   for (const item of state.items) {
     if (item.checked) summary.checked++;
-    if (item.chargedCents == null) continue;
-    const diff = item.chargedCents - item.priceCents * item.qty;
+    const diff = chargedDiff(item);
     if (diff !== 0) summary.mismatches++;
     if (diff > 0) summary.overchargeCents += diff;
     if (diff < 0) summary.inFavorCents -= diff;
@@ -106,11 +115,10 @@ export function sortItems(items, { key = 'added', dir = 'desc' } = {}, locale = 
   const rows = items.map((item, i) => ({ item, n: i + 1 }));
   const sign = dir === 'asc' ? 1 : -1;
   const byAdded = (a, b) => a.n - b.n;
-  const lineTotal = ({ item }) => item.priceCents * item.qty;
   const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
   const compare = {
     added: (a, b) => sign * byAdded(a, b),
-    total: (a, b) => sign * (lineTotal(a) - lineTotal(b)) || byAdded(a, b),
+    total: (a, b) => sign * (lineTotal(a.item) - lineTotal(b.item)) || byAdded(a, b),
     name: (a, b) => {
       const [an, bn] = [a.item.name, b.item.name];
       if (!an !== !bn) return an ? -1 : 1;

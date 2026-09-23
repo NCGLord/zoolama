@@ -1,6 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary, linePriceCents, sortItems } from '../src/cart.js';
+import {
+  initialCart,
+  cartReducer,
+  total,
+  counts,
+  referencedPhotos,
+  checkSummary,
+  linePriceCents,
+  lineTotal,
+  chargedDiff,
+  sortItems,
+} from '../src/cart.js';
 
 const run = (...actions) => actions.reduce(cartReducer, initialCart());
 const add = (priceCents, name = '', qty) => ({ type: 'add', priceCents, name, qty });
@@ -208,4 +219,15 @@ test('unnamed items go last in both directions, in the order they were added', (
   const items = named('', 'Café', '', 'arroz');
   assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'asc' })), ['arroz', 'Café', '#1', '#3']);
   assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'desc' })), ['Café', 'arroz', '#1', '#3']);
+});
+
+test('lineTotal is price × qty, and a weighed line is already its price', () => {
+  assert.equal(lineTotal({ priceCents: 450, qty: 3 }), 1350);
+  assert.equal(lineTotal({ priceCents: 999, qty: 1, perKgCents: 799, grams: 1250 }), 999);
+});
+
+test('chargedDiff is what the till charged beyond the line total, and 0 when nothing was charged', () => {
+  assert.equal(chargedDiff({ priceCents: 450, qty: 2 }), 0);
+  assert.equal(chargedDiff({ priceCents: 450, qty: 2, chargedCents: 1000 }), 100);
+  assert.equal(chargedDiff({ priceCents: 450, qty: 2, chargedCents: 850 }), -50);
 });

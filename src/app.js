@@ -1,7 +1,18 @@
 // DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
 
 import { parseMoney, formatMoney, formatMoneyParts } from './money.js';
-import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary, linePriceCents, sortItems } from './cart.js';
+import {
+  initialCart,
+  cartReducer,
+  total,
+  counts,
+  referencedPhotos,
+  checkSummary,
+  linePriceCents,
+  lineTotal,
+  chargedDiff,
+  sortItems,
+} from './cart.js';
 import { compare } from './compare.js';
 import { UNITS, BASE_UNIT, parseGrams } from './units.js';
 import { t, detectLang, formatPct, formatKg, LOCALES } from './i18n.js';
@@ -176,7 +187,7 @@ function editLineView(item, n) {
       enterkeyhint: 'done',
       'data-action': 'rename',
     }),
-    h('span', { class: 'line-sub', text: formatMoney(item.priceCents * item.qty, state.lang) }),
+    h('span', { class: 'line-sub', text: formatMoney(lineTotal(item), state.lang) }),
     h('span', { class: 'line-each', text: eachText(item) }),
     h(
       'div',
@@ -201,8 +212,8 @@ let justTicked = null; // line ticked by the latest tap: its tick snaps in once
 /** A line at the till: tick, photo, name, noted total, and what the till charged when it differs. */
 function checkLineView(item, n) {
   const id = item.id;
-  const noted = item.priceCents * item.qty;
-  const diff = item.chargedCents == null ? 0 : item.chargedCents - noted;
+  const noted = lineTotal(item);
+  const diff = chargedDiff(item);
   let detail;
   if (editingChargeId === id) {
     detail = h('input', {
@@ -690,7 +701,7 @@ async function openViewer(item) {
     $('viewer-price').append(h('span', { class: 'per', text: '/kg' }));
     $('viewer-price').setAttribute('aria-label', `${formatMoney(item.perKgCents, state.lang)}/kg`);
   }
-  const diff = item.chargedCents == null ? 0 : item.chargedCents - item.priceCents * item.qty;
+  const diff = chargedDiff(item);
   $('viewer-charged').hidden = diff === 0;
   $('viewer-charged').className = `viewer-charged ${diff > 0 ? 'dear' : 'good'}`;
   $('viewer-charged').textContent = diff
@@ -864,7 +875,7 @@ function tripView(trip, whenFormat) {
           {},
           h('span', { text: item.name || tr('itemN', { n: i + 1 }) }),
           h('span', { class: 'each', text: eachText(item) }),
-          h('span', { class: 'sub', text: amount(item.priceCents * item.qty) }),
+          h('span', { class: 'sub', text: amount(lineTotal(item)) }),
         ),
       ),
     ),
