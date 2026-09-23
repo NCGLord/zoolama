@@ -1,6 +1,7 @@
 // UI strings in both languages. test/i18n.test.js enforces key and {placeholder} parity.
 
-export const LOCALES = { pt: 'pt-BR', en: 'en-US' };
+// English is British, like its flag and spelling (favour, till); money is BRL in both.
+export const LOCALES = { pt: 'pt-BR', en: 'en-GB' };
 
 export const STRINGS = {
   pt: {

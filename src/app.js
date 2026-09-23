@@ -94,7 +94,7 @@ function keepingFocus(render) {
 }
 
 function applyLang() {
-  document.documentElement.lang = state.lang === 'en' ? 'en' : 'pt-BR';
+  document.documentElement.lang = LOCALES[state.lang];
   for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = tr(el.dataset.i18n);
   for (const el of document.querySelectorAll('[data-i18n-placeholder]')) el.placeholder = tr(el.dataset.i18nPlaceholder);
   for (const el of document.querySelectorAll('[data-i18n-aria-label]')) {

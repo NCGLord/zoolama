@@ -27,6 +27,11 @@ test('every language has a number-format locale', () => {
   assert.deepEqual(Object.keys(LOCALES).sort(), Object.keys(STRINGS).sort());
 });
 
+test('English follows its UK flag: dates put the day first', () => {
+  const date = new Intl.DateTimeFormat(LOCALES.en, { day: '2-digit', month: '2-digit' }).format(new Date(2026, 8, 22));
+  assert.equal(date, '22/09');
+});
+
 test('t looks up the string for the language', () => {
   assert.equal(t('tabCart', 'pt'), 'Carrinho');
   assert.equal(t('tabCart', 'en'), 'Cart');
