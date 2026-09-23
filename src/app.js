@@ -1,17 +1,7 @@
 // DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
 
 import { parseMoney, formatMoney } from './money.js';
-import {
-  cartReducer,
-  total,
-  counts,
-  referencedPhotos,
-  checkSummary,
-  linePriceCents,
-  lineTotal,
-  chargedDiff,
-  sortItems,
-} from './cart.js';
+import { cartReducer, total, counts, checkSummary, linePriceCents, lineTotal, chargedDiff, sortItems } from './cart.js';
 import { compare } from './compare.js';
 import { UNITS, BASE_UNIT, parseGrams } from './units.js';
 import { t, formatPct, formatKg, LOCALES } from './i18n.js';
@@ -21,13 +11,14 @@ import { shareText } from './share.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
-import { shrinkPhoto, newPhotoId, savePhoto, getPhoto, photoIds, deletePhotos, orphans } from './photos.js';
+import { shrinkPhoto, newPhotoId, savePhoto, getPhoto } from './photos.js';
 import { budgetStatus } from './budget.js';
 import { tweenCents, celebrates, newWinners } from './delight.js';
 import { $, reducedMotion, h, keepingFocus, icon, replay } from './ui/dom.js';
 import { storage, blankOption, initialCompare, state, persist } from './ui/app-state.js';
 import { tr, tagPrice, applyLang, pricePlaceholder, unitLabel, signedMoney, eachText } from './ui/text.js';
 import { showToast, offerUpdate, dropStaleUndo, defineToastActions } from './ui/toast.js';
+import { pendingPhotos, photoUrl, hydratePhotos, collectPhotos } from './ui/photo-cache.js';
 
 const COUNT_MS = 480; // total count-up
 const MAX_QTY = 999;
@@ -527,42 +518,9 @@ $('clear').addEventListener('click', () => {
 
 /* ---------- shelf-tag photos ---------- */
 
-// Saving now, or waiting in the entry form for Add: cleanup must never delete these.
-const pendingPhotos = new Set();
-const photoUrls = new Map(); // photo id → Promise of an object URL (or null)
 let entryPhotoId = null;
 let photoTarget = null; // 'entry', or the id of the cart item being photographed
 let viewing = null; // id of the item open in the viewer
-
-function photoUrl(id) {
-  if (!photoUrls.has(id)) {
-    photoUrls.set(id, getPhoto(id).then((p) => (p ? URL.createObjectURL(p.blob) : null)).catch(() => null));
-  }
-  return photoUrls.get(id);
-}
-
-function hydratePhotos(root) {
-  for (const img of root.querySelectorAll('img[data-photo]')) {
-    photoUrl(img.dataset.photo).then((url) => url && (img.src = url));
-  }
-}
-
-/** Delete stored photos that no item, undo snapshot or pending shot points to. */
-async function collectPhotos() {
-  try {
-    const stored = await photoIds();
-    const keep = referencedPhotos(state.cart); // read after the await, so it sees the latest cart
-    for (const id of pendingPhotos) keep.add(id);
-    const dead = orphans(stored, keep);
-    await deletePhotos(dead);
-    for (const id of dead) {
-      photoUrls.get(id)?.then((url) => url && URL.revokeObjectURL(url));
-      photoUrls.delete(id);
-    }
-  } catch {
-    // no IndexedDB (e.g. private mode): nothing to clean
-  }
-}
 
 function takePhoto(target) {
   photoTarget = target;
