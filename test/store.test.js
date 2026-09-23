@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KEY, load, save } from '../src/store.js';
+import { KEY, HISTORY_KEY, load, save, loadHistory, saveHistory } from '../src/store.js';
 
 class FakeStorage {
   #map = new Map();
@@ -51,4 +51,29 @@ test('save reports false instead of throwing when storage is full', () => {
 
 test('load returns null instead of throwing when storage is blocked', () => {
   assert.equal(load(throwing('getItem')), null);
+});
+
+const trip = { id: 't1', at: 1758560400000, store: 'Assaí', items: [], totalCents: 4789, units: 4 };
+
+test('trip history is empty when nothing is stored', () => {
+  assert.deepEqual(loadHistory(new FakeStorage()), []);
+});
+
+test('trip history round-trips under its own key, apart from the cart state', () => {
+  const s = new FakeStorage();
+  assert.equal(saveHistory(s, [trip]), true);
+  assert.deepEqual(loadHistory(s), [trip]);
+  assert.equal(s.getItem(KEY), null);
+  assert.notEqual(HISTORY_KEY, KEY);
+});
+
+test('unreadable trip history is backed up and starts empty', () => {
+  const s = new FakeStorage();
+  s.setItem(HISTORY_KEY, '[{"id":');
+  assert.deepEqual(loadHistory(s), []);
+  assert.equal(s.getItem(`${HISTORY_KEY}:corrupt`), '[{"id":');
+});
+
+test('saveHistory reports false instead of throwing when storage is full', () => {
+  assert.equal(saveHistory(throwing('setItem'), [trip]), false);
 });
