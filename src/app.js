@@ -52,8 +52,13 @@ function persist(next) {
   save(storage, state);
 }
 
+function setCart(cart) {
+  persist({ ...state, cart });
+  dropStaleUndo();
+}
+
 function dispatchCart(action) {
-  persist({ ...state, cart: cartReducer(state.cart, action) });
+  setCart(cartReducer(state.cart, action));
   renderCart();
   collectPhotos();
 }
@@ -533,7 +538,7 @@ $('lines').addEventListener('click', (e) => {
 $('lines').addEventListener('change', (e) => {
   if (e.target.dataset.action !== 'rename') return;
   const id = Number(e.target.closest('[data-id]').dataset.id);
-  persist({ ...state, cart: cartReducer(state.cart, { type: 'rename', id, name: e.target.value }) });
+  setCart(cartReducer(state.cart, { type: 'rename', id, name: e.target.value }));
 });
 
 $('lines').addEventListener('keydown', (e) => {
@@ -777,6 +782,7 @@ function burst() {
 }
 
 function undoFinish() {
+  if (!state.cart.undo) return; // the cart can't come back, so the trip must stay
   setHistory(history.filter((t) => t.id !== lastFinishedId));
   dispatchCart({ type: 'undo' });
 }
@@ -1128,12 +1134,12 @@ let toastTimer;
 let toastAction = null;
 let updatePending = false;
 
-// The toast's one button; its label is the i18n key of the same name.
 // The toast's one button: what it runs, and the i18n key of its label.
+// cartUndo: it needs the cart's one-level undo snapshot, which any other cart change drops.
 const TOAST_ACTIONS = {
-  undo: { label: 'undo', run: () => dispatchCart({ type: 'undo' }) },
+  undo: { label: 'undo', run: () => dispatchCart({ type: 'undo' }), cartUndo: true },
   update: { label: 'update', run: () => location.reload() },
-  undoFinish: { label: 'undo', run: () => undoFinish() },
+  undoFinish: { label: 'undo', run: () => undoFinish(), cartUndo: true },
   undoDelete: { label: 'undo', run: () => undoDeleteTrip() },
 };
 
@@ -1156,6 +1162,11 @@ function hideToast() {
   $('toast').hidden = true;
   // A waiting update outlives short-lived toasts like Undo: bring its prompt back afterwards.
   if (updatePending) showToast('updateReady', { action: 'update', persist: true });
+}
+
+/** An Undo that can no longer undo anything must not stay on screen. */
+function dropStaleUndo() {
+  if (!$('toast').hidden && TOAST_ACTIONS[toastAction]?.cartUndo && !state.cart.undo) hideToast();
 }
 
 $('toast-action').addEventListener('click', () => {
