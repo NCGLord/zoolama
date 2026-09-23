@@ -1,0 +1,53 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { STRINGS, LOCALES, t, detectLang, formatPct } from '../src/i18n.js';
+
+const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+
+test('pt and en define exactly the same keys', () => {
+  assert.deepEqual(Object.keys(STRINGS.en).sort(), Object.keys(STRINGS.pt).sort());
+});
+
+test('no translation is empty', () => {
+  for (const [lang, dict] of Object.entries(STRINGS)) {
+    for (const [key, value] of Object.entries(dict)) {
+      assert.ok(value.trim(), `${lang}.${key} is empty`);
+    }
+  }
+});
+
+test('each key uses the same placeholders in both languages', () => {
+  for (const key of Object.keys(STRINGS.pt)) {
+    assert.deepEqual(placeholders(STRINGS.en[key]), placeholders(STRINGS.pt[key]), key);
+  }
+});
+
+test('every language has a number-format locale', () => {
+  assert.deepEqual(Object.keys(LOCALES).sort(), Object.keys(STRINGS).sort());
+});
+
+test('t looks up the string for the language', () => {
+  assert.equal(t('tabCart', 'pt'), 'Carrinho');
+  assert.equal(t('tabCart', 'en'), 'Cart');
+});
+
+test('t fills {placeholders} from params', () => {
+  assert.equal(t('itemN', 'en', { n: 3 }), 'Item 3');
+});
+
+test('t returns the key itself for an unknown key, so a gap is visible rather than blank', () => {
+  assert.equal(t('noSuchKey', 'pt'), 'noSuchKey');
+});
+
+test('detectLang picks en only for English browsers and defaults to pt', () => {
+  assert.equal(detectLang('en-US'), 'en');
+  assert.equal(detectLang('pt-BR'), 'pt');
+  assert.equal(detectLang('es-AR'), 'pt');
+  assert.equal(detectLang(undefined), 'pt');
+});
+
+test('formatPct rounds to one decimal in the language format', () => {
+  assert.equal(formatPct(50.3345, 'pt'), '50,3');
+  assert.equal(formatPct(50.3345, 'en'), '50.3');
+  assert.equal(formatPct(20, 'pt'), '20');
+});

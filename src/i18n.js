@@ -1,0 +1,92 @@
+// UI strings in both languages. test/i18n.test.js enforces key and {placeholder} parity.
+
+export const LOCALES = { pt: 'pt-BR', en: 'en-US' };
+
+export const STRINGS = {
+  pt: {
+    langLabel: 'Idioma',
+    tabCart: 'Carrinho',
+    tabCompare: 'Comparar',
+    price: 'Preço',
+    qty: 'Qtd',
+    name: 'Nome (opcional)',
+    add: 'Adicionar',
+    itemN: 'Item {n}',
+    total: 'Total',
+    itemsCount: 'Itens: {n}',
+    clear: 'Limpar',
+    undo: 'Desfazer',
+    cleared: 'Carrinho limpo',
+    removed: 'Item removido',
+    emptyCart: 'Carrinho vazio. Digite um preço acima.',
+    invalidPrice: 'Preço inválido',
+    remove: 'Remover',
+    oneMore: 'Mais um',
+    oneLess: 'Menos um',
+    optionN: 'Opção {n}',
+    label: 'Marca ou descrição (opcional)',
+    quantity: 'Quantidade',
+    unit: 'Unidade',
+    unitCount: 'un',
+    addOption: '+ Opção',
+    removeOption: 'Remover opção',
+    reset: 'Recomeçar',
+    cheapest: 'Mais barato',
+    pctMore: '+{pct}% mais caro',
+    mixedUnits: 'Não dá para comparar peso, volume e unidade entre si.',
+    compareHint: 'Preencha preço e quantidade de ao menos duas opções.',
+    addToCart: 'Adicionar ao carrinho',
+    addedToCart: 'Adicionado ao carrinho',
+    offlineReady: 'Pronto para usar offline',
+  },
+  en: {
+    langLabel: 'Language',
+    tabCart: 'Cart',
+    tabCompare: 'Compare',
+    price: 'Price',
+    qty: 'Qty',
+    name: 'Name (optional)',
+    add: 'Add',
+    itemN: 'Item {n}',
+    total: 'Total',
+    itemsCount: 'Items: {n}',
+    clear: 'Clear',
+    undo: 'Undo',
+    cleared: 'Cart cleared',
+    removed: 'Item removed',
+    emptyCart: 'Cart is empty. Type a price above.',
+    invalidPrice: 'Invalid price',
+    remove: 'Remove',
+    oneMore: 'One more',
+    oneLess: 'One less',
+    optionN: 'Option {n}',
+    label: 'Brand or description (optional)',
+    quantity: 'Quantity',
+    unit: 'Unit',
+    unitCount: 'unit',
+    addOption: '+ Option',
+    removeOption: 'Remove option',
+    reset: 'Reset',
+    cheapest: 'Cheapest',
+    pctMore: '+{pct}% pricier',
+    mixedUnits: "Weight, volume and count can't be compared with each other.",
+    compareHint: 'Fill in price and quantity for at least two options.',
+    addToCart: 'Add to cart',
+    addedToCart: 'Added to cart',
+    offlineReady: 'Ready to use offline',
+  },
+};
+
+export function t(key, lang, params = {}) {
+  const s = STRINGS[lang]?.[key] ?? key;
+  return s.replace(/\{(\w+)\}/g, (m, p) => (p in params ? String(params[p]) : m));
+}
+
+/** English only for English browsers; everyone else gets Portuguese (the shelf-label language). */
+export function detectLang(navigatorLanguage) {
+  return /^en\b/i.test(navigatorLanguage ?? '') ? 'en' : 'pt';
+}
+
+export function formatPct(pct, lang) {
+  return new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 1 }).format(pct);
+}
