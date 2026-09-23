@@ -90,6 +90,6 @@ font's real letter outlines and needs `pip install fonttools brotli`. Run `npm r
 | `src/app.js` | DOM wiring only |
 | `sw.js` | Service worker: atomic precache, cache-first |
 | `tools/` | `stamp-sw.mjs`, `sw-assets.mjs`, `icons.sh`, `wordmark.py` |
-| `docs/superpowers/specs/` | Design spec |
+| `docs/superpowers/specs/` | The MVP design record; this README describes the app as it is now |
 
 The price font is Barlow Condensed Bold (SIL OFL 1.1, see `fonts/OFL.txt`).

@@ -1,5 +1,25 @@
 # Zoolama — offline supermarket cart + unit-price compare (PWA)
 
+> **Status: MVP design record, approved 2026-09-22.** It keeps the reasoning behind the first release and is not
+> updated feature by feature. The [README](../../../README.md) describes the app as it is now; where the two
+> disagree, the README and the code win.
+>
+> **Shipped since** (two of these are listed as out of scope below):
+> - **Weighed items**: price per kg × weight, kept in whole grams.
+> - **Shopping budget** on the total tag.
+> - **Checkout mode** at the till: tick lines, note a different charged amount, see the overcharge and the
+>   lower-price rule (Lei 10.962/2004).
+> - **Shelf-tag photos**, shrunk and kept in IndexedDB (`zoolama-photos`).
+> - **Trip history** (Histórico), grouped by month; **share** a cart or a trip as text; **sort** the cart.
+> - **Updates** no longer wait silently for the next launch: the app re-checks on resume (at most every 30 min)
+>   and offers *Nova versão disponível · Atualizar*. There is also an in-app **Install** button.
+> - **Stored state:** `zoolama:v1` also holds `tab`, `theme`, `checking`, `budgetCents` and `sort`; trips live
+>   under their own key, `zoolama:v1:history`.
+> - **Compare** reads `1.000` g/ml/un as a thousand, like prices; kg and L keep three decimals.
+> - **Look:** the Feira theme and its small animations, all off under reduced motion.
+> - **Deploy:** GitHub Actions tests every push and publishes Pages only from a green `main`, instead of
+>   Pages serving `main` at `/` (step 15).
+
 ## Context
 
 The user wants to use their phone **offline, inside a supermarket** to:
