@@ -238,17 +238,28 @@ button {
 }
 
 .lang button {
+  display: grid;
+  place-items: center;
   min-width: 44px;
   min-height: 40px;
   border: 0;
   background: transparent;
-  font-size: 14px;
-  font-weight: 600;
 }
 
-.lang button[aria-pressed='true'] {
-  background: var(--ink);
-  color: var(--paper);
+/* A flag can't invert like text, so the chosen one gets an ink ring and the other one fades. */
+.flag {
+  width: 26px;
+  height: 18px;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+  opacity: 0.4;
+  transition: opacity 120ms ease-out;
+}
+
+.lang button[aria-pressed='true'] .flag {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  opacity: 1;
 }
 
 main {

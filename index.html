@@ -50,8 +50,24 @@
           </svg>
         </button>
         <div class="lang" role="group" data-i18n-aria-label="langLabel">
-          <button type="button" data-lang="pt" aria-pressed="true">PT</button>
-          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+          <button type="button" data-lang="pt" aria-pressed="true" aria-label="Português" lang="pt-BR">
+            <svg class="flag" viewBox="0 0 30 21" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <rect width="30" height="21" fill="#009440" />
+              <path d="M2.55 10.5 15 2.55 27.45 10.5 15 18.45Z" fill="#ffcb00" />
+              <circle cx="15" cy="10.5" r="5.25" fill="#302681" />
+              <path d="M10.04 8.78A12.38 12.38 0 0 1 20.12 11.66" fill="none" stroke="#fff" stroke-width="0.9" />
+            </svg>
+          </button>
+          <button type="button" data-lang="en" aria-pressed="false" aria-label="English" lang="en">
+            <svg class="flag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <clipPath id="uk-diagonals"><path d="M30 15h30v15zv15H0zH0V0zV0h30z" /></clipPath>
+              <rect width="60" height="30" fill="#012169" />
+              <path d="M0 0l60 30m0-30L0 30" stroke="#fff" stroke-width="6" />
+              <path d="M0 0l60 30m0-30L0 30" clip-path="url(#uk-diagonals)" stroke="#c8102e" stroke-width="4" />
+              <path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10" />
+              <path d="M30 0v30M0 15h60" stroke="#c8102e" stroke-width="6" />
+            </svg>
+          </button>
         </div>
       </div>
     </header>

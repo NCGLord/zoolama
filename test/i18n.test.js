@@ -70,3 +70,13 @@ test('the header wordmark is an image named "Zoolama" for screen readers', () =>
   const brand = html.match(/<h1 class="brand">([\s\S]*?)<\/h1>/)[1];
   assert.match(brand, /<svg[^>]*role="img"[^>]*aria-label="Zoolama"/);
 });
+
+test('language buttons are flags named in their own language for screen readers', () => {
+  for (const [code, lang, name] of [['pt', 'pt-BR', 'Português'], ['en', 'en', 'English']]) {
+    const button = html.match(new RegExp(`<button[^>]*data-lang="${code}"[^>]*>([\\s\\S]*?)</button>`));
+    assert.ok(button, `no ${code} button`);
+    assert.match(button[0], new RegExp(`aria-label="${name}"`));
+    assert.match(button[0], new RegExp(`lang="${lang}"`));
+    assert.match(button[1], /<svg/, `${code} button should draw a flag`);
+  }
+});
