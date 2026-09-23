@@ -3,6 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Only the app's own files run, plus the inline theme script below by its hash (test/csp.test.js checks it).
+         blob: is shelf-tag photos; data: is the torn-receipt edge in styles.css. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'sha256-XatwtviGIGeg8RYg6E24agMCzRLuXUS3ORZfdiZPhUU='; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'"
+    />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f4faef" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e1a11" media="(prefers-color-scheme: dark)" />

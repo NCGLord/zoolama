@@ -34,7 +34,8 @@ Offline supermarket helper for your phone:
 - PT/EN and light/dark toggles in the header.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and
-no runtime dependencies. Your data stays in the phone's browser storage.
+no runtime dependencies. Your data stays in the phone's browser storage, and a Content Security Policy lets only the
+app's own files run.
 
 **Look:** the *Feira* theme (a hortifruti stall: lettuce-green actions, a mango total tag, tomato for warnings), in
 light and dark, plus small moments of joy. The total counts up, finishing a trip within budget throws little
