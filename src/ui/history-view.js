@@ -7,10 +7,12 @@ import { monthlyGroups, storeNames, tripFromCart } from '../history.js';
 import { LOCALES } from '../i18n.js';
 import { formatMoney } from '../money.js';
 import { shareText } from '../share.js';
+import { planNames, planReducer } from '../plan.js';
 import { loadHistory, saveHistory } from '../store.js';
 import { persist, state, storage } from './app-state.js';
 import { dispatchCart } from './cart-store.js';
 import { $, h, reducedMotion } from './dom.js';
+import { setPlan } from './plan-view.js';
 import { rememberPrices } from './price-memory.js';
 import { shareList } from './share-sheet.js';
 import { eachText, tagPrice, tr } from './text.js';
@@ -47,7 +49,9 @@ $('finish-form').addEventListener('submit', () => {
     return;
   }
   lastFinishedId = trip.id;
-  persist({ ...state, checking: false });
+  // What this trip bought comes off the shopping list; the rest waits for the next one.
+  const plan = planReducer(state.plan, { type: 'dropBought', names: state.cart.items.map((i) => i.name) });
+  persist({ ...state, checking: false, plan });
   dispatchCart({ type: 'clear' }); // photos stay while Undo can still bring the cart back
   showToast('tripSaved', { action: 'undoFinish' });
   if (party) burst();
@@ -86,6 +90,7 @@ function burst() {
 function undoFinish() {
   if (!state.cart.undo) return; // the cart can't come back, so the trip must stay
   setTrips(trips.filter((t) => t.id !== lastFinishedId));
+  persist({ ...state, plan: planReducer(state.plan, { type: 'undo' }) });
   dispatchCart({ type: 'undo' });
 }
 
@@ -96,6 +101,13 @@ function tripTitle(trip) {
 
 $('history').addEventListener('click', (e) => {
   const action = e.target.closest('[data-action]')?.dataset.action;
+  if (action === 'buy-again') {
+    const trip = trips.find((t) => t.id === e.target.closest('[data-trip]').dataset.trip);
+    const plan = planReducer(state.plan, { type: 'addNames', names: planNames(trip) });
+    if (plan === state.plan) return showToast('planAlready');
+    setPlan(plan);
+    showToast('planAdded', { action: 'undoPlan' });
+  }
   if (action === 'share-trip') {
     const trip = trips.find((t) => t.id === e.target.closest('[data-trip]').dataset.trip);
     shareList(shareText(trip.items, { lang: state.lang, title: tripTitle(trip) }));
@@ -151,6 +163,7 @@ function tripView(trip, whenFormat) {
     h(
       'div',
       { class: 'trip-actions' },
+      h('button', { type: 'button', class: 'secondary', 'data-action': 'buy-again' }, tr('buyAgain')),
       h('button', { type: 'button', class: 'secondary', 'data-action': 'share-trip' }, tr('share')),
       h('button', { type: 'button', class: 'secondary', 'data-action': 'delete-trip' }, tr('deleteTrip')),
     ),

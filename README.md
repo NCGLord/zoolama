@@ -29,6 +29,9 @@ Offline supermarket helper for your phone:
 - **Backup**: history lives only in this phone's browser, so *Exportar histórico* (under the trips) saves it as a
   small JSON file: through the share sheet on iPhone (e.g. *Save to Files*), as a download on Android. *Importar*
   merges such a file back, on this phone or a new one, adding only trips it doesn't already have, with Undo.
+- **Buy again**: *Comprar de novo* on a past trip puts its items on a shopping list at the top of the cart. Tap one to
+  start entering it (in *Peso* if you last bought it by weight); it's struck off while the cart holds an item of that
+  name, and finishing the trip takes the bought ones off the list, keeping the rest for next time.
 - **Share**: *Compartilhar* sends the cart, or any past trip from Histórico, as plain text through the phone's
   share sheet (WhatsApp, SMS, e-mail…). Where there's no share sheet, it copies the list instead.
 - **Budget**: tap *+ Orçamento* under the total to set a limit. The tag shows what's left, and turns red with the

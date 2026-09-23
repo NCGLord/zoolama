@@ -8,6 +8,7 @@ import { applyLang } from './ui/text.js';
 import { defineToastActions } from './ui/toast.js';
 import { collectPhotos } from './ui/photo-cache.js';
 import { dispatchCart, setCartRenderer } from './ui/cart-store.js';
+import { undoPlan } from './ui/plan-view.js';
 import { renderEntryMode } from './ui/entry.js';
 import { renderCart } from './ui/cart-view.js';
 import { renderHistory, undoFinish, undoDeleteTrip, undoImport } from './ui/history-view.js';
@@ -33,13 +34,14 @@ for (const b of document.querySelectorAll('[data-lang]')) {
 
 setCartRenderer(renderCart);
 
-// cartUndo: it needs the cart's one-level undo snapshot, which any other cart change drops.
+// cartUndo / planUndo: it needs the cart's or the list's one-level undo snapshot, which any later change drops.
 defineToastActions({
   undo: { label: 'undo', run: () => dispatchCart({ type: 'undo' }), cartUndo: true },
   update: { label: 'update', run: () => location.reload() },
   undoFinish: { label: 'undo', run: () => undoFinish(), cartUndo: true },
   undoDelete: { label: 'undo', run: () => undoDeleteTrip() },
   undoImport: { label: 'undo', run: () => undoImport() },
+  undoPlan: { label: 'undo', run: () => undoPlan(), planUndo: true },
 });
 
 // A home-screen shortcut opens a tab or checkout mode; then the query goes, so a reload doesn't apply it again.

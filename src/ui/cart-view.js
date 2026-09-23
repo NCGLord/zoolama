@@ -12,6 +12,7 @@ import { dispatchCart, MAX_QTY, setCart } from './cart-store.js';
 import { $, keepingFocus, reconcile, reducedMotion, replay } from './dom.js';
 import { hydratePhotos } from './photo-cache.js';
 import { openViewer, takePhoto } from './photos-ui.js';
+import { renderPlan } from './plan-view.js';
 import { pricePlaceholder, signedMoney, tagPrice, tr } from './text.js';
 import { showToast } from './toast.js';
 import { keepScreenOn } from './wake-lock.js';
@@ -104,6 +105,7 @@ function renderCart() {
   $('cart-actions').hidden = cart.items.length === 0;
   renderSort();
   renderBadge(units);
+  renderPlan();
 }
 
 let shownTotal = null; // cents on the tag right now

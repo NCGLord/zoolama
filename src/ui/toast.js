@@ -47,7 +47,9 @@ function offerUpdate() {
 
 /** An Undo that can no longer undo anything must not stay on screen. */
 function dropStaleUndo() {
-  if (!$('toast').hidden && toastActions[toastAction]?.cartUndo && !state.cart.undo) hideToast();
+  const action = toastActions[toastAction];
+  const stale = (action?.cartUndo && !state.cart.undo) || (action?.planUndo && !state.plan.undo);
+  if (!$('toast').hidden && stale) hideToast();
 }
 
 $('toast-action').addEventListener('click', () => {

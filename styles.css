@@ -850,6 +850,80 @@ main {
   color: var(--muted);
 }
 
+/* ---------- shopping list ---------- */
+
+.plan {
+  margin: 8px 16px 0;
+}
+
+.plan summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font: 700 20px/1 var(--num);
+  cursor: pointer;
+  list-style: none;
+}
+
+.plan summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The same open/closed marker as a trip in History. */
+.plan summary::before {
+  width: 0.8em;
+  color: var(--muted);
+  content: '▸';
+}
+
+.plan[open] summary::before {
+  content: '▾';
+}
+
+.plan-progress {
+  color: var(--muted);
+  font: 400 14px/1 var(--text);
+}
+
+.plan-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1.5px solid var(--rule);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* Already in the cart: struck through, and nothing to tap. */
+.plan-chip.bought {
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.plan-clear {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: underline;
+}
+
 /* ---------- checkout mode ---------- */
 
 .start-check {

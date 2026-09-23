@@ -119,6 +119,11 @@
           </div>
           <p id="name-hint" class="name-hint" aria-live="polite"></p>
         </form>
+        <details id="plan" class="plan" open hidden>
+          <summary><span data-i18n="planTitle">Lista de compras</span> <span id="plan-progress" class="plan-progress"></span></summary>
+          <ul id="plan-items" class="plan-items"></ul>
+          <button type="button" id="clear-plan" class="plan-clear" data-i18n="clearPlan">Limpar lista</button>
+        </details>
         <div id="check-head" class="check-head" hidden>
           <div>
             <h2 data-i18n="startCheck">Conferir no caixa</h2>

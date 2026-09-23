@@ -117,4 +117,14 @@ $('entry').addEventListener('click', (e) => {
   if (step) $('qty').value = Math.max(1, Math.min(MAX_QTY, readQty() + Number(step)));
 });
 
-export { renderEntryMode };
+/** Starts entering a listed item: its name, Peso if it was last bought by weight, and the price field ready. */
+function enterName(name) {
+  $('name').value = name;
+  const last = lastPrice(memory, name, entryMode === 'weight' ? 'weight' : 'unit');
+  if (last) entryMode = last.kind;
+  setEntryError(null);
+  renderEntryMode();
+  $('price').focus();
+}
+
+export { renderEntryMode, enterName };
