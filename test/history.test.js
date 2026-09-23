@@ -11,6 +11,9 @@ import {
   pastNames,
   lastPrice,
   priceRise,
+  storeStats,
+  monthlySeries,
+  averageTripCents,
 } from '../src/history.js';
 
 const cartOf = (...actions) => actions.reduce(cartReducer, initialCart());
@@ -178,4 +181,55 @@ test('priceRise flags a line that costs at least 1% more than last time, like wi
   assert.equal(priceRise(weighed('Tomate', 799, 2500), memory), null, 'more weight, same price per kg');
   assert.ok(priceRise(weighed('Tomate', 899, 500), memory), 'a dearer price per kg');
   assert.equal(priceRise({ name: '', priceCents: 9999, qty: 1 }, memory), null, 'unnamed');
+});
+
+const spent = (id, when, store, totalCents) => ({ id, at: when, store, items: [], totalCents, units: 0 });
+
+test('storeStats totals and averages each store, spelled as last visited, biggest first, unnamed trips last', () => {
+  const stats = storeStats([
+    spent('a', at(2026, 9, 1), 'assai ', 100),
+    spent('b', at(2026, 9, 2), '', 5000),
+    spent('c', at(2026, 9, 3), 'Assaí', 100),
+    spent('d', at(2026, 9, 4), 'Extra', 150),
+    spent('e', at(2026, 9, 5), 'ASSAÍ', 101),
+  ]);
+  assert.deepEqual(stats, [
+    { name: 'ASSAÍ', trips: 3, totalCents: 301, avgCents: 100 },
+    { name: 'Extra', trips: 1, totalCents: 150, avgCents: 150 },
+    { name: '', trips: 1, totalCents: 5000, avgCents: 5000 },
+  ]);
+  assert.deepEqual(storeStats([]), []);
+});
+
+test('monthlySeries gives the last months oldest first, months without trips at zero', () => {
+  const trips = [
+    spent('a', at(2026, 9, 3), '', 300),
+    spent('b', at(2026, 9, 20), '', 200),
+    spent('c', at(2026, 7, 10), '', 1000),
+    spent('d', at(2026, 1, 10), '', 9999), // before the window
+  ];
+  const series = monthlySeries(trips, { now: at(2026, 9, 23), months: 4 });
+  assert.deepEqual(
+    series.map((m) => [m.year, m.month, m.totalCents, m.trips]),
+    [
+      [2026, 5, 0, 0],
+      [2026, 6, 1000, 1],
+      [2026, 7, 0, 0],
+      [2026, 8, 500, 2],
+    ],
+  );
+});
+
+test('monthlySeries crosses a year boundary, and defaults to six months', () => {
+  const series = monthlySeries([spent('a', at(2025, 12, 31, 23), '', 700)], { now: at(2026, 2, 1) });
+  assert.equal(series.length, 6);
+  const months = series.map((m) => `${m.year}-${m.month}`);
+  assert.deepEqual(months, ['2025-8', '2025-9', '2025-10', '2025-11', '2026-0', '2026-1']);
+  assert.equal(series[3].totalCents, 700);
+});
+
+test('averageTripCents rounds to the centavo, and is null with no trips', () => {
+  assert.equal(averageTripCents([spent('a', 0, '', 100), spent('b', 0, '', 100), spent('c', 0, '', 101)]), 100);
+  assert.equal(averageTripCents([spent('a', 0, '', 100), spent('b', 0, '', 101)]), 101);
+  assert.equal(averageTripCents([]), null);
 });

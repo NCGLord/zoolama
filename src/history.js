@@ -130,3 +130,49 @@ export function priceRise(item, memory, minPct = 1) {
   const pct = ((item.perKgCents ?? item.priceCents) / (last.perKgCents ?? last.priceCents) - 1) * 100;
   return pct >= minPct ? { last, pct } : null;
 }
+
+/* ---------- insights: spending by store and by month ---------- */
+
+/**
+ * Each store's trips, total and average trip, grouped by nameKey and named as last visited: named stores by total,
+ * biggest first, then the trips without a store ('').
+ */
+export function storeStats(trips) {
+  const stores = new Map();
+  for (const trip of [...trips].sort((a, b) => a.at - b.at)) {
+    const key = nameKey(trip.store);
+    const store = stores.get(key) ?? { name: '', trips: 0, totalCents: 0 };
+    store.name = trip.store.trim(); // the newest spelling wins
+    store.trips++;
+    store.totalCents += trip.totalCents;
+    stores.set(key, store);
+  }
+  const stats = [...stores.values()].map((s) => ({ ...s, avgCents: Math.round(s.totalCents / s.trips) }));
+  return stats.sort((a, b) => !a.name - !b.name || b.totalCents - a.totalCents);
+}
+
+/**
+ * The last `months` local months up to `now`'s, oldest first: [{year, month, totalCents, trips}], month 0-based like
+ * Date, and months without trips at zero so a chart shows the gaps.
+ */
+export function monthlySeries(trips, { now, months = 6 }) {
+  const end = new Date(now);
+  const series = Array.from({ length: months }, (_, i) => {
+    const d = new Date(end.getFullYear(), end.getMonth() - (months - 1 - i), 1);
+    return { year: d.getFullYear(), month: d.getMonth(), totalCents: 0, trips: 0 };
+  });
+  const byMonth = new Map(series.map((m) => [`${m.year}-${m.month}`, m]));
+  for (const trip of trips) {
+    const d = new Date(trip.at);
+    const month = byMonth.get(`${d.getFullYear()}-${d.getMonth()}`);
+    if (!month) continue;
+    month.totalCents += trip.totalCents;
+    month.trips++;
+  }
+  return series;
+}
+
+/** The average trip, to the centavo; null with no trips. */
+export function averageTripCents(trips) {
+  return trips.length ? Math.round(trips.reduce((sum, t) => sum + t.totalCents, 0) / trips.length) : null;
+}
