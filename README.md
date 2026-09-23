@@ -47,6 +47,9 @@ the app is fully cached. Then add it to your home screen:
 - **Android (Chrome):** menu ⋮ → **Add to Home screen** / **Install app**.
 - **iPhone (Safari):** Share button → **Add to Home Screen**.
 
+Where the browser can install it, an **Instalar** / **Install** button also appears in the header: on Android it opens
+the install prompt, on iPhone it shows the two steps above. It hides once the app runs from the home screen.
+
 Launch it from the home-screen icon. It works in airplane mode from then on.
 
 **Updates:** the app checks for a new version when you open it, and again when you bring it back to the front
@@ -82,7 +85,8 @@ font's real letter outlines and needs `pip install fonttools brotli`. Run `npm r
 
 | Path | What |
 |---|---|
-| `src/money.js`, `units.js`, `compare.js`, `cart.js`, `store.js`, `i18n.js`, `theme.js` | Pure logic, unit-tested |
+| `src/money.js`, `units.js`, `compare.js`, `cart.js`, `budget.js`, `history.js`, `share.js`, `store.js`, `i18n.js`, `theme.js`, `install.js`, `update.js`, `delight.js` | Pure logic, unit-tested |
+| `src/photos.js` | Shelf-tag photos: shrinks them on a canvas and keeps them in IndexedDB; its pure helpers are unit-tested |
 | `src/app.js` | DOM wiring only |
 | `sw.js` | Service worker: atomic precache, cache-first |
 | `tools/` | `stamp-sw.mjs`, `sw-assets.mjs`, `icons.sh`, `wordmark.py` |
