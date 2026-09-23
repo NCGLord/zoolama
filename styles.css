@@ -419,8 +419,25 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+/* Each past trip is a receipt: a paper slip with a torn zigzag bottom, like a cupom fiscal. */
 .trip {
-  border-bottom: 1px solid var(--rule);
+  position: relative;
+  margin: 10px 0 20px;
+  padding: 0 14px 6px;
+  border-radius: 6px 6px 0 0;
+  background: var(--surface);
+}
+
+.trip::after {
+  position: absolute;
+  right: 0;
+  bottom: -8px;
+  left: 0;
+  height: 8px;
+  background: var(--surface);
+  content: '';
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0h12L6 8z'/%3E%3C/svg%3E") 0 0 / 12px 8px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0h12L6 8z'/%3E%3C/svg%3E") 0 0 / 12px 8px repeat-x;
 }
 
 .trip > summary {
