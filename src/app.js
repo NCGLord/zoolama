@@ -25,11 +25,10 @@ import { dueForUpdateCheck } from './update.js';
 import { shrinkPhoto, newPhotoId, savePhoto, getPhoto, photoIds, deletePhotos, orphans } from './photos.js';
 import { budgetStatus } from './budget.js';
 import { tweenCents, celebrates, newWinners } from './delight.js';
+import { $, reducedMotion, h, keepingFocus, icon, replay } from './ui/dom.js';
 
-const $ = (id) => document.getElementById(id);
 const TOAST_MS = 5000;
 const COUNT_MS = 480; // total count-up
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)'); // JS animations check it too; CSS can't reach them
 const MAX_QTY = 999;
 
 // Reading window.localStorage itself throws when storage is blocked; store.js copes with null.
@@ -85,17 +84,6 @@ function dispatchCart(action) {
 
 /* ---------- rendering helpers ---------- */
 
-function h(tag, attrs = {}, ...children) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v == null || v === false) continue;
-    if (k === 'text') el.textContent = v;
-    else el.setAttribute(k, v === true ? '' : v);
-  }
-  el.append(...children);
-  return el;
-}
-
 function tagPrice(el, cents) {
   const p = formatMoneyParts(cents, state.lang);
   el.replaceChildren(
@@ -104,13 +92,6 @@ function tagPrice(el, cents) {
     h('span', { class: 'cents', text: p.decimal + p.fraction }),
   );
   el.setAttribute('aria-label', formatMoney(cents, state.lang));
-}
-
-/** Re-rendering replaces buttons; put focus back on the element with the same data-key. */
-function keepingFocus(render) {
-  const key = document.activeElement?.dataset?.key;
-  render();
-  if (key) document.querySelector(`[data-key="${key}"]`)?.focus();
 }
 
 function applyLang() {
@@ -129,7 +110,6 @@ const unitLabel = (unit) => (unit === 'un' ? tr('unitCount') : unit);
 
 /* ---------- cart ---------- */
 
-const icon = (id) => $(id).content.firstElementChild.cloneNode(true);
 const signedMoney = (cents) => `${cents > 0 ? '+' : '−'}${formatMoney(Math.abs(cents), state.lang)}`;
 
 function photoCell(item) {
@@ -313,13 +293,6 @@ function renderCart() {
   $('cart-actions').hidden = cart.items.length === 0;
   renderSort();
   renderBadge(units);
-}
-
-/** Restarts a CSS animation on an element, even if it is still running. */
-function replay(el, cls) {
-  el.classList.remove(cls);
-  void el.offsetWidth;
-  el.classList.add(cls);
 }
 
 let shownTotal = null; // cents on the tag right now
