@@ -122,6 +122,12 @@
           <span data-i18n="startCheck">Conferir no caixa</span>
         </button>
         <p id="empty" class="empty" data-i18n="emptyCart"></p>
+        <div id="sort-bar" class="sort-bar" role="group" data-i18n-aria-label="sortBy" hidden>
+          <span aria-hidden="true" data-i18n="sortBy">Ordenar</span>
+          <button type="button" data-sort="added"><span data-i18n="sortAdded">Adicionado</span><span class="dir" aria-hidden="true"></span></button>
+          <button type="button" data-sort="total"><span data-i18n="sortTotal">Valor</span><span class="dir" aria-hidden="true"></span></button>
+          <button type="button" data-sort="name"><span data-i18n="sortName">Nome</span><span class="dir" aria-hidden="true"></span></button>
+        </div>
         <ul id="lines" class="lines"></ul>
         <div id="cart-actions" class="cart-actions" hidden>
           <button type="button" id="share-cart" class="secondary share-btn">

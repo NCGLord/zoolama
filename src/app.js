@@ -1,7 +1,7 @@
 // DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
 
 import { parseMoney, formatMoney, formatMoneyParts } from './money.js';
-import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary, linePriceCents } from './cart.js';
+import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary, linePriceCents, sortItems } from './cart.js';
 import { compare } from './compare.js';
 import { UNITS, BASE_UNIT, parseGrams } from './units.js';
 import { t, detectLang, formatPct, formatKg, LOCALES } from './i18n.js';
@@ -39,6 +39,7 @@ let state = {
   theme: saved?.theme ?? null,
   checking: saved?.checking ?? false, // checkout mode ("Conferir no caixa")
   budgetCents: saved?.budgetCents ?? null, // the shopper's limit; survives clearing the cart
+  sort: saved?.sort ?? { key: 'added', dir: 'desc' }, // cart list order; newest first by default
 };
 
 const tr = (key, params) => t(key, state.lang, params);
@@ -273,8 +274,7 @@ function renderCart() {
   else editingWeightId = null;
   renderCheck();
   keepingFocus(() => {
-    // Newest first, so the line just added sits right under the entry form.
-    $('lines').replaceChildren(...cart.items.map((item, i) => lineView(item, i + 1)).reverse());
+    $('lines').replaceChildren(...sortItems(cart.items, state.sort, LOCALES[state.lang]).map(({ item, n }) => lineView(item, n)));
   });
   hydratePhotos($('lines'));
   $('empty').hidden = cart.items.length > 0;
@@ -284,6 +284,7 @@ function renderCart() {
   $('count').textContent = tr('itemsCount', { n: units });
   $('clear').disabled = cart.items.length === 0;
   $('cart-actions').hidden = cart.items.length === 0;
+  renderSort();
   renderBadge(units);
 }
 
@@ -326,6 +327,34 @@ $('budget-remove').addEventListener('click', () => {
 });
 
 $('budget-cancel').addEventListener('click', () => $('budget-sheet').close());
+
+// Each key starts in its most useful direction; tapping the active key flips it.
+const SORT_START = { added: 'desc', total: 'desc', name: 'asc' };
+const SORT_LABEL = { added: 'sortAdded', total: 'sortTotal', name: 'sortName' };
+
+function renderSort() {
+  $('sort-bar').hidden = state.cart.items.length < 2; // nothing to sort
+  for (const b of document.querySelectorAll('[data-sort]')) {
+    const active = b.dataset.sort === state.sort.key;
+    b.setAttribute('aria-pressed', active);
+    b.querySelector('.dir').textContent = active ? (state.sort.dir === 'asc' ? '↑' : '↓') : '';
+    if (active) {
+      const dir = tr(state.sort.dir === 'asc' ? 'sortAsc' : 'sortDesc');
+      b.setAttribute('aria-label', `${tr(SORT_LABEL[b.dataset.sort])}, ${dir}`);
+    } else {
+      b.removeAttribute('aria-label');
+    }
+  }
+}
+
+$('sort-bar').addEventListener('click', (e) => {
+  const key = e.target.closest('[data-sort]')?.dataset.sort;
+  if (!key) return;
+  const { sort } = state;
+  const dir = key === sort.key ? (sort.dir === 'asc' ? 'desc' : 'asc') : SORT_START[key];
+  persist({ ...state, sort: { key, dir } });
+  renderCart();
+});
 
 let badgeUnits = null;
 
