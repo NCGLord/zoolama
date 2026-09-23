@@ -123,9 +123,15 @@
         </button>
         <p id="empty" class="empty" data-i18n="emptyCart"></p>
         <ul id="lines" class="lines"></ul>
-        <button type="button" id="finish" class="primary finish-btn" hidden>
-          <span data-i18n="finishTrip">Finalizar compra</span>
-        </button>
+        <div id="cart-actions" class="cart-actions" hidden>
+          <button type="button" id="share-cart" class="secondary share-btn">
+            <svg class="share-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M7 11H5.5v9.5h13V11H17" /></svg>
+            <span data-i18n="share">Compartilhar</span>
+          </button>
+          <button type="button" id="finish" class="primary">
+            <span data-i18n="finishTrip">Finalizar compra</span>
+          </button>
+        </div>
       </section>
 
       <section id="panel-history" class="panel" role="tabpanel" aria-labelledby="tab-history" hidden>

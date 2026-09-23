@@ -7,6 +7,7 @@ import { UNITS, BASE_UNIT, parseGrams } from './units.js';
 import { t, detectLang, formatPct, formatKg, LOCALES } from './i18n.js';
 import { load, save, loadHistory, saveHistory } from './store.js';
 import { tripFromCart, monthlyGroups, storeNames } from './history.js';
+import { shareText } from './share.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
@@ -282,7 +283,7 @@ function renderCart() {
   const { units } = counts(cart);
   $('count').textContent = tr('itemsCount', { n: units });
   $('clear').disabled = cart.items.length === 0;
-  $('finish').hidden = cart.items.length === 0;
+  $('cart-actions').hidden = cart.items.length === 0;
   renderBadge(units);
 }
 
@@ -676,8 +677,41 @@ function undoFinish() {
   dispatchCart({ type: 'undo' });
 }
 
+/** The phone's share sheet where there is one; otherwise copy the list. Closing the sheet is not an error. */
+async function shareList(text) {
+  if (navigator.share) {
+    try {
+      await navigator.share({ text });
+      return;
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      // any other failure: fall back to copying
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('copied');
+  } catch {
+    showToast('shareFailed');
+  }
+}
+
+$('share-cart').addEventListener('click', () =>
+  shareList(shareText(state.cart.items, { lang: state.lang, title: tr('shareCartTitle') })),
+);
+
+function tripTitle(trip) {
+  const date = new Intl.DateTimeFormat(LOCALES[state.lang], { dateStyle: 'short' }).format(trip.at);
+  return `Zoolama — ${trip.store || tr('tripUnnamed')}, ${date}`;
+}
+
 $('history').addEventListener('click', (e) => {
-  if (e.target.closest('[data-action]')?.dataset.action !== 'delete-trip') return;
+  const action = e.target.closest('[data-action]')?.dataset.action;
+  if (action === 'share-trip') {
+    const trip = history.find((t) => t.id === e.target.closest('[data-trip]').dataset.trip);
+    shareList(shareText(trip.items, { lang: state.lang, title: tripTitle(trip) }));
+  }
+  if (action !== 'delete-trip') return;
   const id = e.target.closest('[data-trip]').dataset.trip;
   const index = history.findIndex((t) => t.id === id);
   lastDeleted = { trip: history[index], index };
@@ -724,7 +758,12 @@ function tripView(trip, whenFormat) {
         ),
       ),
     ),
-    h('button', { type: 'button', class: 'secondary trip-delete', 'data-action': 'delete-trip' }, tr('deleteTrip')),
+    h(
+      'div',
+      { class: 'trip-actions' },
+      h('button', { type: 'button', class: 'secondary', 'data-action': 'share-trip' }, tr('share')),
+      h('button', { type: 'button', class: 'secondary', 'data-action': 'delete-trip' }, tr('deleteTrip')),
+    ),
   );
 }
 

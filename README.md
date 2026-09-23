@@ -16,6 +16,8 @@ Offline supermarket helper for your phone:
 - **Trip history (Histórico)**: *Finalizar compra* under the cart saves the trip (date, optional store, items,
   total, and any overcharge found at the till) and clears the cart, with Undo. The Histórico tab lists trips by
   month with monthly totals; tap one to see its items or delete it.
+- **Share**: *Compartilhar* sends the cart, or any past trip from Histórico, as plain text through the phone's
+  share sheet (WhatsApp, SMS, e-mail…). Where there's no share sheet, it copies the list instead.
 - **Budget**: tap *+ Orçamento* under the total to set a limit. The tag shows what's left, and turns red with the
   amount over when you pass it. The budget stays when you clear the cart.
 - **Compare (Comparar)**: enter two or more options (e.g. 1 kg for R$ 8,99 vs 5 kg for R$ 29,90) to see the

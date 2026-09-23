@@ -330,9 +330,20 @@ button {
 
 /* ---------- finishing a trip ---------- */
 
-.finish-btn {
-  width: calc(100% - 32px);
+.cart-actions {
+  display: flex;
+  gap: 8px;
   margin: 16px;
+}
+
+.cart-actions .primary {
+  flex: 1;
+}
+
+.share-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .finish-total {
@@ -471,7 +482,10 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
-.trip-delete {
+.trip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 8px 0 14px 1.1em;
 }
 
