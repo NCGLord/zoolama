@@ -1,14 +1,15 @@
 // DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
 
 import { parseMoney, formatMoney, formatMoneyParts } from './money.js';
-import { initialCart, cartReducer, total, counts } from './cart.js';
+import { initialCart, cartReducer, total, counts, referencedPhotos } from './cart.js';
 import { compare } from './compare.js';
 import { UNITS, BASE_UNIT } from './units.js';
-import { t, detectLang, formatPct } from './i18n.js';
+import { t, detectLang, formatPct, LOCALES } from './i18n.js';
 import { load, save } from './store.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
+import { shrinkPhoto, newPhotoId, savePhoto, getPhoto, photoIds, deletePhotos, orphans } from './photos.js';
 
 const $ = (id) => document.getElementById(id);
 const TOAST_MS = 5000;
@@ -45,6 +46,7 @@ function persist(next) {
 function dispatchCart(action) {
   persist({ ...state, cart: cartReducer(state.cart, action) });
   renderCart();
+  collectPhotos();
 }
 
 /* ---------- rendering helpers ---------- */
@@ -98,6 +100,17 @@ function lineView(item, n) {
   return h(
     'li',
     { class: 'line', 'data-id': id },
+    item.photoId
+      ? h(
+          'button',
+          { type: 'button', class: 'line-photo', 'data-action': 'view-photo', 'aria-label': tr('photoOf') },
+          h('img', { alt: '', 'data-photo': item.photoId }),
+        )
+      : h(
+          'button',
+          { type: 'button', class: 'line-photo empty', 'data-action': 'take-photo', 'aria-label': tr('takePhoto') },
+          $('camera-icon').content.firstElementChild.cloneNode(true),
+        ),
     h('input', {
       class: 'line-name',
       value: item.name,
@@ -129,6 +142,7 @@ function renderCart() {
     // Newest first, so the line just added sits right under the entry form.
     $('lines').replaceChildren(...cart.items.map((item, i) => lineView(item, i + 1)).reverse());
   });
+  hydratePhotos($('lines'));
   $('empty').hidden = cart.items.length > 0;
   tagPrice($('total'), total(cart));
   const { units } = counts(cart);
@@ -173,7 +187,10 @@ $('entry').addEventListener('submit', (e) => {
     $('price').focus();
     return;
   }
-  dispatchCart({ type: 'add', priceCents, qty: readQty(), name: $('name').value });
+  dispatchCart({ type: 'add', priceCents, qty: readQty(), name: $('name').value, photoId: entryPhotoId });
+  pendingPhotos.delete(entryPhotoId); // now the cart keeps it
+  entryPhotoId = null;
+  renderEntryPhoto();
   $('entry').reset();
   setPriceError(null);
   $('price').focus();
@@ -191,6 +208,8 @@ $('lines').addEventListener('click', (e) => {
   const id = Number(e.target.closest('[data-id]')?.dataset.id);
   const item = state.cart.items.find((i) => i.id === id);
   if (!item) return;
+  if (action === 'take-photo') takePhoto(id);
+  if (action === 'view-photo') openViewer(item);
   if (action === 'inc') dispatchCart({ type: 'setQty', id, qty: Math.min(MAX_QTY, item.qty + 1) });
   if (action === 'dec' && item.qty > 1) dispatchCart({ type: 'setQty', id, qty: item.qty - 1 });
   if (action === 'remove' || (action === 'dec' && item.qty === 1)) {
@@ -213,6 +232,111 @@ $('lines').addEventListener('keydown', (e) => {
 $('clear').addEventListener('click', () => {
   dispatchCart({ type: 'clear' });
   showToast('cleared', { action: 'undo' });
+});
+
+/* ---------- shelf-tag photos ---------- */
+
+// Saving now, or waiting in the entry form for Add: cleanup must never delete these.
+const pendingPhotos = new Set();
+const photoUrls = new Map(); // photo id → Promise of an object URL (or null)
+let entryPhotoId = null;
+let photoTarget = null; // 'entry', or the id of the cart item being photographed
+let viewing = null; // id of the item open in the viewer
+
+function photoUrl(id) {
+  if (!photoUrls.has(id)) {
+    photoUrls.set(id, getPhoto(id).then((p) => (p ? URL.createObjectURL(p.blob) : null)).catch(() => null));
+  }
+  return photoUrls.get(id);
+}
+
+function hydratePhotos(root) {
+  for (const img of root.querySelectorAll('img[data-photo]')) {
+    photoUrl(img.dataset.photo).then((url) => url && (img.src = url));
+  }
+}
+
+/** Delete stored photos that no item, undo snapshot or pending shot points to. */
+async function collectPhotos() {
+  try {
+    const stored = await photoIds();
+    const keep = referencedPhotos(state.cart); // read after the await, so it sees the latest cart
+    for (const id of pendingPhotos) keep.add(id);
+    const dead = orphans(stored, keep);
+    await deletePhotos(dead);
+    for (const id of dead) {
+      photoUrls.get(id)?.then((url) => url && URL.revokeObjectURL(url));
+      photoUrls.delete(id);
+    }
+  } catch {
+    // no IndexedDB (e.g. private mode): nothing to clean
+  }
+}
+
+function takePhoto(target) {
+  photoTarget = target;
+  $('photo-input').click();
+}
+
+function renderEntryPhoto() {
+  const img = $('entry-photo-img');
+  img.hidden = !entryPhotoId;
+  if (entryPhotoId) photoUrl(entryPhotoId).then((url) => url && (img.src = url));
+  $('entry-photo').dataset.i18nAriaLabel = entryPhotoId ? 'retakePhoto' : 'takePhoto';
+  $('entry-photo').setAttribute('aria-label', tr($('entry-photo').dataset.i18nAriaLabel));
+}
+
+$('entry-photo').addEventListener('click', () => takePhoto('entry'));
+
+$('photo-input').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  e.target.value = ''; // so picking the same file again still fires change
+  const target = photoTarget;
+  photoTarget = null;
+  if (!file || target === null) return;
+
+  const id = newPhotoId();
+  pendingPhotos.add(id);
+  try {
+    await savePhoto(id, await shrinkPhoto(file));
+  } catch {
+    pendingPhotos.delete(id);
+    showToast('photoError');
+    return;
+  }
+  if (target === 'entry') {
+    if (entryPhotoId) pendingPhotos.delete(entryPhotoId); // a retake orphans the previous shot
+    entryPhotoId = id; // stays pending until Add
+    renderEntryPhoto();
+    collectPhotos();
+  } else {
+    dispatchCart({ type: 'setPhoto', id: target, photoId: id });
+    pendingPhotos.delete(id);
+  }
+});
+
+async function openViewer(item) {
+  viewing = item.id;
+  const n = state.cart.items.findIndex((i) => i.id === item.id) + 1;
+  const [url, photo] = await Promise.all([photoUrl(item.photoId), getPhoto(item.photoId).catch(() => null)]);
+  $('viewer-img').src = url ?? '';
+  $('viewer-img').alt = tr('photoOf');
+  $('viewer-title').textContent = item.name || tr('itemN', { n });
+  tagPrice($('viewer-price'), item.priceCents);
+  const when = photo && new Intl.DateTimeFormat(LOCALES[state.lang], { dateStyle: 'short', timeStyle: 'short' }).format(photo.takenAt);
+  $('viewer-when').textContent = when ? tr('photoTakenAt', { when }) : '';
+  $('viewer').showModal();
+}
+
+$('viewer-retake').addEventListener('click', () => {
+  $('viewer').close();
+  takePhoto(viewing);
+});
+
+$('viewer-remove').addEventListener('click', () => {
+  $('viewer').close();
+  dispatchCart({ type: 'setPhoto', id: viewing, photoId: null });
+  showToast('photoRemoved', { action: 'undo' });
 });
 
 /* ---------- compare ---------- */
@@ -487,6 +611,7 @@ renderCart();
 renderOptions();
 renderTab();
 renderInstall();
+collectPhotos();
 navigator.storage?.persist?.().catch(() => {});
 
 if ('serviceWorker' in navigator) {

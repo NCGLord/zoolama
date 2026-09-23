@@ -192,6 +192,89 @@ button {
   }
 }
 
+/* Photo viewer: always dark, like any photo view, whatever the app theme. */
+.viewer {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #0b0c0e;
+  color: #f3f5f7;
+}
+
+.viewer[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.viewer::backdrop {
+  background: #000;
+}
+
+.viewer > img {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.viewer-bar {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  border-top: 1px solid #2e333a;
+}
+
+.viewer-caption {
+  display: grid;
+  gap: 4px;
+}
+
+.viewer-caption h2 {
+  margin: 0;
+  font: 700 22px/1.1 var(--num);
+}
+
+.viewer .tag-price {
+  color: var(--tag);
+  font-size: 48px;
+}
+
+.viewer-caption p {
+  margin: 0;
+  color: #9ba5b0;
+  font-size: 14px;
+}
+
+.viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.viewer-actions button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid #2e333a;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+}
+
+.viewer-actions form {
+  margin-left: auto;
+}
+
+.viewer-actions .primary {
+  border-color: #f3f5f7;
+  background: #f3f5f7;
+  color: #15171a;
+}
+
 .sheet {
   max-width: min(340px, calc(100vw - 32px));
   padding: 20px;
@@ -372,6 +455,54 @@ main {
   color: var(--muted);
 }
 
+.entry-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.entry-actions .primary {
+  flex: 1;
+}
+
+/* Camera buttons: a dashed frame until a photo fills them. */
+.photo-btn,
+.line-photo {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  padding: 0;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.photo-btn {
+  width: 48px;
+  height: 48px;
+}
+
+.photo-btn img,
+.line-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .primary {
   min-height: 48px;
   padding: 0 20px;
@@ -398,14 +529,27 @@ main {
 
 .line {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   grid-template-areas:
-    'name sub'
-    'each ctl';
+    'photo name sub'
+    'photo each ctl';
   gap: 2px 12px;
   align-items: center;
   padding: 10px 0;
   border-bottom: 1px solid var(--rule);
+}
+
+.line-photo {
+  grid-area: photo;
+  width: 44px;
+  height: 44px;
+  align-self: center;
+}
+
+.line-photo.empty {
+  border-style: dashed;
+  background: transparent;
+  color: var(--muted);
 }
 
 .line-name {
