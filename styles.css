@@ -654,17 +654,54 @@ main {
 }
 
 .tabs button {
+  display: flex;
   flex: 1;
-  min-height: 52px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 60px;
+  padding: 6px 0 4px;
   border: 0;
   background: transparent;
   color: var(--muted);
+  font-size: 13px;
   font-weight: 600;
+}
+
+.tab-icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 30px;
+  border-radius: 15px;
+}
+
+.tab-icon svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tabs button[aria-selected='true'] {
   color: var(--ink);
-  box-shadow: inset 0 3px 0 var(--ink);
+}
+
+/* The active tab wears a little shelf tag; it pops in when tapped. */
+.tabs button[aria-selected='true'] .tab-icon {
+  background: var(--tag);
+  color: var(--tag-ink);
+  animation: tag-pop 200ms cubic-bezier(0.3, 1.4, 0.6, 1);
+}
+
+@keyframes tag-pop {
+  from {
+    transform: scaleX(0.4);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
