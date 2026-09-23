@@ -106,3 +106,15 @@ test('correcting a weighed line changes its price per kg, not its weight', async
   await expect(weighed.locator('.line-each')).toHaveText('R$ 6,99/kg × 1,250 kg');
   await expect(weighed.locator('.line-sub')).toHaveText('R$ 8,74');
 });
+
+test('tapping another line straight after typing a corrected price saves the price and takes the tap', async ({
+  app: page,
+}) => {
+  await addItem(page, { price: '45,00', name: 'Leite' });
+  await addItem(page, { price: '8,99', name: 'Café' });
+  await line(page, 'Leite').getByRole('button', { name: /^Corrigir preço/ }).click();
+  await line(page, 'Leite').locator('.price-input').fill('4,50'); // no Enter: the next tap blurs it
+  await line(page, 'Café').getByRole('button', { name: 'Mais um' }).click();
+  await expect(line(page, 'Leite').locator('.line-sub')).toHaveText('R$ 4,50');
+  await expect(line(page, 'Café').locator('.line-sub')).toHaveText('R$ 17,98');
+});

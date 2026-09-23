@@ -85,3 +85,16 @@ test('the screen stays on while checking, and the lock comes back after the brow
   await page.reload();
   await expect.poll(locks).toEqual({ requested: 1, released: 0 });
 });
+
+test('tapping the next line straight after typing a charged amount saves the amount and takes the tap', async ({
+  app: page,
+}) => {
+  await addItem(page, { price: '8,99', name: 'Café' });
+  await addItem(page, { price: '12,00', name: 'Arroz' });
+  await page.locator('#start-check').click();
+  await checkLine(page, 'Café').getByRole('button', { name: 'O caixa cobrou outro valor' }).click();
+  await checkLine(page, 'Café').locator('.charge-input').fill('10,00'); // no Enter: the next tap blurs it
+  await checkLine(page, 'Arroz').getByRole('button', { name: 'Conferido' }).click();
+  await expect(checkLine(page, 'Café').locator('.line-charged')).toHaveText('cobrado R$ 10,00+R$ 1,01');
+  await expect(checkLine(page, 'Arroz').getByRole('button', { name: 'Conferido' })).toHaveAttribute('aria-pressed', 'true');
+});

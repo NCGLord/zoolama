@@ -31,4 +31,13 @@ function replay(el, cls) {
   el.classList.add(cls);
 }
 
-export { $, reducedMotion, h, keepingFocus, icon, replay };
+/** Makes `parent`'s children exactly `nodes`, in order, removing or moving only the ones that must change. */
+function reconcile(parent, nodes) {
+  const keep = new Set(nodes);
+  for (const child of [...parent.children]) if (!keep.has(child)) child.remove();
+  nodes.forEach((node, i) => {
+    if (parent.children[i] !== node) parent.insertBefore(node, parent.children[i] ?? null);
+  });
+}
+
+export { $, reducedMotion, h, keepingFocus, icon, replay, reconcile };

@@ -7,9 +7,9 @@ import { LOCALES } from '../i18n.js';
 import { formatMoney, parseMoney } from '../money.js';
 import { parseGrams } from '../units.js';
 import { persist, state } from './app-state.js';
-import { editing, lineView } from './cart-lines.js';
+import { editing, lineNodes } from './cart-lines.js';
 import { dispatchCart, MAX_QTY, setCart } from './cart-store.js';
-import { $, keepingFocus, reducedMotion, replay } from './dom.js';
+import { $, keepingFocus, reconcile, reducedMotion, replay } from './dom.js';
 import { hydratePhotos } from './photo-cache.js';
 import { openViewer, takePhoto } from './photos-ui.js';
 import { pricePlaceholder, tagPrice, tr } from './text.js';
@@ -44,7 +44,8 @@ function renderCart() {
   else editing.weightId = editing.priceId = null;
   renderCheck();
   keepingFocus(() => {
-    $('lines').replaceChildren(...sortItems(cart.items, state.sort, LOCALES[state.lang]).map(({ item, n }) => lineView(item, n)));
+    const rows = sortItems(cart.items, state.sort, LOCALES[state.lang]);
+    reconcile($('lines'), lineNodes(rows, [...$('lines').children]));
   });
   hydratePhotos($('lines'));
   $('empty').hidden = cart.items.length > 0;

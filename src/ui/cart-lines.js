@@ -172,4 +172,27 @@ function checkLineView(item, n) {
   );
 }
 
-export { lineView, editing };
+// A line node remembers the look it was drawn with. Saving one line's field on blur redraws the list in the middle
+// of the tap that caused the blur; lines whose look didn't change keep their node, so that tap still lands.
+const looks = new WeakMap();
+
+/** Everything a line's view depends on: the item, its number, the mode, the language and which field is open. */
+function lineLook(item, n) {
+  const id = item.id;
+  const open = [editing.weightId, editing.priceId, editing.chargeId, editing.justTicked].map((x) => x === id);
+  return JSON.stringify([item, n, state.checking, state.lang, ...open]);
+}
+
+/** Nodes for the sorted rows: the same node where a line looks the same as in `current`, a new one where it changed. */
+function lineNodes(rows, current) {
+  const byLook = new Map(current.map((li) => [looks.get(li), li]));
+  return rows.map(({ item, n }) => {
+    const look = lineLook(item, n);
+    if (byLook.has(look)) return byLook.get(look);
+    const li = lineView(item, n);
+    looks.set(li, look);
+    return li;
+  });
+}
+
+export { lineNodes, editing };
