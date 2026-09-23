@@ -176,6 +176,38 @@ test('setWeight ignores a weight that is not positive', () => {
   assert.deepEqual(cartReducer(before, { type: 'setWeight', id: 1, grams: 0 }).items, before.items);
 });
 
+test('setPrice corrects a line\'s price and keeps its quantity', () => {
+  const s = run(add(450, 'Leite', 2), { type: 'setPrice', id: 1, priceCents: 399 });
+  assert.deepEqual(s.items, [{ id: 1, name: 'Leite', priceCents: 399, qty: 2 }]);
+  assert.equal(total(s), 798);
+});
+
+test('setPrice on a weighed line corrects the price per kg and re-prices the line at the same weight', () => {
+  const s = run({ type: 'add', perKgCents: 799, grams: 1250 }, { type: 'setPrice', id: 1, priceCents: 699 });
+  assert.equal(s.items[0].perKgCents, 699);
+  assert.equal(s.items[0].grams, 1250);
+  assert.equal(s.items[0].priceCents, 874); // 8,7375
+});
+
+test('setPrice keeps what the till charged, so the difference follows the corrected price', () => {
+  const s = run(
+    add(450, '', 2),
+    { type: 'setCharged', id: 1, chargedCents: 1000 },
+    { type: 'setPrice', id: 1, priceCents: 500 },
+  );
+  assert.equal(s.items[0].chargedCents, 1000);
+  assert.equal(s.items[0].checked, true);
+  assert.equal(chargedDiff(s.items[0]), 0);
+});
+
+test('setPrice ignores a price that is not a positive whole number of centavos, and unknown lines', () => {
+  const before = run(add(450));
+  for (const priceCents of [0, -100, 4.5, null, undefined, NaN]) {
+    assert.equal(cartReducer(before, { type: 'setPrice', id: 1, priceCents }), before, String(priceCents));
+  }
+  assert.equal(cartReducer(before, { type: 'setPrice', id: 9, priceCents: 100 }), before);
+});
+
 test('weighed lines count as one item and add their line price to the total', () => {
   const s = run(add(450, '', 2), { type: 'add', perKgCents: 799, grams: 1250 });
   assert.equal(total(s), 900 + 999);

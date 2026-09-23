@@ -43,6 +43,15 @@ export function cartReducer(state, action) {
       if (!item?.perKgCents || !(action.grams > 0)) return state;
       return edit(state, action.id, { grams: action.grams, priceCents: linePriceCents(item.perKgCents, action.grams) });
     }
+    case 'setPrice': {
+      // A typo'd price is corrected in place, keeping the line's photo, quantity and checkout marks.
+      const item = state.items.find((i) => i.id === action.id);
+      const price = action.priceCents;
+      if (!item || !(Number.isSafeInteger(price) && price > 0)) return state;
+      return item.perKgCents
+        ? edit(state, action.id, { perKgCents: price, priceCents: linePriceCents(price, item.grams) })
+        : edit(state, action.id, { priceCents: price });
+    }
     case 'toggleChecked':
       return edit(state, action.id, { checked: !state.items.find((i) => i.id === action.id)?.checked });
     case 'setCharged': {
