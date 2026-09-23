@@ -66,3 +66,67 @@ export function storeNames(trips) {
   const names = [...trips].sort((a, b) => b.at - a.at).map((t) => t.store).filter(Boolean);
   return [...new Set(names)];
 }
+
+/* ---------- price memory: what an item cost last time ---------- */
+
+/** A name as a lookup key: case, accents and spacing don't matter ("Açúcar " and "acucar" are one item). */
+export function nameKey(name) {
+  return String(name ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * The last price paid for each named item: Map<nameKey, {unit?, weight?}>. `unit` is {name, at, store, priceCents}
+ * (the price of one), `weight` is {name, at, store, perKgCents}; a name bought both ways keeps both, since only like
+ * can be compared with like. The newest trip wins, and within a trip the later line.
+ */
+export function priceMemory(trips) {
+  const memory = new Map();
+  for (const trip of [...trips].sort((a, b) => a.at - b.at)) {
+    for (const item of trip.items) {
+      const key = nameKey(item.name);
+      if (!key) continue;
+      const seen = { name: item.name.trim(), at: trip.at, store: trip.store };
+      const slot = memory.get(key) ?? {};
+      if (item.perKgCents) slot.weight = { ...seen, perKgCents: item.perKgCents };
+      else slot.unit = { ...seen, priceCents: item.priceCents };
+      memory.set(key, slot);
+    }
+  }
+  return memory;
+}
+
+const lastSeen = (slot) => Math.max(slot.unit?.at ?? -Infinity, slot.weight?.at ?? -Infinity);
+
+/** Remembered item names to suggest, most recently bought first, each as last spelled. */
+export function pastNames(memory, limit = 300) {
+  return [...memory.values()]
+    .sort((a, b) => lastSeen(b) - lastSeen(a))
+    .slice(0, limit)
+    .map((slot) => (lastSeen(slot) === slot.unit?.at ? slot.unit.name : slot.weight.name));
+}
+
+/** The last buy of `name`, preferring `kind` ('unit' | 'weight') and falling back to the other; with its kind. */
+export function lastPrice(memory, name, kind) {
+  const slot = memory.get(nameKey(name));
+  if (!slot) return null;
+  const other = kind === 'weight' ? 'unit' : 'weight';
+  if (slot[kind]) return { ...slot[kind], kind };
+  return slot[other] ? { ...slot[other], kind: other } : null;
+}
+
+/**
+ * {last, pct} when a cart line costs at least minPct % more than the same kind of buy last time: the price of one, or
+ * the price per kg (never a weighed line's total, which depends on the weight). null otherwise.
+ */
+export function priceRise(item, memory, minPct = 1) {
+  const kind = item.perKgCents ? 'weight' : 'unit';
+  const last = memory.get(nameKey(item.name))?.[kind];
+  if (!last) return null;
+  const pct = ((item.perKgCents ?? item.priceCents) / (last.perKgCents ?? last.priceCents) - 1) * 100;
+  return pct >= minPct ? { last, pct } : null;
+}
