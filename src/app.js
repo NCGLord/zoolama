@@ -2,7 +2,6 @@
 
 import { parseMoney, formatMoney, formatMoneyParts } from './money.js';
 import {
-  initialCart,
   cartReducer,
   total,
   counts,
@@ -15,8 +14,8 @@ import {
 } from './cart.js';
 import { compare } from './compare.js';
 import { UNITS, BASE_UNIT, parseGrams } from './units.js';
-import { t, detectLang, formatPct, formatKg, LOCALES } from './i18n.js';
-import { load, save, loadHistory, saveHistory } from './store.js';
+import { t, formatPct, formatKg, LOCALES } from './i18n.js';
+import { loadHistory, saveHistory } from './store.js';
 import { tripFromCart, monthlyGroups, storeNames } from './history.js';
 import { lineEach, shareText } from './share.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
@@ -26,41 +25,13 @@ import { shrinkPhoto, newPhotoId, savePhoto, getPhoto, photoIds, deletePhotos, o
 import { budgetStatus } from './budget.js';
 import { tweenCents, celebrates, newWinners } from './delight.js';
 import { $, reducedMotion, h, keepingFocus, icon, replay } from './ui/dom.js';
+import { storage, blankOption, initialCompare, state, persist } from './ui/app-state.js';
 
 const TOAST_MS = 5000;
 const COUNT_MS = 480; // total count-up
 const MAX_QTY = 999;
 
-// Reading window.localStorage itself throws when storage is blocked; store.js copes with null.
-const storage = (() => {
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-})();
-
-const blankOption = (unit = 'g') => ({ label: '', price: '', qty: '', unit });
-const initialCompare = () => ({ options: [blankOption(), blankOption()] });
-
-const saved = load(storage);
-let state = {
-  cart: saved?.cart ?? initialCart(),
-  compare: saved?.compare ?? initialCompare(),
-  lang: saved?.lang ?? detectLang(navigator.language),
-  tab: saved?.tab ?? 'cart',
-  theme: saved?.theme ?? null,
-  checking: saved?.checking ?? false, // checkout mode ("Conferir no caixa")
-  budgetCents: saved?.budgetCents ?? null, // the shopper's limit; survives clearing the cart
-  sort: saved?.sort ?? { key: 'added', dir: 'desc' }, // cart list order; newest first by default
-};
-
 const tr = (key, params) => t(key, state.lang, params);
-
-function persist(next) {
-  state = next;
-  save(storage, state);
-}
 
 function setCart(cart) {
   persist({ ...state, cart });
