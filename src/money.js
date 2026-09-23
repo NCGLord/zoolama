@@ -1,6 +1,6 @@
 // Money is always integer cents — never floats — so totals add up exactly.
 
-const LOCALES = { pt: 'pt-BR', en: 'en-US' };
+import { LOCALES } from './i18n.js';
 
 /**
  * Parse a price typed by hand into cents. Accepts "8,99", "8.99", "R$ 1.299,90", "1,299.90".
