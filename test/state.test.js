@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { restoreState, initialCompare, blankOption } from '../src/state.js';
 import { initialCart, cartReducer } from '../src/cart.js';
+import { initialPlan } from '../src/plan.js';
 
 const restore = (saved) => restoreState(saved, { lang: 'en' });
 
@@ -14,6 +15,7 @@ const defaults = {
   checking: false,
   budgetCents: null,
   sort: { key: 'added', dir: 'desc' },
+  plan: initialPlan(),
 };
 
 test('with nothing saved, every field starts at its default and the language is the one detected', () => {
@@ -38,6 +40,7 @@ test('a state the app saved comes back unchanged', () => {
     checking: true,
     budgetCents: 20000,
     sort: { key: 'name', dir: 'asc' },
+    plan: { items: [{ id: 1, name: 'Leite' }], nextId: 2, undo: [] },
   };
   assert.deepEqual(restore({ schema: 1, ...saved }), saved);
 });

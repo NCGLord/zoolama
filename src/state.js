@@ -2,6 +2,7 @@
 // the app; whatever doesn't hold up falls back to its default, so one bad field can never blank the app mid-shop.
 
 import { initialCart } from './cart.js';
+import { restorePlan } from './plan.js';
 import { UNITS } from './units.js';
 import { STRINGS } from './i18n.js';
 
@@ -80,5 +81,6 @@ export function restoreState(saved, { lang }) {
     checking: saved?.checking === true, // checkout mode ("Conferir no caixa")
     budgetCents: isPositive(saved?.budgetCents) ? saved.budgetCents : null, // the shopper's limit; survives Clear
     sort: validSort ? { key: sort.key, dir: sort.dir } : { ...DEFAULT_SORT },
+    plan: restorePlan(saved?.plan), // the shopping list; outlives Clear, emptied as trips buy from it
   };
 }
