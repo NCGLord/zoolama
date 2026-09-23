@@ -29,7 +29,7 @@ Offline supermarket helper for your phone:
 - PT/EN and light/dark toggles in the header.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and
-no dependencies. Your data stays in the phone's browser storage.
+no runtime dependencies. Your data stays in the phone's browser storage.
 
 **Look:** the *Feira* theme (a hortifruti stall: lettuce-green actions, a mango total tag, tomato for warnings), in
 light and dark, plus small moments of joy. The total counts up, finishing a trip within budget throws little
@@ -63,6 +63,14 @@ npm test                      # unit tests (node --test), no install needed
 python3 -m http.server 8765   # then open http://localhost:8765
 ```
 
+The browser tests (`e2e/*.spec.js`) drive the app in Chromium at phone size (390×844, pt-BR) and fail on any console
+error. They are the only thing that needs an install, the pinned `@playwright/test` dev dependency:
+
+```sh
+npm ci && npx playwright install --only-shell chromium   # once
+npm run e2e                                             # serves the app on port 8799 by itself
+```
+
 After changing **any precached file** (anything listed in `ASSETS` in `sw.js`), run:
 
 ```sh
@@ -72,9 +80,9 @@ npm run stamp                 # rewrites sw.js VERSION = hash of the precached f
 `npm test` fails until you do. This is deliberate: an unchanged `VERSION` would leave phones on the old cache
 forever. New files the app references must also be added to `ASSETS`, and the tests catch it when they aren't.
 
-**CI:** every push runs `npm test` on GitHub Actions (`.github/workflows/test-and-deploy.yml`). Only a green
-`main` is published to GitHub Pages, whose source is set to *GitHub Actions*, so a failing test (a forgotten
-`npm run stamp` included) never reaches the phone.
+**CI:** every push runs `npm test` and `npm run e2e` on GitHub Actions (`.github/workflows/test-and-deploy.yml`).
+Only a `main` where both pass is published to GitHub Pages, whose source is set to *GitHub Actions*, so a failing
+test (a forgotten `npm run stamp` included) never reaches the phone.
 
 Icons are generated from `icons/*.svg` with `tools/icons.sh` (needs `rsvg-convert`).
 
@@ -89,6 +97,8 @@ font's real letter outlines and needs `pip install fonttools brotli`. Run `npm r
 | `src/photos.js` | Shelf-tag photos: shrinks them on a canvas and keeps them in IndexedDB; its pure helpers are unit-tested |
 | `src/app.js` | DOM wiring only |
 | `sw.js` | Service worker: atomic precache, cache-first |
+| `test/` | Unit tests (`node --test`) |
+| `e2e/`, `playwright.config.js` | Browser tests (`npm run e2e`) |
 | `tools/` | `stamp-sw.mjs`, `sw-assets.mjs`, `icons.sh`, `wordmark.py` |
 | `docs/superpowers/specs/` | The MVP design record; this README describes the app as it is now |
 
