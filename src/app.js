@@ -141,11 +141,16 @@ const lineView = (item, n) => (state.checking ? checkLineView(item, n) : editLin
 
 const eachText = (item) => lineEach(item, state.lang);
 
-let editingWeightId = null; // weighed line whose weight field is open
+// Which line has a field open, and which tick just snapped. The line views read these; the #lines handlers set them.
+const editing = {
+  weightId: null, // weighed line whose weight field is open
+  chargeId: null, // line whose "charged" field is open in checkout mode
+  justTicked: null, // line ticked by the latest tap: its tick snaps in once
+};
 
 function weightControl(item) {
   const id = item.id;
-  if (editingWeightId === id) {
+  if (editing.weightId === id) {
     return h('input', {
       class: 'weight-input',
       'data-action': 'weight',
@@ -202,16 +207,13 @@ function editLineView(item, n) {
   );
 }
 
-let editingChargeId = null; // line whose "charged" field is open in checkout mode
-let justTicked = null; // line ticked by the latest tap: its tick snaps in once
-
 /** A line at the till: tick, photo, name, noted total, and what the till charged when it differs. */
 function checkLineView(item, n) {
   const id = item.id;
   const noted = lineTotal(item);
   const diff = chargedDiff(item);
   let detail;
-  if (editingChargeId === id) {
+  if (editing.chargeId === id) {
     detail = h('input', {
       class: 'charge-input',
       'data-action': 'charge',
@@ -239,7 +241,7 @@ function checkLineView(item, n) {
       'button',
       {
         type: 'button',
-        class: id === justTicked ? 'tick snap' : 'tick',
+        class: id === editing.justTicked ? 'tick snap' : 'tick',
         'data-action': 'toggle-check',
         'data-key': `tick-${id}`,
         'aria-pressed': String(Boolean(item.checked)),
@@ -286,8 +288,8 @@ function renderCheck() {
 function renderCart() {
   const { cart } = state;
   if (state.checking && cart.items.length === 0) persist({ ...state, checking: false }); // nothing left to check
-  if (!state.checking) editingChargeId = null;
-  else editingWeightId = null;
+  if (!state.checking) editing.chargeId = null;
+  else editing.weightId = null;
   renderCheck();
   keepingFocus(() => {
     $('lines').replaceChildren(...sortItems(cart.items, state.sort, LOCALES[state.lang]).map(({ item, n }) => lineView(item, n)));
@@ -513,21 +515,21 @@ $('lines').addEventListener('click', (e) => {
   if (action === 'view-photo') openViewer(item);
   if (action === 'toggle-check') {
     if (!item.checked) {
-      justTicked = id;
+      editing.justTicked = id;
       navigator.vibrate?.(12); // a short haptic tick on Android; a no-op elsewhere
     }
     dispatchCart({ type: 'toggleChecked', id });
-    justTicked = null;
+    editing.justTicked = null;
   }
   if (action === 'edit-weight') {
-    editingWeightId = id;
+    editing.weightId = id;
     renderCart();
     const input = document.querySelector(`[data-key="weight-${id}"]`);
     input?.focus();
     input?.select();
   }
   if (action === 'edit-charge') {
-    editingChargeId = id;
+    editing.chargeId = id;
     renderCart();
     const input = document.querySelector(`[data-key="charge-${id}"]`);
     input?.focus();
@@ -553,7 +555,7 @@ $('lines').addEventListener('keydown', (e) => {
   if (e.target.dataset.action !== 'charge' && e.target.dataset.action !== 'weight') return;
   if (e.key === 'Enter') e.target.blur(); // focusout saves
   if (e.key === 'Escape') {
-    editingChargeId = editingWeightId = null; // cancel: re-render without saving
+    editing.chargeId = editing.weightId = null; // cancel: re-render without saving
     renderCart();
   }
 });
@@ -562,8 +564,8 @@ $('lines').addEventListener('keydown', (e) => {
 $('lines').addEventListener('focusout', (e) => {
   if (e.target.dataset.action === 'weight') {
     const id = Number(e.target.closest('[data-id]').dataset.id);
-    if (editingWeightId !== id) return;
-    editingWeightId = null;
+    if (editing.weightId !== id) return;
+    editing.weightId = null;
     const grams = parseGrams(e.target.value);
     if (grams === null) {
       renderCart();
@@ -575,8 +577,8 @@ $('lines').addEventListener('focusout', (e) => {
   }
   if (e.target.dataset.action !== 'charge') return;
   const id = Number(e.target.closest('[data-id]').dataset.id);
-  if (editingChargeId !== id) return;
-  editingChargeId = null;
+  if (editing.chargeId !== id) return;
+  editing.chargeId = null;
   const raw = e.target.value.trim();
   const chargedCents = raw === '' ? null : parseMoney(raw);
   if (raw !== '' && chargedCents === null) {
