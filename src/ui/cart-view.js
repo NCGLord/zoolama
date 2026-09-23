@@ -167,6 +167,14 @@ function renderBadge(units) {
   else $('tab-cart').removeAttribute('aria-label');
 }
 
+/** Draws the line with its field open, then focuses the field with what's in it selected, ready to retype. */
+function openField(key) {
+  renderCart();
+  const input = document.querySelector(`[data-key="${key}"]`);
+  input?.focus();
+  input?.select();
+}
+
 $('lines').addEventListener('click', (e) => {
   const action = e.target.closest('[data-action]')?.dataset.action;
   const id = Number(e.target.closest('[data-id]')?.dataset.id);
@@ -184,17 +192,11 @@ $('lines').addEventListener('click', (e) => {
   }
   if (action === 'edit-weight') {
     editing.weightId = id;
-    renderCart();
-    const input = document.querySelector(`[data-key="weight-${id}"]`);
-    input?.focus();
-    input?.select();
+    openField(`weight-${id}`);
   }
   if (action === 'edit-charge') {
     editing.chargeId = id;
-    renderCart();
-    const input = document.querySelector(`[data-key="charge-${id}"]`);
-    input?.focus();
-    input?.select();
+    openField(`charge-${id}`);
   }
   if (action === 'inc') dispatchCart({ type: 'setQty', id, qty: Math.min(MAX_QTY, item.qty + 1) });
   if (action === 'dec' && item.qty > 1) dispatchCart({ type: 'setQty', id, qty: item.qty - 1 });
