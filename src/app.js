@@ -68,9 +68,18 @@ function setCart(cart) {
   dropStaleUndo();
 }
 
+// The cart view draws the cart and also changes it, so it can't be imported here without a cycle: boot hands it over.
+let cartRenderer = () => {
+  throw new Error('cart renderer not wired');
+};
+
+function setCartRenderer(render) {
+  cartRenderer = render;
+}
+
 function dispatchCart(action) {
   setCart(cartReducer(state.cart, action));
-  renderCart();
+  cartRenderer();
   collectPhotos();
 }
 
@@ -1148,14 +1157,13 @@ let toastTimer;
 let toastAction = null;
 let updatePending = false;
 
-// The toast's one button: what it runs, and the i18n key of its label.
-// cartUndo: it needs the cart's one-level undo snapshot, which any other cart change drops.
-const TOAST_ACTIONS = {
-  undo: { label: 'undo', run: () => dispatchCart({ type: 'undo' }), cartUndo: true },
-  update: { label: 'update', run: () => location.reload() },
-  undoFinish: { label: 'undo', run: () => undoFinish(), cartUndo: true },
-  undoDelete: { label: 'undo', run: () => undoDeleteTrip() },
-};
+// The toast's one button: what it runs, and the i18n key of its label. The actions reach into the views that show
+// toasts, so boot defines them.
+let toastActions = {};
+
+function defineToastActions(actions) {
+  toastActions = actions;
+}
 
 function showToast(key, { action = null, persist = false } = {}) {
   $('toast-text').dataset.i18n = key;
@@ -1164,7 +1172,7 @@ function showToast(key, { action = null, persist = false } = {}) {
   const button = $('toast-action');
   button.hidden = !action;
   if (action) {
-    button.dataset.i18n = TOAST_ACTIONS[action].label;
+    button.dataset.i18n = toastActions[action].label;
     button.textContent = tr(button.dataset.i18n);
   }
   $('toast').hidden = false;
@@ -1186,13 +1194,13 @@ function offerUpdate() {
 
 /** An Undo that can no longer undo anything must not stay on screen. */
 function dropStaleUndo() {
-  if (!$('toast').hidden && TOAST_ACTIONS[toastAction]?.cartUndo && !state.cart.undo) hideToast();
+  if (!$('toast').hidden && toastActions[toastAction]?.cartUndo && !state.cart.undo) hideToast();
 }
 
 $('toast-action').addEventListener('click', () => {
   const action = toastAction;
   hideToast();
-  TOAST_ACTIONS[action]?.run();
+  toastActions[action]?.run();
 });
 
 /* ---------- language ---------- */
@@ -1210,6 +1218,16 @@ for (const b of document.querySelectorAll('[data-lang]')) {
 }
 
 /* ---------- boot ---------- */
+
+setCartRenderer(renderCart);
+
+// cartUndo: it needs the cart's one-level undo snapshot, which any other cart change drops.
+defineToastActions({
+  undo: { label: 'undo', run: () => dispatchCart({ type: 'undo' }), cartUndo: true },
+  update: { label: 'update', run: () => location.reload() },
+  undoFinish: { label: 'undo', run: () => undoFinish(), cartUndo: true },
+  undoDelete: { label: 'undo', run: () => undoDeleteTrip() },
+});
 
 applyLang();
 renderTheme();
