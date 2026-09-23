@@ -48,6 +48,10 @@ npm run stamp                 # rewrites sw.js VERSION = hash of the precached f
 `npm test` fails until you do. This is deliberate: an unchanged `VERSION` would leave phones on the old cache
 forever. New files the app references must also be added to `ASSETS`, and the tests catch it when they aren't.
 
+**CI:** every push runs `npm test` on GitHub Actions (`.github/workflows/test-and-deploy.yml`). Only a green
+`main` is published to GitHub Pages, whose source is set to *GitHub Actions*, so a failing test (a forgotten
+`npm run stamp` included) never reaches the phone.
+
 Icons are generated from `icons/*.svg` with `tools/icons.sh` (needs `rsvg-convert`).
 
 The header wordmark (the llama in *Zoolama*) is generated into `index.html` by `tools/wordmark.py`. It uses the

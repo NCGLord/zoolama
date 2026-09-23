@@ -1,0 +1,45 @@
+# Every push runs the tests; only a green `main` is published to GitHub Pages.
+# The Pages source is set to "GitHub Actions", so this workflow is the only way anything reaches the site.
+name: Test and deploy
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # Includes the service-worker guard: a precached file changed without `npm run stamp` fails here.
+      - run: npm test
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # Deploys queue rather than cancel each other, so a half-published site is impossible.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v6
+      # The app is served straight from the repo root, as before; dotfiles are left out.
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v5
