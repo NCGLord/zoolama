@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { shareText } from '../src/share.js';
+import { lineEach, shareText } from '../src/share.js';
 
 const items = [
   { name: 'Leite', priceCents: 450, qty: 2 },
@@ -10,13 +10,19 @@ const items = [
 ];
 const plain = (s) => s.replace(/ /g, ' '); // currency formats put a no-break space after R$
 
+test('lineEach writes a line the way the cart shows it: price × qty, or price per kg × weight', () => {
+  assert.equal(plain(lineEach(items[0], 'pt')), 'R$ 4,50 × 2');
+  assert.equal(plain(lineEach(items[1], 'pt')), 'R$ 7,99/kg × 1,250 kg');
+  assert.equal(plain(lineEach(items[1], 'en')), 'R$7.99/kg × 1.250 kg');
+});
+
 test('the shared cart lists each line, weighed ones by kg, then the total, in Portuguese', () => {
   assert.equal(
     plain(shareText(items, { lang: 'pt', title: 'Zoolama — Carrinho' })),
     [
       'Zoolama — Carrinho',
-      '- Leite: 2 × R$ 4,50 = R$ 9,00',
-      '- Tomate: 1,250 kg × R$ 7,99/kg = R$ 9,99',
+      '- Leite: R$ 4,50 × 2 = R$ 9,00',
+      '- Tomate: R$ 7,99/kg × 1,250 kg = R$ 9,99',
       '- Arroz 5 kg: R$ 29,90',
       '- Item 4: R$ 3,50',
       'Total: R$ 52,39 — Itens: 5',
@@ -27,7 +33,7 @@ test('the shared cart lists each line, weighed ones by kg, then the total, in Po
 test('the shared cart follows the English number format and wording', () => {
   assert.equal(
     plain(shareText(items.slice(0, 2), { lang: 'en', title: 'Zoolama — Cart' })),
-    ['Zoolama — Cart', '- Leite: 2 × R$4.50 = R$9.00', '- Tomate: 1.250 kg × R$7.99/kg = R$9.99', 'Total: R$18.99 — Items: 3'].join(
+    ['Zoolama — Cart', '- Leite: R$4.50 × 2 = R$9.00', '- Tomate: R$7.99/kg × 1.250 kg = R$9.99', 'Total: R$18.99 — Items: 3'].join(
       '\n',
     ),
   );

@@ -18,7 +18,7 @@ import { UNITS, BASE_UNIT, parseGrams } from './units.js';
 import { t, detectLang, formatPct, formatKg, LOCALES } from './i18n.js';
 import { load, save, loadHistory, saveHistory } from './store.js';
 import { tripFromCart, monthlyGroups, storeNames } from './history.js';
-import { shareText } from './share.js';
+import { lineEach, shareText } from './share.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
@@ -139,11 +139,7 @@ function photoCell(item) {
 
 const lineView = (item, n) => (state.checking ? checkLineView(item, n) : editLineView(item, n));
 
-/** "R$ 4,50 × 2", or for a weighed item "R$ 7,99/kg × 1,250 kg". */
-const eachText = (item) =>
-  item.perKgCents
-    ? `${formatMoney(item.perKgCents, state.lang)}/kg × ${formatKg(item.grams, state.lang)}`
-    : `${formatMoney(item.priceCents, state.lang)} × ${item.qty}`;
+const eachText = (item) => lineEach(item, state.lang);
 
 let editingWeightId = null; // weighed line whose weight field is open
 
