@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseMoney, formatMoney } from '../src/money.js';
+import { parseMoney, formatMoney, formatMoneyParts } from '../src/money.js';
 
 test('parseMoney reads a comma decimal (pt-BR shelf style)', () => {
   assert.equal(parseMoney('8,99'), 899);
@@ -48,4 +48,12 @@ test('formatMoney uses pt-BR format for pt', () => {
 
 test('formatMoney uses en-US format for en, still in BRL', () => {
   assert.equal(formatMoney(129990, 'en').replace(/\s/g, ' '), 'R$1,299.90');
+});
+
+test('formatMoneyParts splits a pt amount for shelf-tag display (small raised cents)', () => {
+  assert.deepEqual(formatMoneyParts(129990, 'pt'), { currency: 'R$', whole: '1.299', decimal: ',', fraction: '90' });
+});
+
+test('formatMoneyParts follows the en separators', () => {
+  assert.deepEqual(formatMoneyParts(129990, 'en'), { currency: 'R$', whole: '1,299', decimal: '.', fraction: '90' });
 });

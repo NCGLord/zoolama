@@ -31,9 +31,21 @@ export function parseMoney(input) {
   return Number.isSafeInteger(cents) && cents > 0 ? cents : null;
 }
 
+const currencyFormat = (lang) =>
+  new Intl.NumberFormat(LOCALES[lang] ?? LOCALES.pt, { style: 'currency', currency: 'BRL' });
+
 export function formatMoney(cents, lang) {
-  return new Intl.NumberFormat(LOCALES[lang] ?? LOCALES.pt, {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(cents / 100);
+  return currencyFormat(lang).format(cents / 100);
+}
+
+/** The pieces of a formatted amount, so a shelf tag can set the cents small and raised. */
+export function formatMoneyParts(cents, lang) {
+  const out = { currency: '', whole: '', decimal: '', fraction: '' };
+  for (const { type, value } of currencyFormat(lang).formatToParts(cents / 100)) {
+    if (type === 'currency') out.currency = value;
+    else if (type === 'integer' || type === 'group' || type === 'minusSign') out.whole += value;
+    else if (type === 'decimal') out.decimal = value;
+    else if (type === 'fraction') out.fraction = value;
+  }
+  return out;
 }
