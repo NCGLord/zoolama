@@ -85,8 +85,11 @@ renderHistory();
 renderInstall();
 collectPhotos();
 navigator.storage?.persist?.().catch(() => {});
+registerServiceWorker();
 
-if ('serviceWorker' in navigator) {
+/** Registers the service worker, looks for a new version on resume, and offers a reload once one takes over. */
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
   const sw = navigator.serviceWorker;
   let controlled = Boolean(sw.controller);
   const firstInstall = !controlled;
