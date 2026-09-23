@@ -142,6 +142,88 @@ button {
   display: none;
 }
 
+.install-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 43px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.install-btn svg,
+.share-glyph {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Narrow phones: icon only, the label stays for screen readers. */
+@media (max-width: 379px) {
+  .install-btn {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .install-btn span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+.sheet {
+  max-width: min(340px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.sheet h2 {
+  margin: 0 0 12px;
+  font: 700 24px/1.1 var(--num);
+}
+
+.sheet ol {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding-left: 1.3em;
+}
+
+.sheet li span {
+  margin-right: 4px;
+}
+
+.share-glyph {
+  display: inline-block;
+  vertical-align: -3px;
+}
+
+.sheet .primary {
+  width: 100%;
+}
+
 .lang {
   display: flex;
   border: 1.5px solid var(--rule);

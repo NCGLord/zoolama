@@ -29,6 +29,10 @@
     <header class="bar">
       <h1 class="brand">Zoolama</h1>
       <div class="bar-tools">
+        <button type="button" id="install" class="install-btn" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M7.5 10 12 14.5l4.5-4.5M4.5 16.5v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2" /></svg>
+          <span data-i18n="install">Instalar</span>
+        </button>
         <button type="button" id="theme" class="theme-btn">
           <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" /></svg>
           <svg class="sun" viewBox="0 0 24 24" aria-hidden="true">
@@ -78,6 +82,18 @@
         </div>
       </section>
     </main>
+
+    <dialog id="ios-install" class="sheet" aria-labelledby="ios-install-title">
+      <h2 id="ios-install-title" data-i18n="iosInstallTitle">Instalar no iPhone</h2>
+      <ol>
+        <li>
+          <span data-i18n="iosStep1">Toque em Compartilhar na barra do navegador.</span>
+          <svg class="share-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M7 11H5.5v9.5h13V11H17" /></svg>
+        </li>
+        <li><span data-i18n="iosStep2">Escolha “Adicionar à Tela de Início”.</span></li>
+      </ol>
+      <form method="dialog"><button class="primary" data-i18n="gotIt">Entendi</button></form>
+    </dialog>
 
     <div class="dock">
       <div id="toast" class="toast" role="status" hidden>
