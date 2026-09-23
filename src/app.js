@@ -8,6 +8,7 @@ import { t, detectLang, formatPct } from './i18n.js';
 import { load, save } from './store.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
+import { dueForUpdateCheck } from './update.js';
 
 const $ = (id) => document.getElementById(id);
 const TOAST_MS = 5000;
@@ -194,7 +195,7 @@ $('lines').addEventListener('click', (e) => {
   if (action === 'dec' && item.qty > 1) dispatchCart({ type: 'setQty', id, qty: item.qty - 1 });
   if (action === 'remove' || (action === 'dec' && item.qty === 1)) {
     dispatchCart({ type: 'remove', id });
-    showToast('removed', { undo: true });
+    showToast('removed', { action: 'undo' });
   }
 });
 
@@ -211,7 +212,7 @@ $('lines').addEventListener('keydown', (e) => {
 
 $('clear').addEventListener('click', () => {
   dispatchCart({ type: 'clear' });
-  showToast('cleared', { undo: true });
+  showToast('cleared', { action: 'undo' });
 });
 
 /* ---------- compare ---------- */
@@ -418,23 +419,40 @@ $('install').addEventListener('click', () => {
 /* ---------- toast ---------- */
 
 let toastTimer;
+let toastAction = null;
+let updatePending = false;
 
-function showToast(key, { undo = false } = {}) {
+// The toast's one button; its label is the i18n key of the same name.
+const TOAST_ACTIONS = {
+  undo: () => dispatchCart({ type: 'undo' }),
+  update: () => location.reload(),
+};
+
+function showToast(key, { action = null, persist = false } = {}) {
   $('toast-text').dataset.i18n = key;
   $('toast-text').textContent = tr(key);
-  $('toast-undo').hidden = !undo;
+  toastAction = action;
+  const button = $('toast-action');
+  button.hidden = !action;
+  if (action) {
+    button.dataset.i18n = action;
+    button.textContent = tr(action);
+  }
   $('toast').hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(hideToast, TOAST_MS);
+  if (!persist) toastTimer = setTimeout(hideToast, TOAST_MS);
 }
 
 function hideToast() {
   $('toast').hidden = true;
+  // A waiting update outlives short-lived toasts like Undo: bring its prompt back afterwards.
+  if (updatePending) showToast('updateReady', { action: 'update', persist: true });
 }
 
-$('toast-undo').addEventListener('click', () => {
-  dispatchCart({ type: 'undo' });
+$('toast-action').addEventListener('click', () => {
+  const action = toastAction;
   hideToast();
+  TOAST_ACTIONS[action]?.();
 });
 
 /* ---------- language ---------- */
@@ -460,10 +478,30 @@ renderInstall();
 navigator.storage?.persist?.().catch(() => {});
 
 if ('serviceWorker' in navigator) {
-  const firstInstall = !navigator.serviceWorker.controller;
-  navigator.serviceWorker
-    .register('./sw.js')
-    .then(() => navigator.serviceWorker.ready)
+  const sw = navigator.serviceWorker;
+  let controlled = Boolean(sw.controller);
+  const firstInstall = !controlled;
+
+  sw.register('./sw.js')
+    .then((registration) => {
+      let lastCheck = Date.now(); // registering has just checked
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible' || !dueForUpdateCheck(Date.now(), lastCheck)) return;
+        lastCheck = Date.now();
+        registration.update().catch(() => {}); // offline: the next foregrounding tries again
+      });
+      return sw.ready;
+    })
     .then(() => firstInstall && showToast('offlineReady'))
     .catch(() => {}); // no SW (e.g. private mode): the app still works while the page is open
+
+  // sw.js skips waiting and claims the page, so a new version takes over as soon as it has installed.
+  // The screen still shows the old one; offer a reload rather than forcing it mid-typing.
+  sw.addEventListener('controllerchange', () => {
+    if (controlled) {
+      updatePending = true;
+      showToast('updateReady', { action: 'update', persist: true });
+    }
+    controlled = true; // the first claim after a fresh install is not an update
+  });
 }

@@ -24,8 +24,9 @@ the app is fully cached. Then add it to your home screen:
 
 Launch it from the home-screen icon. It works in airplane mode from then on.
 
-**Updates** download in the background the next time you open the app with signal, and apply on the
-following launch.
+**Updates:** the app checks for a new version when you open it, and again when you bring it back to the front
+(at most every 30 minutes). A new version downloads in the background; when it's ready you see
+*Nova versão disponível · Atualizar*. Tap it to switch now, or keep shopping and get it on the next launch.
 
 ## Develop
 

@@ -46,6 +46,8 @@ export const STRINGS = {
     addToCart: 'Adicionar ao carrinho',
     addedToCart: 'Adicionado ao carrinho',
     offlineReady: 'Pronto para usar offline',
+    updateReady: 'Nova versão disponível',
+    update: 'Atualizar',
   },
   en: {
     langLabel: 'Language',
@@ -90,6 +92,8 @@ export const STRINGS = {
     addToCart: 'Add to cart',
     addedToCart: 'Added to cart',
     offlineReady: 'Ready to use offline',
+    updateReady: 'New version available',
+    update: 'Update',
   },
 };
 
