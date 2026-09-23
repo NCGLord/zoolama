@@ -97,6 +97,29 @@ export function linePriceCents(perKgCents, grams) {
   return Math.round((perKgCents * grams) / 1000);
 }
 
+/**
+ * The cart in display order, each item with n = its 1-based added position (for the "Item N" label).
+ * key: 'added' | 'total' (the line total) | 'name'; dir: 'asc' | 'desc'. Ties keep the order items were added,
+ * and unnamed items go last in both directions, since they have no name to sort by.
+ */
+export function sortItems(items, { key = 'added', dir = 'desc' } = {}, locale = 'pt-BR') {
+  const rows = items.map((item, i) => ({ item, n: i + 1 }));
+  const sign = dir === 'asc' ? 1 : -1;
+  const byAdded = (a, b) => a.n - b.n;
+  const lineTotal = ({ item }) => item.priceCents * item.qty;
+  const collator = new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
+  const compare = {
+    added: (a, b) => sign * byAdded(a, b),
+    total: (a, b) => sign * (lineTotal(a) - lineTotal(b)) || byAdded(a, b),
+    name: (a, b) => {
+      const [an, bn] = [a.item.name, b.item.name];
+      if (!an !== !bn) return an ? -1 : 1;
+      return (an && sign * collator.compare(an, bn)) || byAdded(a, b);
+    },
+  }[key];
+  return rows.sort(compare);
+}
+
 export function counts(state) {
   return { lines: state.items.length, units: state.items.reduce((n, i) => n + i.qty, 0) };
 }

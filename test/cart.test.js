@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary, linePriceCents } from '../src/cart.js';
+import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary, linePriceCents, sortItems } from '../src/cart.js';
 
 const run = (...actions) => actions.reduce(cartReducer, initialCart());
 const add = (priceCents, name = '', qty) => ({ type: 'add', priceCents, name, qty });
@@ -169,4 +169,43 @@ test('weighed lines count as one item and add their line price to the total', ()
   const s = run(add(450, '', 2), { type: 'add', perKgCents: 799, grams: 1250 });
   assert.equal(total(s), 900 + 999);
   assert.deepEqual(counts(s), { lines: 2, units: 3 });
+});
+
+const named = (...names) => names.map((name, i) => ({ id: i + 1, name, priceCents: 100, qty: 1 }));
+const order = (rows) => rows.map((r) => r.item.name || `#${r.n}`);
+
+test('sortItems defaults to newest first and keeps each item\'s added position as n', () => {
+  const rows = sortItems(named('a', 'b', 'c'));
+  assert.deepEqual(rows.map((r) => [r.item.name, r.n]), [['c', 3], ['b', 2], ['a', 1]]);
+});
+
+test('sortItems by added, ascending, is the order items were added', () => {
+  assert.deepEqual(order(sortItems(named('a', 'b', 'c'), { key: 'added', dir: 'asc' })), ['a', 'b', 'c']);
+});
+
+test('sortItems by value uses the line total, and equal totals keep the order they were added', () => {
+  const items = [
+    { name: 'leite', priceCents: 450, qty: 2 }, // 9,00
+    { name: 'arroz', priceCents: 2990, qty: 1 }, // 29,90
+    { name: 'pão', priceCents: 900, qty: 1 }, // 9,00, same as leite
+    { name: 'tomate', priceCents: 999, qty: 1, perKgCents: 799, grams: 1250 }, // 9,99
+  ];
+  assert.deepEqual(order(sortItems(items, { key: 'total', dir: 'asc' })), ['leite', 'pão', 'tomate', 'arroz']);
+  assert.deepEqual(order(sortItems(items, { key: 'total', dir: 'desc' })), ['arroz', 'tomate', 'leite', 'pão']);
+});
+
+test('sortItems by name ignores accents and case, the Portuguese way', () => {
+  const items = named('Café', 'arroz', 'Açúcar', 'banana');
+  assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'asc' })), ['Açúcar', 'arroz', 'banana', 'Café']);
+  assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'desc' })), ['Café', 'banana', 'arroz', 'Açúcar']);
+});
+
+test('sortItems by name orders numbers naturally', () => {
+  assert.deepEqual(order(sortItems(named('Lata 10', 'Lata 2'), { key: 'name', dir: 'asc' })), ['Lata 2', 'Lata 10']);
+});
+
+test('unnamed items go last in both directions, in the order they were added', () => {
+  const items = named('', 'Café', '', 'arroz');
+  assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'asc' })), ['arroz', 'Café', '#1', '#3']);
+  assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'desc' })), ['Café', 'arroz', '#1', '#3']);
 });
