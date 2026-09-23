@@ -1,0 +1,73 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { initialCart, cartReducer, total, counts } from '../src/cart.js';
+
+const run = (...actions) => actions.reduce(cartReducer, initialCart());
+const add = (priceCents, name = '', qty) => ({ type: 'add', priceCents, name, qty });
+
+test('add appends an item with qty 1 and a trimmed name', () => {
+  const s = run(add(899, '  Arroz  '));
+  assert.deepEqual(s.items, [{ id: 1, name: 'Arroz', priceCents: 899, qty: 1 }]);
+});
+
+test('add accepts an explicit qty and gives each item a fresh id', () => {
+  const s = run(add(899), add(250, '', 3));
+  assert.deepEqual(
+    s.items.map((i) => [i.id, i.qty]),
+    [
+      [1, 1],
+      [2, 3],
+    ],
+  );
+});
+
+test('total sums price × qty in cents', () => {
+  assert.equal(total(run(add(899, '', 2), add(1050))), 2848);
+});
+
+test('counts reports lines and units', () => {
+  assert.deepEqual(counts(run(add(899, '', 2), add(1050))), { lines: 2, units: 3 });
+});
+
+test('setQty changes the quantity of one item', () => {
+  const s = run(add(899), add(250), { type: 'setQty', id: 2, qty: 4 });
+  assert.deepEqual(s.items.map((i) => i.qty), [1, 4]);
+});
+
+test('setQty to 0 removes the item and can be undone', () => {
+  const removed = run(add(899), { type: 'setQty', id: 1, qty: 0 });
+  assert.deepEqual(removed.items, []);
+  assert.equal(cartReducer(removed, { type: 'undo' }).items.length, 1);
+});
+
+test('rename sets a trimmed name', () => {
+  const s = run(add(899), { type: 'rename', id: 1, name: ' Feijão ' });
+  assert.equal(s.items[0].name, 'Feijão');
+});
+
+test('remove then undo restores the item in its original position', () => {
+  const before = run(add(100, 'a'), add(200, 'b'), add(300, 'c'));
+  const removed = cartReducer(before, { type: 'remove', id: 2 });
+  assert.deepEqual(removed.items.map((i) => i.name), ['a', 'c']);
+  assert.deepEqual(cartReducer(removed, { type: 'undo' }).items, before.items);
+});
+
+test('clear empties the cart and undo brings everything back', () => {
+  const before = run(add(100), add(200));
+  const cleared = cartReducer(before, { type: 'clear' });
+  assert.deepEqual(cleared.items, []);
+  assert.deepEqual(cartReducer(cleared, { type: 'undo' }).items, before.items);
+});
+
+test('a later action discards the undo snapshot', () => {
+  const s = run(add(100), { type: 'clear' }, add(200), { type: 'undo' });
+  assert.deepEqual(s.items.map((i) => i.priceCents), [200]);
+});
+
+test('the reducer never mutates the previous state', () => {
+  const before = run(add(100));
+  const snapshot = structuredClone(before);
+  assert.equal(cartReducer(before, { type: 'setQty', id: 1, qty: 5 }).items[0].qty, 5);
+  assert.deepEqual(cartReducer(before, { type: 'clear' }).items, []);
+  assert.deepEqual(before, snapshot);
+});
