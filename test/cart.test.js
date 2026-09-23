@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary } from '../src/cart.js';
+import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary, linePriceCents } from '../src/cart.js';
 
 const run = (...actions) => actions.reduce(cartReducer, initialCart());
 const add = (priceCents, name = '', qty) => ({ type: 'add', priceCents, name, qty });
@@ -141,4 +141,32 @@ test('clearing the cart and undoing brings the ticks and charged amounts back', 
   const before = run(add(2990), { type: 'setCharged', id: 1, chargedCents: 3150 });
   const restored = [{ type: 'clear' }, { type: 'undo' }].reduce(cartReducer, before);
   assert.deepEqual(restored.items, before.items);
+});
+
+test('a weighed item stores price per kg and grams, and prices the line at qty 1', () => {
+  const s = run({ type: 'add', perKgCents: 799, grams: 1250, name: 'Tomate' });
+  assert.deepEqual(s.items[0], { id: 1, name: 'Tomate', priceCents: 999, qty: 1, perKgCents: 799, grams: 1250 });
+});
+
+test('the line price rounds to the nearest centavo, halves up, like a scale label', () => {
+  assert.equal(linePriceCents(799, 1250), 999); // 9,9875
+  assert.equal(linePriceCents(3990, 350), 1397); // 13,965
+  assert.equal(linePriceCents(1000, 1), 1); // 0,01
+});
+
+test('setWeight corrects the weight and re-prices the line', () => {
+  const s = run({ type: 'add', perKgCents: 799, grams: 1250 }, { type: 'setWeight', id: 1, grams: 800 });
+  assert.equal(s.items[0].grams, 800);
+  assert.equal(s.items[0].priceCents, 639); // 6,392
+});
+
+test('setWeight ignores a weight that is not positive', () => {
+  const before = run({ type: 'add', perKgCents: 799, grams: 1250 });
+  assert.deepEqual(cartReducer(before, { type: 'setWeight', id: 1, grams: 0 }).items, before.items);
+});
+
+test('weighed lines count as one item and add their line price to the total', () => {
+  const s = run(add(450, '', 2), { type: 'add', perKgCents: 799, grams: 1250 });
+  assert.equal(total(s), 900 + 999);
+  assert.deepEqual(counts(s), { lines: 2, units: 3 });
 });

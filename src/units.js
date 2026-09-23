@@ -27,3 +27,10 @@ export function toBase(qty, unit) {
   const u = UNITS[unit];
   return u ? { dim: u.dim, qty: qty / u.per } : null;
 }
+
+/** A weight typed in kg ("1,250", "0,35") as whole grams; null unless it is at least one gram. */
+export function parseGrams(input) {
+  const kg = parseQuantity(input);
+  const grams = kg === null ? 0 : Math.round(kg * 1000);
+  return grams >= 1 ? grams : null;
+}

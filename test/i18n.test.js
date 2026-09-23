@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { STRINGS, LOCALES, t, detectLang, formatPct } from '../src/i18n.js';
+import { STRINGS, LOCALES, t, detectLang, formatPct, formatKg } from '../src/i18n.js';
 
 const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
@@ -79,4 +79,9 @@ test('language buttons are flags named in their own language for screen readers'
     assert.match(button[0], new RegExp(`lang="${lang}"`));
     assert.match(button[1], /<svg/, `${code} button should draw a flag`);
   }
+});
+
+test('formatKg shows grams as kg with three decimals in the language format', () => {
+  assert.equal(formatKg(1250, 'pt'), '1,250 kg');
+  assert.equal(formatKg(350, 'en'), '0.350 kg');
 });

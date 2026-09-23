@@ -162,3 +162,9 @@ export function detectLang(navigatorLanguage) {
 export function formatPct(pct, lang) {
   return new Intl.NumberFormat(LOCALES[lang], { maximumFractionDigits: 1 }).format(pct);
 }
+
+/** Grams as kg with three decimals, the way scale labels print weight. */
+export function formatKg(grams, lang) {
+  const kg = new Intl.NumberFormat(LOCALES[lang], { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(grams / 1000);
+  return `${kg} kg`;
+}

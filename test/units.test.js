@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { UNITS, BASE_UNIT, parseQuantity, toBase } from '../src/units.js';
+import { UNITS, BASE_UNIT, parseQuantity, toBase, parseGrams } from '../src/units.js';
 
 test('parseQuantity reads comma and dot decimals of any length', () => {
   assert.equal(parseQuantity('0,350'), 0.35);
@@ -45,4 +45,14 @@ test('toBase returns null for an unknown unit', () => {
 
 test('each dimension has a base unit label', () => {
   assert.deepEqual(BASE_UNIT, { mass: 'kg', volume: 'L', count: 'un' });
+});
+
+test('parseGrams reads a weight typed in kg, as scale labels print it', () => {
+  assert.equal(parseGrams('1,250'), 1250);
+  assert.equal(parseGrams('0,35'), 350);
+  assert.equal(parseGrams('2'), 2000);
+});
+
+test('parseGrams rejects empty, non-numeric and sub-gram weights', () => {
+  for (const bad of ['', 'abc', '0', '0,0004', null]) assert.equal(parseGrams(bad), null, `input ${JSON.stringify(bad)}`);
 });
