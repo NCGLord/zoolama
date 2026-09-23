@@ -143,6 +143,14 @@
       <section id="panel-history" class="panel" role="tabpanel" aria-labelledby="tab-history" hidden>
         <p id="history-empty" class="empty" data-i18n="historyEmpty">Nenhuma compra salva ainda.</p>
         <div id="history"></div>
+        <div class="backup">
+          <p id="backup-hint" data-i18n="backupHint">O histórico fica só neste aparelho. Exporte uma cópia para não perdê-lo.</p>
+          <div class="backup-actions">
+            <button type="button" id="export-history" class="secondary" data-i18n="exportHistory">Exportar histórico</button>
+            <button type="button" id="import-history" class="secondary" data-i18n="importHistory">Importar</button>
+          </div>
+          <input type="file" id="import-input" accept=".json,application/json" hidden />
+        </div>
       </section>
 
       <section id="panel-compare" class="panel" role="tabpanel" aria-labelledby="tab-compare" hidden>

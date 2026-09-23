@@ -9,7 +9,7 @@ import { collectPhotos } from './ui/photo-cache.js';
 import { dispatchCart, setCartRenderer } from './ui/cart-store.js';
 import { renderEntryMode } from './ui/entry.js';
 import { renderCart } from './ui/cart-view.js';
-import { renderHistory, undoFinish, undoDeleteTrip } from './ui/history-view.js';
+import { renderHistory, undoFinish, undoDeleteTrip, undoImport } from './ui/history-view.js';
 import { renderOptions } from './ui/compare-view.js';
 import { renderTab, renderTheme } from './ui/shell.js';
 import { renderInstall, registerServiceWorker } from './ui/pwa.js';
@@ -38,6 +38,7 @@ defineToastActions({
   update: { label: 'update', run: () => location.reload() },
   undoFinish: { label: 'undo', run: () => undoFinish(), cartUndo: true },
   undoDelete: { label: 'undo', run: () => undoDeleteTrip() },
+  undoImport: { label: 'undo', run: () => undoImport() },
 });
 
 applyLang();

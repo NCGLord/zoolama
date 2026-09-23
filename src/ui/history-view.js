@@ -1,5 +1,6 @@
 // Finished trips: the Finalizar sheet (and its celebration), the History tab, and sharing or deleting a past trip.
 
+import { backupFileName, backupJson, mergeTrips, readBackup } from '../backup.js';
 import { counts, lineTotal, total } from '../cart.js';
 import { celebrates } from '../delight.js';
 import { monthlyGroups, storeNames, tripFromCart } from '../history.js';
@@ -156,6 +157,10 @@ function tripView(trip, whenFormat) {
 
 function renderHistory() {
   $('history-empty').hidden = trips.length > 0;
+  $('export-history').hidden = trips.length === 0;
+  // Nothing to export yet: the hint is about bringing a history over instead.
+  $('backup-hint').dataset.i18n = trips.length ? 'backupHint' : 'backupHintEmpty';
+  $('backup-hint').textContent = tr($('backup-hint').dataset.i18n);
   const locale = LOCALES[state.lang];
   const monthFormat = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
   const whenFormat = new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -181,4 +186,56 @@ function renderHistory() {
   );
 }
 
-export { renderHistory, undoFinish, undoDeleteTrip };
+/* ---------- backup ---------- */
+
+let beforeImport = null; // history as it was before the latest import, for its Undo
+
+/** The share sheet where it takes the file (iOS: Save to Files); a download elsewhere (Android won't share .json). */
+async function exportTrips() {
+  const now = Date.now();
+  const file = new File([backupJson(trips, now)], backupFileName(now), { type: 'application/json' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] });
+      return;
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      // any other failure: fall back to a download
+    }
+  }
+  const url = URL.createObjectURL(file);
+  const link = h('a', { href: url, download: file.name, hidden: true });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000); // revoking at once can cancel the download
+}
+
+$('export-history').addEventListener('click', exportTrips);
+$('import-history').addEventListener('click', () => $('import-input').click());
+
+$('import-input').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  e.target.value = ''; // so picking the same file again still fires change
+  if (!file) return;
+  const backup = readBackup(await file.text().catch(() => ''));
+  if (backup.error) return showToast(backup.error);
+  const { trips: merged, added } = mergeTrips(trips, backup.trips);
+  if (!added) return showToast('importNothing');
+  const previous = trips;
+  if (!setTrips(merged)) {
+    trips = previous; // not stored: don't pretend
+    renderHistory();
+    return showToast('importNotSaved');
+  }
+  beforeImport = previous;
+  showToast('importedTrips', { action: 'undoImport' });
+});
+
+function undoImport() {
+  if (!beforeImport) return;
+  setTrips(beforeImport);
+  beforeImport = null;
+}
+
+export { renderHistory, undoFinish, undoDeleteTrip, undoImport };
