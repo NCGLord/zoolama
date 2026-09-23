@@ -55,7 +55,8 @@ the app is fully cached. Then add it to your home screen:
 Where the browser can install it, an **Instalar** / **Install** button also appears in the header: on Android it opens
 the install prompt, on iPhone it shows the two steps above. It hides once the app runs from the home screen.
 
-Launch it from the home-screen icon. It works in airplane mode from then on.
+Launch it from the home-screen icon. It works in airplane mode from then on. On Android, long-press the icon for two
+shortcuts: *Comparar preços* opens Compare, *Conferir no caixa* opens the cart ready to check at the till.
 
 **Updates:** the app checks for a new version when you open it, and again when you bring it back to the front
 (at most every 30 minutes). A new version downloads in the background; when it's ready you see

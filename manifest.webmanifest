@@ -10,6 +10,21 @@
   "orientation": "portrait",
   "background_color": "#f4faef",
   "theme_color": "#f4faef",
+  "categories": ["shopping", "finance"],
+  "shortcuts": [
+    {
+      "name": "Comparar preços",
+      "short_name": "Comparar",
+      "description": "Preço por kg, L ou unidade",
+      "url": "./?tab=compare"
+    },
+    {
+      "name": "Conferir no caixa",
+      "short_name": "Conferir",
+      "description": "Marcar cada item quando passar no caixa",
+      "url": "./?check=1"
+    }
+  ],
   "icons": [
     { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
