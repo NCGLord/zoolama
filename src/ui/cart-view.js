@@ -14,12 +14,14 @@ import { hydratePhotos } from './photo-cache.js';
 import { openViewer, takePhoto } from './photos-ui.js';
 import { pricePlaceholder, tagPrice, tr } from './text.js';
 import { showToast } from './toast.js';
+import { keepScreenOn } from './wake-lock.js';
 
 const COUNT_MS = 480; // total count-up
 
 function renderCheck() {
   const { cart } = state;
   const checking = state.checking;
+  keepScreenOn(checking);
   $('entry').hidden = checking;
   $('check-head').hidden = !checking;
   $('start-check').hidden = checking || cart.items.length === 0;

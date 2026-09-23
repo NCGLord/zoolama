@@ -1,6 +1,6 @@
 // Offline-first service worker. VERSION is a hash of the ASSETS below, written by `npm run stamp`;
 // test/sw.test.js fails when it is stale, so a changed file can never hide behind an old cache.
-const VERSION = 'd3da43b3b225';
+const VERSION = '3564a26eb2cf';
 const CACHE = `zoolama-${VERSION}`;
 
 const ASSETS = /* ASSETS:start */ [
@@ -39,6 +39,7 @@ const ASSETS = /* ASSETS:start */ [
   "./src/ui/shell.js",
   "./src/ui/text.js",
   "./src/ui/toast.js",
+  "./src/ui/wake-lock.js",
   "./fonts/barlow-condensed-700.woff2",
   "./icons/icon.svg",
   "./icons/icon-192.png",

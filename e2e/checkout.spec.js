@@ -38,3 +38,50 @@ test('ticks lines at the till and totals what the till charged differently', asy
   await expect(page.locator('#check-summary')).toBeHidden();
   await expect(page.locator('#entry')).toBeVisible();
 });
+
+test('the screen stays on while checking, and the lock comes back after the browser drops it', async ({ app: page }) => {
+  // A stand-in Wake Lock API that counts, so the test sees what the app asks for.
+  await page.addInitScript(() => {
+    const locks = { requested: 0, released: 0, last: null };
+    window.__locks = locks;
+    Object.defineProperty(navigator, 'wakeLock', {
+      value: {
+        async request(type) {
+          if (type !== 'screen') throw new TypeError(type);
+          locks.requested++;
+          const lock = new EventTarget();
+          lock.release = async () => {
+            locks.released++;
+            lock.dispatchEvent(new Event('release'));
+          };
+          locks.last = lock;
+          return lock;
+        },
+      },
+    });
+  });
+  await page.reload();
+  const locks = () => page.evaluate(() => ({ requested: window.__locks.requested, released: window.__locks.released }));
+
+  await addItem(page, { price: '4,50', name: 'Leite' });
+  expect(await locks()).toEqual({ requested: 0, released: 0 });
+  await page.locator('#start-check').click();
+  await expect.poll(locks).toEqual({ requested: 1, released: 0 });
+  await checkLine(page, 'Leite').getByRole('button', { name: 'Conferido' }).click();
+  await expect.poll(locks).toEqual({ requested: 1, released: 0 }); // renders don't ask again
+
+  // The browser drops the lock when the page is hidden; coming back asks for it again.
+  await page.evaluate(async () => {
+    await window.__locks.last.release();
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(locks).toEqual({ requested: 2, released: 1 });
+
+  await page.getByRole('button', { name: 'Sair' }).click();
+  await expect.poll(locks).toEqual({ requested: 2, released: 2 });
+
+  // Checkout mode survives a reload, and so does the lock.
+  await page.locator('#start-check').click();
+  await page.reload();
+  await expect.poll(locks).toEqual({ requested: 1, released: 0 });
+});
