@@ -4,6 +4,7 @@
 // At the till (checkout mode) an item can be ticked, and carry what the till charged for the whole line.
 // A weighed item (hortifruti, açougue) keeps its price per kg and weight in whole grams; its priceCents is the
 // line price and qty stays 1, so totals, budget and checkout treat it like any other line.
+// The cart may also carry receiptCents, the total printed on the till's receipt, noted in checkout mode.
 
 export function initialCart() {
   return { items: [], nextId: 1, undo: null };
@@ -22,7 +23,10 @@ export function cartReducer(state, action) {
         ...(weighed ? { perKgCents: action.perKgCents, grams: action.grams } : {}),
         ...(action.photoId ? { photoId: action.photoId } : {}),
       };
-      return { items: [...items, item], nextId: state.nextId + 1, undo: null };
+      // Cart-level fields stay, except that the first item of a new trip drops the last trip's receipt total.
+      const { receiptCents, ...rest } = state;
+      const base = items.length ? state : rest;
+      return { ...base, items: [...items, item], nextId: state.nextId + 1, undo: null };
     }
     case 'setQty':
       if (action.qty <= 0) return cartReducer(state, { type: 'remove', id: action.id });
@@ -51,6 +55,12 @@ export function cartReducer(state, action) {
       return item.perKgCents
         ? edit(state, action.id, { perKgCents: price, priceCents: linePriceCents(price, item.grams) })
         : edit(state, action.id, { priceCents: price });
+    }
+    case 'setReceipt': {
+      const { receiptCents, ...rest } = state;
+      if (action.receiptCents === null) return { ...rest, undo: null };
+      const valid = Number.isSafeInteger(action.receiptCents) && action.receiptCents > 0;
+      return valid ? { ...state, receiptCents: action.receiptCents, undo: null } : state;
     }
     case 'toggleChecked':
       return edit(state, action.id, { checked: !state.items.find((i) => i.id === action.id)?.checked });
@@ -89,6 +99,25 @@ export function chargedDiff(item) {
 
 export function total(state) {
   return state.items.reduce((sum, i) => sum + lineTotal(i), 0);
+}
+
+/** What the till charged, as far as the lines say: the charged amount where one was noted, else the line total. */
+export function chargedTotal(state) {
+  return state.items.reduce((sum, i) => sum + (i.chargedCents ?? lineTotal(i)), 0);
+}
+
+/**
+ * The receipt total against the cart, or null without both. diffCents is the receipt minus the noted total (shelf
+ * prices, what the lower-price rule protects); unexplainedCents is the receipt minus what the lines say was charged,
+ * the part no noted line difference accounts for.
+ */
+export function receiptCheck(state) {
+  if (state.receiptCents == null || !state.items.length) return null;
+  const notedCents = total(state);
+  const chargedCents = chargedTotal(state);
+  const { receiptCents } = state;
+  const diffCents = receiptCents - notedCents;
+  return { receiptCents, notedCents, chargedCents, diffCents, unexplainedCents: receiptCents - chargedCents };
 }
 
 /** Every photo something still points to, including the undo snapshot, so Undo can bring it back. */

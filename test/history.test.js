@@ -86,3 +86,11 @@ test('isTrip rejects a trip History could not show', () => {
   for (const trip of broken) assert.equal(isTrip(trip), false, JSON.stringify(trip));
   assert.equal(isTrip(good), true);
 });
+
+test('a trip keeps the receipt total noted at the till, and only when one was noted', () => {
+  const cart = cartOf({ type: 'add', priceCents: 450 }, { type: 'setReceipt', receiptCents: 500 });
+  assert.equal(tripFromCart(cart, { id: 't', at: 0 }).receiptCents, 500);
+  assert.equal('receiptCents' in tripFromCart(cartOf({ type: 'add', priceCents: 450 }), { id: 't', at: 0 }), false);
+  assert.equal(isTrip(tripFromCart(cart, { id: 't', at: 0 })), true);
+  assert.equal(isTrip({ ...tripFromCart(cart, { id: 't', at: 0 }), receiptCents: 0 }), false);
+});

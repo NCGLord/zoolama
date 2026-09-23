@@ -46,7 +46,12 @@ function restoreCart(cart) {
   const undo = Array.isArray(cart.undo) ? restoreItems(cart.undo) : null;
   // The next id must not reuse one still in the cart or in the Undo snapshot.
   const used = Math.max(0, ...items.map((i) => i.id), ...(undo ?? []).map((i) => i.id));
-  return { items, nextId: isPositive(cart.nextId) && cart.nextId > used ? cart.nextId : used + 1, undo };
+  return {
+    items,
+    nextId: isPositive(cart.nextId) && cart.nextId > used ? cart.nextId : used + 1,
+    undo,
+    ...(isPositive(cart.receiptCents) ? { receiptCents: cart.receiptCents } : {}), // noted at the till
+  };
 }
 
 function restoreCompare(compare) {

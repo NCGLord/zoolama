@@ -123,3 +123,9 @@ test('unknown language, tab, theme, sort, budget or checkout flag fall back to t
   assert.equal(restore({ budgetCents: -100 }).budgetCents, null);
   assert.deepEqual(restore({ sort: { key: 'name', dir: 'sideways' } }).sort, defaults.sort);
 });
+
+test('the receipt total noted at the till comes back with the cart, unless it is not a positive amount', () => {
+  const cart = { items: [{ id: 1, name: '', priceCents: 450, qty: 1 }], nextId: 2, undo: null };
+  assert.equal(restore({ cart: { ...cart, receiptCents: 500 } }).cart.receiptCents, 500);
+  assert.equal('receiptCents' in restore({ cart: { ...cart, receiptCents: -1 } }).cart, false);
+});

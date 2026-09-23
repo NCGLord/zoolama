@@ -10,6 +10,8 @@ import {
   linePriceCents,
   lineTotal,
   chargedDiff,
+  chargedTotal,
+  receiptCheck,
   sortItems,
 } from '../src/cart.js';
 
@@ -262,4 +264,45 @@ test('chargedDiff is what the till charged beyond the line total, and 0 when not
   assert.equal(chargedDiff({ priceCents: 450, qty: 2 }), 0);
   assert.equal(chargedDiff({ priceCents: 450, qty: 2, chargedCents: 1000 }), 100);
   assert.equal(chargedDiff({ priceCents: 450, qty: 2, chargedCents: 850 }), -50);
+});
+
+test('setReceipt notes the receipt total, clears it with null, and ignores anything else', () => {
+  const s = run(add(450), { type: 'setReceipt', receiptCents: 500 });
+  assert.equal(s.receiptCents, 500);
+  assert.equal('receiptCents' in cartReducer(s, { type: 'setReceipt', receiptCents: null }), false);
+  for (const receiptCents of [0, -5, 4.5, '500', undefined]) {
+    assert.equal(cartReducer(s, { type: 'setReceipt', receiptCents }), s, String(receiptCents));
+  }
+});
+
+test('adding to a cart keeps its receipt total; adding to an empty one starts a new trip without it', () => {
+  const noted = run(add(450), { type: 'setReceipt', receiptCents: 500 });
+  assert.equal(cartReducer(noted, add(100)).receiptCents, 500);
+  const cleared = cartReducer(noted, { type: 'clear' });
+  assert.equal(cleared.receiptCents, 500, 'Clear keeps it, so Undo brings the whole check back');
+  assert.equal(cartReducer(cleared, { type: 'undo' }).receiptCents, 500);
+  assert.equal('receiptCents' in cartReducer(cleared, add(100)), false);
+});
+
+test('chargedTotal is what the till charged: the charged amount where noted, else the line total', () => {
+  const s = run(add(450, '', 2), add(1200), { type: 'setCharged', id: 1, chargedCents: 1000 });
+  assert.equal(chargedTotal(s), 1000 + 1200);
+  assert.equal(chargedTotal(s), total(s) + checkSummary(s).overchargeCents - checkSummary(s).inFavorCents);
+});
+
+test('receiptCheck compares the receipt with the noted total and with what the lines say was charged', () => {
+  const s = run(add(450, '', 2), add(1200));
+  assert.equal(receiptCheck(s), null, 'no receipt noted');
+  assert.equal(receiptCheck(cartReducer(initialCart(), { type: 'setReceipt', receiptCents: 500 })), null, 'no items');
+
+  const check = (state, receiptCents) => receiptCheck(cartReducer(state, { type: 'setReceipt', receiptCents }));
+  const matching = { receiptCents: 2100, notedCents: 2100, chargedCents: 2100, diffCents: 0, unexplainedCents: 0 };
+  assert.deepEqual(check(s, 2100), matching);
+  assert.equal(check(s, 2200).diffCents, 100);
+  assert.equal(check(s, 2000).diffCents, -100);
+
+  const charged = cartReducer(s, { type: 'setCharged', id: 1, chargedCents: 1000 });
+  const explained = { receiptCents: 2200, notedCents: 2100, chargedCents: 2200, diffCents: 100, unexplainedCents: 0 };
+  assert.deepEqual(check(charged, 2200), explained);
+  assert.equal(check(charged, 2350).unexplainedCents, 150);
 });

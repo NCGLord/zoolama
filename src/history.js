@@ -18,6 +18,7 @@ export function tripFromCart(cart, { id, at, store = '' }) {
     totalCents: total(cart),
     units: counts(cart).units,
     ...(overchargeCents ? { overchargeCents } : {}),
+    ...(cart.receiptCents ? { receiptCents: cart.receiptCents } : {}),
   };
 }
 
@@ -41,7 +42,8 @@ export function isTrip(trip) {
     trip.items.every(isTripItem) &&
     isCount(trip.totalCents) &&
     isCount(trip.units) &&
-    (trip.overchargeCents === undefined || isPositive(trip.overchargeCents))
+    (trip.overchargeCents === undefined || isPositive(trip.overchargeCents)) &&
+    (trip.receiptCents === undefined || isPositive(trip.receiptCents))
   );
 }
 
