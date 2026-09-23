@@ -65,3 +65,8 @@ test('data-i18n elements hold only text, since applyLang replaces their textCont
   const clobbered = [...html.matchAll(/<(\w+)\s[^>]*?\bdata-i18n="([^"]+)"[^>]*>[^<]*<(?!\/\1>)/g)].map((m) => m[2]);
   assert.deepEqual(clobbered, [], 'these elements would lose their child markup on a language switch');
 });
+
+test('the header wordmark is an image named "Zoolama" for screen readers', () => {
+  const brand = html.match(/<h1 class="brand">([\s\S]*?)<\/h1>/)[1];
+  assert.match(brand, /<svg[^>]*role="img"[^>]*aria-label="Zoolama"/);
+});

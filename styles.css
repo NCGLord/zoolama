@@ -107,7 +107,13 @@ button {
 
 .brand {
   margin: 0;
-  font: 700 24px/1 var(--num);
+  line-height: 0;
+}
+
+.wordmark {
+  display: block;
+  width: auto;
+  height: 36px;
 }
 
 .bar-tools {
