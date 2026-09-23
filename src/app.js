@@ -191,6 +191,7 @@ function editLineView(item, n) {
 }
 
 let editingChargeId = null; // line whose "charged" field is open in checkout mode
+let justTicked = null; // line ticked by the latest tap: its tick snaps in once
 
 /** A line at the till: tick, photo, name, noted total, and what the till charged when it differs. */
 function checkLineView(item, n) {
@@ -226,7 +227,7 @@ function checkLineView(item, n) {
       'button',
       {
         type: 'button',
-        class: 'tick',
+        class: id === justTicked ? 'tick snap' : 'tick',
         'data-action': 'toggle-check',
         'data-key': `tick-${id}`,
         'aria-pressed': String(Boolean(item.checked)),
@@ -498,7 +499,14 @@ $('lines').addEventListener('click', (e) => {
   if (!item) return;
   if (action === 'take-photo') takePhoto(id);
   if (action === 'view-photo') openViewer(item);
-  if (action === 'toggle-check') dispatchCart({ type: 'toggleChecked', id });
+  if (action === 'toggle-check') {
+    if (!item.checked) {
+      justTicked = id;
+      navigator.vibrate?.(12); // a short haptic tick on Android; a no-op elsewhere
+    }
+    dispatchCart({ type: 'toggleChecked', id });
+    justTicked = null;
+  }
   if (action === 'edit-weight') {
     editingWeightId = id;
     renderCart();
