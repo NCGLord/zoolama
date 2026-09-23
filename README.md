@@ -6,7 +6,8 @@ Offline supermarket helper for your phone:
   app, restarting the phone, or losing signal.
 - **Price memory**: the name field suggests items from past trips, and once a name matches it shows what that item
   cost last time, where and when (*Última vez: R$ 4,29 · Assaí, 12/09*), adding *+7% desde a última vez* when the
-  price you type is higher. Weighed items are remembered by their price per kg.
+  price you type is higher; a cart line that costs more than last time says so too. Weighed items are remembered by
+  their price per kg.
 - **Fix a price**: tap a line's arithmetic (*R$ 4,50 × 2*) to retype its price in place; the quantity, photo and
   checkout marks stay. On a weighed line it corrects the price per kg at the same weight.
 - **Sort**: order the cart by *Adicionado* (when added), *Valor* (line total) or *Nome*; tap the active one again to

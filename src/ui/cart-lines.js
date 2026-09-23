@@ -1,10 +1,12 @@
 // A cart line as it looks while shopping (editable) and at the till (tick, what the till charged).
 
 import { chargedDiff, lineTotal } from '../cart.js';
-import { formatKg } from '../i18n.js';
+import { priceRise } from '../history.js';
+import { formatKg, formatPct } from '../i18n.js';
 import { formatMoney } from '../money.js';
 import { state } from './app-state.js';
 import { h, icon } from './dom.js';
+import { memory, version as memoryVersion } from './price-memory.js';
 import { eachText, signedMoney, tr } from './text.js';
 
 function photoCell(item) {
@@ -81,6 +83,7 @@ function priceControl(item) {
 
 function editLineView(item, n) {
   const id = item.id;
+  const rise = priceRise(item, memory);
   return h(
     'li',
     { class: 'line', 'data-id': id },
@@ -109,6 +112,7 @@ function editLineView(item, n) {
           ),
       h('button', { type: 'button', class: 'remove', 'data-action': 'remove', 'aria-label': tr('remove') }, '✕'),
     ),
+    rise ? h('span', { class: 'line-rise', text: tr('priceRise', { pct: formatPct(rise.pct, state.lang) }) }) : '',
   );
 }
 
@@ -176,11 +180,12 @@ function checkLineView(item, n) {
 // of the tap that caused the blur; lines whose look didn't change keep their node, so that tap still lands.
 const looks = new WeakMap();
 
-/** Everything a line's view depends on: the item, its number, the mode, the language and which field is open. */
+/** Everything a line's view depends on: the item, its number, the mode, the language, the price memory (for the
+ * price-rise note) and which field is open. */
 function lineLook(item, n) {
   const id = item.id;
   const open = [editing.weightId, editing.priceId, editing.chargeId, editing.justTicked].map((x) => x === id);
-  return JSON.stringify([item, n, state.checking, state.lang, ...open]);
+  return JSON.stringify([item, n, state.checking, state.lang, memoryVersion, ...open]);
 }
 
 /** Nodes for the sorted rows: the same node where a line looks the same as in `current`, a new one where it changed. */

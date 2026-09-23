@@ -39,3 +39,14 @@ test('a weighed item is remembered by its price per kg', async ({ page }) => {
   await page.locator('#name').fill('Tomate');
   await expect(page.locator('#name-hint')).toHaveText('Última vez: R$ 7,99/kg · Assaí, 12/01');
 });
+
+test('a cart line that costs more than last time says so, and only while shopping', async ({ page }) => {
+  await addItem(page, { price: '4,59', name: 'Leite' });
+  await addItem(page, { price: '4,29', name: 'leite' });
+  await addItem(page, { price: '9,99', name: 'Arroz' });
+  await expect(line(page, 'Leite').locator('.line-rise')).toHaveText('+7% desde a última vez');
+  await expect(line(page, 'leite').locator('.line-rise')).toHaveCount(0);
+  await expect(line(page, 'Arroz').locator('.line-rise')).toHaveCount(0);
+  await page.locator('#start-check').click();
+  await expect(page.locator('.line-rise')).toHaveCount(0);
+});

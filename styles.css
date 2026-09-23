@@ -1159,6 +1159,14 @@ button.line-each {
   outline: none;
 }
 
+/* "+7% desde a última vez", under a line that costs more than it did on the last trip. */
+.line-rise {
+  grid-column: 2 / -1;
+  grid-row: 3;
+  color: var(--dear);
+  font-size: 13px;
+}
+
 .line-ctl {
   grid-area: ctl;
   display: flex;
