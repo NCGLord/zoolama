@@ -1532,6 +1532,23 @@ main {
   }
 }
 
+/* Celebration after finishing a trip: little price tags (pointed end, like the app icon). */
+.burst {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.burst-tag {
+  position: absolute;
+  width: 16px;
+  height: 10px;
+  border-radius: 2px;
+  clip-path: polygon(28% 0, 100% 0, 100% 100%, 28% 100%, 0 50%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

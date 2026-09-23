@@ -723,6 +723,7 @@ $('finish').addEventListener('click', () => {
 $('finish-cancel').addEventListener('click', () => $('finish-sheet').close());
 
 $('finish-form').addEventListener('submit', () => {
+  const party = celebrates(total(state.cart), state.budgetCents);
   const trip = tripFromCart(state.cart, { id: crypto.randomUUID(), at: Date.now(), store: $('finish-store').value });
   if (!setHistory([trip, ...history])) {
     history = history.filter((t) => t.id !== trip.id); // not stored: keep the cart, don't pretend
@@ -734,7 +735,38 @@ $('finish-form').addEventListener('submit', () => {
   persist({ ...state, checking: false });
   dispatchCart({ type: 'clear' }); // photos stay while Undo can still bring the cart back
   showToast('tripSaved', { action: 'undoFinish' });
+  if (party) burst();
 });
+
+/** A handful of little price tags in the theme's colours fly up from the total and fall away. */
+function burst() {
+  if (reducedMotion.matches) return;
+  const root = getComputedStyle(document.documentElement);
+  const colours = ['--tag', '--primary', '--dear', '--good'].map((v) => root.getPropertyValue(v).trim());
+  const from = $('tally').getBoundingClientRect();
+  const layer = h('div', { class: 'burst', 'aria-hidden': 'true' });
+  document.body.append(layer);
+  const PIECES = 22;
+  let landed = 0;
+  for (let i = 0; i < PIECES; i++) {
+    const tag = h('span', { class: 'burst-tag' });
+    tag.style.background = colours[i % colours.length];
+    tag.style.left = `${from.left + from.width * (0.15 + Math.random() * 0.7)}px`;
+    tag.style.top = `${from.top + 8}px`;
+    layer.append(tag);
+    const dx = (Math.random() - 0.5) * 320;
+    const dy = -(180 + Math.random() * 300);
+    const spin = (Math.random() - 0.5) * 900;
+    tag.animate(
+      [
+        { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) rotate(${spin}deg)`, opacity: 1, offset: 0.55 },
+        { transform: `translate(${dx * 1.25}px, ${dy + 320}px) rotate(${spin * 1.6}deg)`, opacity: 0 },
+      ],
+      { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(0.2, 0.7, 0.4, 1)' },
+    ).onfinish = () => ++landed === PIECES && layer.remove();
+  }
+}
 
 function undoFinish() {
   setHistory(history.filter((t) => t.id !== lastFinishedId));
