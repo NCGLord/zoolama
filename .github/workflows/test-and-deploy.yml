@@ -1,4 +1,4 @@
-# Every push runs the tests; only a green `main` is published to GitHub Pages.
+# Every push runs the unit tests and the browser tests; only `main` with both green is published to GitHub Pages.
 # The Pages source is set to "GitHub Actions", so this workflow is the only way anything reaches the site.
 name: Test and deploy
 
@@ -20,8 +20,43 @@ jobs:
       # Includes the service-worker guard: a precached file changed without `npm run stamp` fails here.
       - run: npm test
 
+  # The browser tests (e2e/*.spec.js) drive the real app in Chromium at phone size. They are the only job that
+  # installs anything: @playwright/test, pinned by package-lock.json, which in turn pins the browser build.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - id: pw
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
+      # Keyed on the exact Playwright version, which fixes the browser build it downloads.
+      - id: browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps --only-shell chromium
+      # The browser is cached, but the system libraries it needs are not.
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - run: npm run e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
   deploy:
-    needs: test
+    needs: [test, e2e]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
