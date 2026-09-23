@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { initialCart, cartReducer } from '../src/cart.js';
+import { initialCart, cartReducer, lineTotal } from '../src/cart.js';
 import {
   tripFromCart,
   monthlyGroups,
@@ -232,4 +232,22 @@ test('averageTripCents rounds to the centavo, and is null with no trips', () => 
   assert.equal(averageTripCents([spent('a', 0, '', 100), spent('b', 0, '', 100), spent('c', 0, '', 101)]), 100);
   assert.equal(averageTripCents([spent('a', 0, '', 100), spent('b', 0, '', 101)]), 101);
   assert.equal(averageTripCents([]), null);
+});
+
+// History re-totals a trip line by line (and share writes each line's arithmetic), so whatever a cart line can carry
+// that changes its total must travel into the trip too. This pins that for every kind of line the cart knows.
+test('a trip\'s lines always add up to its total', () => {
+  const carts = [
+    cartOf({ type: 'add', priceCents: 450, qty: 3 }),
+    cartOf({ type: 'add', perKgCents: 799, grams: 1250 }, { type: 'add', priceCents: 1299 }),
+    cartOf(
+      { type: 'add', priceCents: 450, qty: 2 },
+      { type: 'setCharged', id: 1, chargedCents: 1000 },
+      { type: 'setPrice', id: 1, priceCents: 399 },
+    ),
+  ];
+  for (const cart of carts) {
+    const trip = tripFromCart(cart, { id: 't', at: 0 });
+    assert.equal(trip.items.reduce((sum, item) => sum + lineTotal(item), 0), trip.totalCents);
+  }
 });
