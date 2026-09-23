@@ -123,9 +123,13 @@ function onOptionInput(e) {
   renderResults();
 }
 
-// Radios fire 'change' everywhere but 'input' only in newer engines; handling both is harmless.
+// Radios fire 'change' everywhere but 'input' only in newer engines, so they are read on both. Text fields are read on
+// 'input' alone: their 'change' comes on blur, when a tap on Add to cart moves focus, and redrawing the results then
+// would replace the very button being tapped, losing the tap.
 $('options').addEventListener('input', onOptionInput);
-$('options').addEventListener('change', onOptionInput);
+$('options').addEventListener('change', (e) => {
+  if (e.target.type === 'radio') onOptionInput(e);
+});
 
 $('options').addEventListener('click', (e) => {
   const action = e.target.closest('[data-action]')?.dataset.action;

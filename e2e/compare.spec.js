@@ -39,3 +39,14 @@ test('refuses to compare weight with volume', async ({ page }) => {
   await expect(page.locator('#compare-msg')).toHaveText('Não dá para comparar peso, volume e unidade entre si.');
   await expect(page.locator('#options .winner')).toHaveCount(0);
 });
+
+test('Add to cart works on the first tap straight after typing a price', async ({ page }) => {
+  await fillOption(page, 1, { price: '8,99', qty: '1', unit: 'kg' });
+  const big = page.locator('#options .option').nth(1);
+  await big.getByLabel('Quantidade').fill('5');
+  await big.getByRole('radio', { name: 'kg', exact: true }).check();
+  await big.getByLabel('Preço').fill('29,90'); // the price field still has focus when Add is tapped
+  await big.getByRole('button', { name: 'Adicionar ao carrinho' }).click();
+  await expect(page.locator('#toast-text')).toHaveText('Adicionado ao carrinho');
+  await expect(page.locator('#cart-badge')).toHaveText('1');
+});
