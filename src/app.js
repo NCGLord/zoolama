@@ -482,9 +482,7 @@ $('entry').addEventListener('submit', (e) => {
     line = { perKgCents: priceCents, grams };
   }
   dispatchCart({ type: 'add', ...line, name: $('name').value, photoId: entryPhotoId });
-  pendingPhotos.delete(entryPhotoId); // now the cart keeps it
-  entryPhotoId = null;
-  renderEntryPhoto();
+  entryPhotoAdded();
   $('entry').reset();
   renderEntryMode(); // reset() puts the switch back to its default; keep the chosen mode
   setEntryError(null);
@@ -655,6 +653,13 @@ function renderEntryPhoto() {
   if (entryPhotoId) photoUrl(entryPhotoId).then((url) => url && (img.src = url));
   $('entry-photo').dataset.i18nAriaLabel = entryPhotoId ? 'retakePhoto' : 'takePhoto';
   $('entry-photo').setAttribute('aria-label', tr($('entry-photo').dataset.i18nAriaLabel));
+}
+
+/** The entry's photo went into the cart with its item: the cart keeps it now, and the next item starts without one. */
+function entryPhotoAdded() {
+  pendingPhotos.delete(entryPhotoId);
+  entryPhotoId = null;
+  renderEntryPhoto();
 }
 
 $('entry-photo').addEventListener('click', () => takePhoto('entry'));
@@ -1173,6 +1178,12 @@ function hideToast() {
   if (updatePending) showToast('updateReady', { action: 'update', persist: true });
 }
 
+/** A new version has taken over: offer the reload, and keep offering it after shorter-lived toasts. */
+function offerUpdate() {
+  updatePending = true;
+  showToast('updateReady', { action: 'update', persist: true });
+}
+
 /** An Undo that can no longer undo anything must not stay on screen. */
 function dropStaleUndo() {
   if (!$('toast').hidden && TOAST_ACTIONS[toastAction]?.cartUndo && !state.cart.undo) hideToast();
@@ -1232,10 +1243,7 @@ if ('serviceWorker' in navigator) {
   // sw.js skips waiting and claims the page, so a new version takes over as soon as it has installed.
   // The screen still shows the old one; offer a reload rather than forcing it mid-typing.
   sw.addEventListener('controllerchange', () => {
-    if (controlled) {
-      updatePending = true;
-      showToast('updateReady', { action: 'update', persist: true });
-    }
+    if (controlled) offerUpdate();
     controlled = true; // the first claim after a fresh install is not an update
   });
 }
