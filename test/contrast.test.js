@@ -39,6 +39,8 @@ const PAIRS = [
   ['pill-ink', 'pill', 3],
   ['dear', 'surface', 4.5],
   ['good', 'surface', 4.5],
+  ['dear', 'paper', 4.5], // cart lines and the Compare message sit on the page itself
+  ['good', 'paper', 4.5],
   ['focus', 'paper', 3],
 ];
 
@@ -56,6 +58,15 @@ for (const [name, theme] of [['light', light], ['dark', dark]]) {
     assert.ok(contrast('#ffffff', theme.over) >= 4.5, `white on --over ${theme.over} is ${contrast('#ffffff', theme.over).toFixed(2)}:1`);
   });
 }
+
+// The cheapest Compare card turns tag yellow and re-points its tokens; the yellow is the same in both themes.
+test('the winning Compare card keeps its muted text and focus ring readable on the yellow', () => {
+  const winner = tokens('.option.winner');
+  for (const [fg, min] of [['muted', 4.5], ['focus', 3]]) {
+    const ratio = contrast(winner[fg], light.tag);
+    assert.ok(ratio >= min, `winner: --${fg} ${winner[fg]} on --tag ${light.tag} is ${ratio.toFixed(2)}:1, needs ${min}:1`);
+  }
+});
 
 test('the system-dark block and the forced-dark block define the same dark palette', () => {
   const start = css.indexOf("@media (prefers-color-scheme: dark)");
