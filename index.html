@@ -108,7 +108,8 @@
             <input id="weight" class="weight-field" inputmode="decimal" enterkeyhint="done" placeholder="0,000" />
             <p id="weight-preview" class="weight-preview" aria-live="polite"></p>
           </div>
-          <input id="name" class="entry-name" enterkeyhint="done" data-i18n-placeholder="name" data-i18n-aria-label="name" />
+          <input id="name" class="entry-name" list="item-names" enterkeyhint="done" data-i18n-placeholder="name" data-i18n-aria-label="name" />
+          <datalist id="item-names"></datalist>
           <div class="entry-actions">
             <button type="button" id="entry-photo" class="photo-btn" data-i18n-aria-label="takePhoto">
               <svg class="camera" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5a2 2 0 0 1 2-2h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" /><circle cx="12" cy="12.5" r="3.5" /></svg>
@@ -116,6 +117,7 @@
             </button>
             <button class="primary" type="submit" data-i18n="add">Adicionar</button>
           </div>
+          <p id="name-hint" class="name-hint" aria-live="polite"></p>
         </form>
         <div id="check-head" class="check-head" hidden>
           <div>

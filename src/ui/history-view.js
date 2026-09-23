@@ -11,6 +11,7 @@ import { loadHistory, saveHistory } from '../store.js';
 import { persist, state, storage } from './app-state.js';
 import { dispatchCart } from './cart-store.js';
 import { $, h, reducedMotion } from './dom.js';
+import { rememberPrices } from './price-memory.js';
 import { shareList } from './share-sheet.js';
 import { eachText, tagPrice, tr } from './text.js';
 import { showToast } from './toast.js';
@@ -157,6 +158,7 @@ function tripView(trip, whenFormat) {
 }
 
 function renderHistory() {
+  rememberPrices(trips); // every change to the history comes through here
   $('history-empty').hidden = trips.length > 0;
   $('export-history').hidden = trips.length === 0;
   // Nothing to export yet: the hint is about bringing a history over instead.

@@ -1,13 +1,15 @@
 // The entry form at the top of the cart: price, quantity or weight, an optional name and photo, then Add.
 
 import { linePriceCents } from '../cart.js';
-import { formatKg } from '../i18n.js';
+import { lastPrice, priceRise } from '../history.js';
+import { formatKg, formatPct, LOCALES } from '../i18n.js';
 import { formatMoney, parseMoney } from '../money.js';
 import { parseGrams } from '../units.js';
 import { state } from './app-state.js';
 import { dispatchCart, MAX_QTY } from './cart-store.js';
 import { $ } from './dom.js';
 import { entryPhotoAdded, entryPhotoId } from './photos-ui.js';
+import { memory } from './price-memory.js';
 import { tr } from './text.js';
 
 function readQty() {
@@ -33,6 +35,28 @@ function renderEntryMode() {
   $('price-label').textContent = tr($('price-label').dataset.i18n);
   $('weight').placeholder = formatKg(0, state.lang).replace(' kg', '');
   renderWeightPreview();
+  renderNameHint();
+}
+
+/** What the typed name cost last time (and where, and when), and whether the typed price is dearer. */
+function renderNameHint() {
+  const weighed = entryMode === 'weight';
+  const name = $('name').value;
+  const last = lastPrice(memory, name, weighed ? 'weight' : 'unit');
+  if (!last) {
+    $('name-hint').textContent = '';
+    return;
+  }
+  const price = `${formatMoney(last.perKgCents ?? last.priceCents, state.lang)}${last.kind === 'weight' ? '/kg' : ''}`;
+  const date = new Date(last.at);
+  const thisYear = date.getFullYear() === new Date().getFullYear();
+  const format = { day: '2-digit', month: '2-digit', year: thisYear ? undefined : 'numeric' };
+  const when = new Intl.DateTimeFormat(LOCALES[state.lang], format).format(date);
+  const parts = [last.store ? tr('lastPaidAt', { price, store: last.store, when }) : tr('lastPaid', { price, when })];
+  const typed = parseMoney($('price').value);
+  const rise = typed && priceRise(weighed ? { name, perKgCents: typed } : { name, priceCents: typed }, memory);
+  if (rise) parts.push(tr('priceRise', { pct: formatPct(rise.pct, state.lang) }));
+  $('name-hint').textContent = parts.join(' · ');
 }
 
 function renderWeightPreview() {
@@ -78,7 +102,10 @@ $('entry').addEventListener('submit', (e) => {
 $('price').addEventListener('input', () => {
   setEntryError(null);
   renderWeightPreview();
+  renderNameHint();
 });
+
+$('name').addEventListener('input', renderNameHint);
 
 $('weight').addEventListener('input', () => {
   setEntryError(null);

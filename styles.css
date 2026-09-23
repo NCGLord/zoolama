@@ -731,6 +731,17 @@ main {
   background: transparent;
 }
 
+.name-hint {
+  grid-column: 1 / -1;
+  margin: -2px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.name-hint:empty {
+  display: none;
+}
+
 .entry-name::placeholder,
 .line-name::placeholder {
   color: var(--muted);
