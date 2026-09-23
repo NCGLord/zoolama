@@ -1,0 +1,10 @@
+{
+  "name": "zoolama",
+  "private": true,
+  "type": "module",
+  "description": "Offline supermarket cart and unit-price comparison (PWA).",
+  "scripts": {
+    "test": "node --test",
+    "stamp": "node tools/stamp-sw.mjs"
+  }
+}
