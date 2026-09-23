@@ -1134,10 +1134,10 @@ main {
 
 .tally-tag.pop {
   transform-origin: left bottom;
-  animation: tag-pop 320ms cubic-bezier(0.3, 1.6, 0.6, 1);
+  animation: total-pop 320ms cubic-bezier(0.3, 1.6, 0.6, 1);
 }
 
-@keyframes tag-pop {
+@keyframes total-pop {
   40% {
     transform: scale(1.06);
   }
