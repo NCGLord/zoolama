@@ -34,6 +34,30 @@ export function parseQuantity(input, { grouping = false } = {}) {
   return Number.isFinite(qty) && qty > 0 ? qty : null;
 }
 
+// A multipack as typed in Compare: a whole pack count, a ×, a size ("12x350", "12 × 350", "6 × 1,5").
+const PACK = /^(\d+)[x×X](.+)$/;
+
+/**
+ * A quantity typed in Compare, where it may be a multipack: {packs, size, qty} with qty = packs × size, in the unit
+ * typed; a plain quantity is one pack. The size follows parseQuantity's rules, `grouping` included, so "2 x 1.000" g
+ * is 2000 g. null unless the count is a whole number of at least 1 and the size a valid quantity. Weights and cart
+ * quantities keep using parseQuantity and parseGrams, which never read a ×.
+ */
+export function parsePack(input, { grouping = false } = {}) {
+  const s = String(input ?? '').replace(/\s/g, '');
+  const m = s.match(PACK);
+  const packs = m ? Number(m[1]) : 1;
+  const size = parseQuantity(m ? m[2] : s, { grouping });
+  return packs >= 1 && size !== null ? { packs, size, qty: packs * size } : null;
+}
+
+/** A pack written the way packs print it, for a cart line's name: "12x350" → "12 × 350"; anything else as typed. */
+export function packLabel(input) {
+  const s = String(input ?? '').trim();
+  const m = s.replace(/\s/g, '').match(PACK);
+  return m ? `${m[1]} × ${m[2]}` : s;
+}
+
 export function toBase(qty, unit) {
   const u = UNITS[unit];
   return u ? { dim: u.dim, qty: qty / u.per } : null;

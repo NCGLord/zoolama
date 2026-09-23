@@ -59,3 +59,15 @@ test('a pack typed as 1.000 g weighs a thousand grams, while 1.250 kg stays one 
   assert.equal(results[0].isCheapest, true);
   assert.equal(results[2].unitPrice, 1200); // R$ 12,00/kg
 });
+
+test('a multipack is compared by its total size: 12 × 350 ml ties with 4,2 L at the same price', () => {
+  const { results } = compare([opt('39,90', '12 x 350', 'ml'), opt('39,90', '4,2', 'L')]);
+  assert.equal(results[0].isCheapest, true);
+  assert.equal(results[1].isCheapest, true);
+});
+
+test('a 2 L bottle beats a 12-can pack when its price per litre is lower', () => {
+  const { results } = compare([opt('29,90', '12x350', 'ml'), opt('9,99', '2', 'L')]);
+  assert.equal(results[1].isCheapest, true);
+  assert.equal(Math.round(results[0].unitPrice), 712); // R$ 7,12/L against R$ 5,00/L
+});
