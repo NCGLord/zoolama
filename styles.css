@@ -429,6 +429,59 @@ main {
   font-size: 14px;
 }
 
+/* Weighed items: price per kg × weight, with the line price previewed before Add. */
+.weight-field {
+  width: 6.5ch;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+  background: transparent;
+  font: 700 34px/1.1 var(--num);
+  font-variant-numeric: tabular-nums;
+}
+
+.weight-field:focus-visible {
+  outline: none;
+  border-bottom-color: var(--focus);
+}
+
+.weight-preview {
+  min-height: 1.2em;
+  margin: 4px 0 0;
+  font: 700 18px/1.1 var(--num);
+}
+
+.weight-btn {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font: 700 20px/1 var(--num);
+  font-variant-numeric: tabular-nums;
+}
+
+.weight-input {
+  width: 6.5ch;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 2px solid var(--focus);
+  background: transparent;
+  font: 700 22px/1.1 var(--num);
+  font-variant-numeric: tabular-nums;
+}
+
+.weight-input:focus-visible {
+  outline: none;
+}
+
+.tag-price .per {
+  align-self: flex-end;
+  margin-bottom: 0.3em;
+  margin-left: 2px;
+  font-size: 0.34em;
+}
+
 .entry-qty {
   align-self: start;
 }

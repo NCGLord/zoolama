@@ -1,10 +1,10 @@
 // DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
 
 import { parseMoney, formatMoney, formatMoneyParts } from './money.js';
-import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary } from './cart.js';
+import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary, linePriceCents } from './cart.js';
 import { compare } from './compare.js';
-import { UNITS, BASE_UNIT } from './units.js';
-import { t, detectLang, formatPct, LOCALES } from './i18n.js';
+import { UNITS, BASE_UNIT, parseGrams } from './units.js';
+import { t, detectLang, formatPct, formatKg, LOCALES } from './i18n.js';
 import { load, save } from './store.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
@@ -117,6 +117,40 @@ function photoCell(item) {
 
 const lineView = (item, n) => (state.checking ? checkLineView(item, n) : editLineView(item, n));
 
+/** "R$ 4,50 × 2", or for a weighed item "R$ 7,99/kg × 1,250 kg". */
+const eachText = (item) =>
+  item.perKgCents
+    ? `${formatMoney(item.perKgCents, state.lang)}/kg × ${formatKg(item.grams, state.lang)}`
+    : `${formatMoney(item.priceCents, state.lang)} × ${item.qty}`;
+
+let editingWeightId = null; // weighed line whose weight field is open
+
+function weightControl(item) {
+  const id = item.id;
+  if (editingWeightId === id) {
+    return h('input', {
+      class: 'weight-input',
+      'data-action': 'weight',
+      'data-key': `weight-${id}`,
+      inputmode: 'decimal',
+      enterkeyhint: 'done',
+      value: formatKg(item.grams, state.lang).replace(' kg', ''),
+      'aria-label': tr('editWeight'),
+    });
+  }
+  return h(
+    'button',
+    {
+      type: 'button',
+      class: 'weight-btn',
+      'data-action': 'edit-weight',
+      'data-key': `wb-${id}`,
+      'aria-label': `${tr('editWeight')}: ${formatKg(item.grams, state.lang)}`,
+    },
+    formatKg(item.grams, state.lang),
+  );
+}
+
 function editLineView(item, n) {
   const id = item.id;
   return h(
@@ -132,17 +166,19 @@ function editLineView(item, n) {
       'data-action': 'rename',
     }),
     h('span', { class: 'line-sub', text: formatMoney(item.priceCents * item.qty, state.lang) }),
-    h('span', { class: 'line-each', text: `${formatMoney(item.priceCents, state.lang)} × ${item.qty}` }),
+    h('span', { class: 'line-each', text: eachText(item) }),
     h(
       'div',
       { class: 'line-ctl' },
-      h(
-        'div',
-        { class: 'stepper' },
-        h('button', { type: 'button', 'data-action': 'dec', 'data-key': `dec-${id}`, 'aria-label': tr('oneLess') }, '−'),
-        h('span', { text: item.qty }),
-        h('button', { type: 'button', 'data-action': 'inc', 'data-key': `inc-${id}`, 'aria-label': tr('oneMore') }, '+'),
-      ),
+      item.perKgCents
+        ? weightControl(item)
+        : h(
+            'div',
+            { class: 'stepper' },
+            h('button', { type: 'button', 'data-action': 'dec', 'data-key': `dec-${id}`, 'aria-label': tr('oneLess') }, '−'),
+            h('span', { text: item.qty }),
+            h('button', { type: 'button', 'data-action': 'inc', 'data-key': `inc-${id}`, 'aria-label': tr('oneMore') }, '+'),
+          ),
       h('button', { type: 'button', class: 'remove', 'data-action': 'remove', 'aria-label': tr('remove') }, '✕'),
     ),
   );
@@ -175,7 +211,7 @@ function checkLineView(item, n) {
       h('span', { text: signedMoney(diff) }),
     );
   } else {
-    detail = h('span', { class: 'line-each', text: `${formatMoney(item.priceCents, state.lang)} × ${item.qty}` });
+    detail = h('span', { class: 'line-each', text: eachText(item) });
   }
   return h(
     'li',
@@ -232,6 +268,7 @@ function renderCart() {
   const { cart } = state;
   if (state.checking && cart.items.length === 0) persist({ ...state, checking: false }); // nothing left to check
   if (!state.checking) editingChargeId = null;
+  else editingWeightId = null;
   renderCheck();
   keepingFocus(() => {
     // Newest first, so the line just added sits right under the entry form.
@@ -310,29 +347,77 @@ function readQty() {
   return Number.isInteger(n) && n >= 1 ? Math.min(n, MAX_QTY) : 1;
 }
 
-function setPriceError(key) {
+/** Shows an entry error under the price and marks the field it's about. */
+function setEntryError(key, field = 'price') {
   $('price-error').textContent = key ? tr(key) : '';
-  $('price').setAttribute('aria-invalid', Boolean(key));
+  $('price').setAttribute('aria-invalid', Boolean(key) && field === 'price');
+  $('weight').setAttribute('aria-invalid', Boolean(key) && field === 'weight');
 }
+
+let entryMode = 'unit'; // 'unit' or 'weight'; stays until changed, as weighed items come in runs
+
+function renderEntryMode() {
+  const weighed = entryMode === 'weight';
+  document.querySelector(`input[name="entry-mode"][value="${entryMode}"]`).checked = true;
+  document.querySelector('.entry-qty').hidden = weighed;
+  document.querySelector('.entry-weight').hidden = !weighed;
+  $('price-label').dataset.i18n = weighed ? 'pricePerKg' : 'price';
+  $('price-label').textContent = tr($('price-label').dataset.i18n);
+  $('weight').placeholder = formatKg(0, state.lang).replace(' kg', '');
+  renderWeightPreview();
+}
+
+function renderWeightPreview() {
+  const perKg = parseMoney($('price').value);
+  const grams = parseGrams($('weight').value);
+  const ready = entryMode === 'weight' && perKg !== null && grams !== null;
+  $('weight-preview').textContent = ready ? `= ${formatMoney(linePriceCents(perKg, grams), state.lang)}` : '';
+}
+
+$('entry').addEventListener('change', (e) => {
+  if (e.target.name !== 'entry-mode') return;
+  entryMode = e.target.value;
+  setEntryError(null);
+  renderEntryMode();
+});
 
 $('entry').addEventListener('submit', (e) => {
   e.preventDefault();
   const priceCents = parseMoney($('price').value);
   if (priceCents === null) {
-    setPriceError('invalidPrice');
+    setEntryError('invalidPrice');
     $('price').focus();
     return;
   }
-  dispatchCart({ type: 'add', priceCents, qty: readQty(), name: $('name').value, photoId: entryPhotoId });
+  let line = { priceCents, qty: readQty() };
+  if (entryMode === 'weight') {
+    const grams = parseGrams($('weight').value);
+    if (grams === null) {
+      setEntryError('invalidWeight', 'weight');
+      $('weight').focus();
+      return;
+    }
+    line = { perKgCents: priceCents, grams };
+  }
+  dispatchCart({ type: 'add', ...line, name: $('name').value, photoId: entryPhotoId });
   pendingPhotos.delete(entryPhotoId); // now the cart keeps it
   entryPhotoId = null;
   renderEntryPhoto();
   $('entry').reset();
-  setPriceError(null);
+  renderEntryMode(); // reset() puts the switch back to its default; keep the chosen mode
+  setEntryError(null);
   $('price').focus();
 });
 
-$('price').addEventListener('input', () => setPriceError(null));
+$('price').addEventListener('input', () => {
+  setEntryError(null);
+  renderWeightPreview();
+});
+
+$('weight').addEventListener('input', () => {
+  setEntryError(null);
+  renderWeightPreview();
+});
 
 $('entry').addEventListener('click', (e) => {
   const step = e.target.closest('[data-step]')?.dataset.step;
@@ -347,6 +432,13 @@ $('lines').addEventListener('click', (e) => {
   if (action === 'take-photo') takePhoto(id);
   if (action === 'view-photo') openViewer(item);
   if (action === 'toggle-check') dispatchCart({ type: 'toggleChecked', id });
+  if (action === 'edit-weight') {
+    editingWeightId = id;
+    renderCart();
+    const input = document.querySelector(`[data-key="weight-${id}"]`);
+    input?.focus();
+    input?.select();
+  }
   if (action === 'edit-charge') {
     editingChargeId = id;
     renderCart();
@@ -371,16 +463,29 @@ $('lines').addEventListener('change', (e) => {
 
 $('lines').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.dataset.action === 'rename') e.target.blur();
-  if (e.target.dataset.action !== 'charge') return;
+  if (e.target.dataset.action !== 'charge' && e.target.dataset.action !== 'weight') return;
   if (e.key === 'Enter') e.target.blur(); // focusout saves
   if (e.key === 'Escape') {
-    editingChargeId = null; // cancel: re-render without saving
+    editingChargeId = editingWeightId = null; // cancel: re-render without saving
     renderCart();
   }
 });
 
-// The charged field saves when it loses focus. Guarded, so a re-render can never save it twice.
+// The weight and charged fields save when they lose focus. Guarded, so a re-render can never save twice.
 $('lines').addEventListener('focusout', (e) => {
+  if (e.target.dataset.action === 'weight') {
+    const id = Number(e.target.closest('[data-id]').dataset.id);
+    if (editingWeightId !== id) return;
+    editingWeightId = null;
+    const grams = parseGrams(e.target.value);
+    if (grams === null) {
+      renderCart();
+      showToast('invalidWeight');
+      return;
+    }
+    dispatchCart({ type: 'setWeight', id, grams });
+    return;
+  }
   if (e.target.dataset.action !== 'charge') return;
   const id = Number(e.target.closest('[data-id]').dataset.id);
   if (editingChargeId !== id) return;
@@ -499,7 +604,12 @@ async function openViewer(item) {
   $('viewer-img').src = url ?? '';
   $('viewer-img').alt = tr('photoOf');
   $('viewer-title').textContent = item.name || tr('itemN', { n });
-  tagPrice($('viewer-price'), item.priceCents);
+  // A weighed item's shelf tag shows R$/kg, so the viewer does too.
+  tagPrice($('viewer-price'), item.perKgCents ?? item.priceCents);
+  if (item.perKgCents) {
+    $('viewer-price').append(h('span', { class: 'per', text: '/kg' }));
+    $('viewer-price').setAttribute('aria-label', `${formatMoney(item.perKgCents, state.lang)}/kg`);
+  }
   const diff = item.chargedCents == null ? 0 : item.chargedCents - item.priceCents * item.qty;
   $('viewer-charged').hidden = diff === 0;
   $('viewer-charged').className = `viewer-charged ${diff > 0 ? 'dear' : 'good'}`;
@@ -781,6 +891,7 @@ for (const b of document.querySelectorAll('[data-lang]')) {
     persist({ ...state, lang: b.dataset.lang });
     applyLang();
     renderTheme();
+    renderEntryMode();
     renderCart();
     renderOptions();
   });
@@ -793,6 +904,7 @@ renderTheme();
 renderCart();
 renderOptions();
 renderTab();
+renderEntryMode();
 renderInstall();
 collectPhotos();
 navigator.storage?.persist?.().catch(() => {});

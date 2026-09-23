@@ -4,6 +4,8 @@ Offline supermarket helper for your phone:
 
 - **Cart (Carrinho)**: type a price, tap Add, and watch the running total. The cart survives closing the
   app, restarting the phone, or losing signal.
+- **Weighed items**: switch the entry to *Peso*, type the price per kg and the weight from the scale label
+  (`1,250`), and see the line price before adding it. Tap a line's weight to correct it.
 - **Shelf-tag photos**: tap 📷 to photograph the price tag as you add an item, or later from its line. Tap the
   thumbnail at checkout to show the photo full-screen with the price you noted. By law (Lei 10.962/2004, art. 5º),
   when the shelf and the checkout disagree, you pay the lower price. Photos stay on the phone and are deleted

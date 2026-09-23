@@ -75,8 +75,13 @@
     <main>
       <section id="panel-cart" class="panel" role="tabpanel" aria-labelledby="tab-cart">
         <form id="entry" class="entry" novalidate autocomplete="off">
+          <fieldset class="unit-choice entry-mode">
+            <legend class="visually-hidden" data-i18n="entryMode">Tipo de item</legend>
+            <label><input type="radio" name="entry-mode" value="unit" checked /><span data-i18n="modeUnit">Unidade</span></label>
+            <label><input type="radio" name="entry-mode" value="weight" /><span data-i18n="modeWeight">Peso</span></label>
+          </fieldset>
           <div class="entry-price">
-            <label for="price" data-i18n="price">Preço</label>
+            <label for="price" id="price-label" data-i18n="price">Preço</label>
             <div class="money-field">
               <span aria-hidden="true">R$</span>
               <input id="price" inputmode="decimal" enterkeyhint="done" placeholder="0,00" aria-describedby="price-error" />
@@ -90,6 +95,11 @@
               <input id="qty" inputmode="numeric" value="1" />
               <button type="button" data-step="1" data-i18n-aria-label="oneMore">+</button>
             </div>
+          </div>
+          <div class="entry-weight" hidden>
+            <label for="weight" data-i18n="weightKg">Peso (kg)</label>
+            <input id="weight" class="weight-field" inputmode="decimal" enterkeyhint="done" placeholder="0,000" />
+            <p id="weight-preview" class="weight-preview" aria-live="polite"></p>
           </div>
           <input id="name" class="entry-name" enterkeyhint="done" data-i18n-placeholder="name" data-i18n-aria-label="name" />
           <div class="entry-actions">
