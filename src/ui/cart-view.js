@@ -39,7 +39,7 @@ function renderCart() {
   const { cart } = state;
   if (state.checking && cart.items.length === 0) persist({ ...state, checking: false }); // nothing left to check
   if (!state.checking) editing.chargeId = null;
-  else editing.weightId = null;
+  else editing.weightId = editing.priceId = null;
   renderCheck();
   keepingFocus(() => {
     $('lines').replaceChildren(...sortItems(cart.items, state.sort, LOCALES[state.lang]).map(({ item, n }) => lineView(item, n)));
@@ -198,6 +198,10 @@ $('lines').addEventListener('click', (e) => {
     editing.chargeId = id;
     openField(`charge-${id}`);
   }
+  if (action === 'edit-price') {
+    editing.priceId = id;
+    openField(`line-price-${id}`);
+  }
   if (action === 'inc') dispatchCart({ type: 'setQty', id, qty: Math.min(MAX_QTY, item.qty + 1) });
   if (action === 'dec' && item.qty > 1) dispatchCart({ type: 'setQty', id, qty: item.qty - 1 });
   if (action === 'remove' || (action === 'dec' && item.qty === 1)) {
@@ -215,16 +219,29 @@ $('lines').addEventListener('change', (e) => {
 
 $('lines').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.dataset.action === 'rename') e.target.blur();
-  if (e.target.dataset.action !== 'charge' && e.target.dataset.action !== 'weight') return;
+  if (!['charge', 'weight', 'price'].includes(e.target.dataset.action)) return;
   if (e.key === 'Enter') e.target.blur(); // focusout saves
   if (e.key === 'Escape') {
-    editing.chargeId = editing.weightId = null; // cancel: re-render without saving
+    editing.chargeId = editing.weightId = editing.priceId = null; // cancel: re-render without saving
     renderCart();
   }
 });
 
-// The weight and charged fields save when they lose focus. Guarded, so a re-render can never save twice.
+// The weight, price and charged fields save when they lose focus. Guarded, so a re-render can never save twice.
 $('lines').addEventListener('focusout', (e) => {
+  if (e.target.dataset.action === 'price') {
+    const id = Number(e.target.closest('[data-id]').dataset.id);
+    if (editing.priceId !== id) return;
+    editing.priceId = null;
+    const priceCents = parseMoney(e.target.value);
+    if (priceCents === null) {
+      renderCart();
+      showToast('invalidPrice');
+      return;
+    }
+    dispatchCart({ type: 'setPrice', id, priceCents });
+    return;
+  }
   if (e.target.dataset.action === 'weight') {
     const id = Number(e.target.closest('[data-id]').dataset.id);
     if (editing.weightId !== id) return;

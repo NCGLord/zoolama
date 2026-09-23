@@ -4,6 +4,8 @@ Offline supermarket helper for your phone:
 
 - **Cart (Carrinho)**: type a price, tap Add, and watch the running total. The cart survives closing the
   app, restarting the phone, or losing signal.
+- **Fix a price**: tap a line's arithmetic (*R$ 4,50 × 2*) to retype its price in place; the quantity, photo and
+  checkout marks stay. On a weighed line it corrects the price per kg at the same weight.
 - **Sort**: order the cart by *Adicionado* (when added), *Valor* (line total) or *Nome*; tap the active one again to
   flip ascending/descending. The choice is remembered and applies in checkout mode too.
 - **Weighed items**: switch the entry to *Peso*, type the price per kg and the weight from the scale label

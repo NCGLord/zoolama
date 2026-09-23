@@ -67,3 +67,42 @@ test('a weighed item is priced per kg, and its weight can be corrected', async (
   await expect(weighed.locator('.line-sub')).toHaveText('R$ 4,00');
   await expect(page.locator('#total')).toHaveAttribute('aria-label', brl('4,00'));
 });
+
+test('a mistyped price is corrected on its line; Escape and an invalid price leave it alone', async ({ app: page }) => {
+  await addItem(page, { price: '45,00', name: 'Leite', qty: 2 });
+  const leite = line(page, 'Leite');
+  const correct = async (typed, key = 'Enter') => {
+    await leite.getByRole('button', { name: /^Corrigir preço/ }).click();
+    const input = leite.locator('.price-input');
+    await expect(input).toBeFocused();
+    await input.fill(typed);
+    await input.press(key);
+  };
+
+  await correct('4,50');
+  await expect(leite.locator('.line-sub')).toHaveText('R$ 9,00');
+  await expect(leite.locator('.line-each')).toHaveText('R$ 4,50 × 2');
+  await expect(page.locator('#total')).toHaveAttribute('aria-label', brl('9,00'));
+
+  await correct('1', 'Escape');
+  await expect(leite.locator('.line-sub')).toHaveText('R$ 9,00');
+
+  await correct('abc');
+  await expect(page.locator('#toast-text')).toHaveText('Preço inválido');
+  await expect(leite.locator('.line-sub')).toHaveText('R$ 9,00');
+});
+
+test('correcting a weighed line changes its price per kg, not its weight', async ({ app: page }) => {
+  await page.getByRole('radio', { name: 'Peso' }).check();
+  await page.locator('#price').fill('7,99');
+  await page.locator('#weight').fill('1,250');
+  await page.locator('#entry button[type="submit"]').click();
+
+  const weighed = page.locator('#lines .line');
+  await weighed.getByRole('button', { name: /^Corrigir preço por kg/ }).click();
+  await expect(weighed.locator('.price-input')).toHaveValue('7,99');
+  await weighed.locator('.price-input').fill('6,99');
+  await weighed.locator('.price-input').press('Enter');
+  await expect(weighed.locator('.line-each')).toHaveText('R$ 6,99/kg × 1,250 kg');
+  await expect(weighed.locator('.line-sub')).toHaveText('R$ 8,74');
+});

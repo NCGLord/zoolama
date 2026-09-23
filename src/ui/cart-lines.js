@@ -26,6 +26,7 @@ const lineView = (item, n) => (state.checking ? checkLineView(item, n) : editLin
 // Which line has a field open, and which tick just snapped. The line views read these; the #lines handlers set them.
 const editing = {
   weightId: null, // weighed line whose weight field is open
+  priceId: null, // line whose price field is open
   chargeId: null, // line whose "charged" field is open in checkout mode
   justTicked: null, // line ticked by the latest tap: its tick snaps in once
 };
@@ -56,6 +57,28 @@ function weightControl(item) {
   );
 }
 
+/** A line's arithmetic ("R$ 4,50 × 2"); tapping it corrects the price: per unit, or per kg for a weighed line. */
+function priceControl(item) {
+  const id = item.id;
+  const label = tr(item.perKgCents ? 'editPricePerKg' : 'editPrice');
+  if (editing.priceId === id) {
+    return h('input', {
+      class: 'price-input',
+      'data-action': 'price',
+      'data-key': `line-price-${id}`,
+      inputmode: 'decimal',
+      enterkeyhint: 'done',
+      value: formatMoney(item.perKgCents ?? item.priceCents, state.lang).replace(/^\D+/, ''),
+      'aria-label': label,
+    });
+  }
+  return h(
+    'button',
+    { type: 'button', class: 'line-each', 'data-action': 'edit-price', 'data-key': `each-${id}`, 'aria-label': `${label}: ${eachText(item)}` },
+    eachText(item),
+  );
+}
+
 function editLineView(item, n) {
   const id = item.id;
   return h(
@@ -71,7 +94,7 @@ function editLineView(item, n) {
       'data-action': 'rename',
     }),
     h('span', { class: 'line-sub', text: formatMoney(lineTotal(item), state.lang) }),
-    h('span', { class: 'line-each', text: eachText(item) }),
+    priceControl(item),
     h(
       'div',
       { class: 'line-ctl' },

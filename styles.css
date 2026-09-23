@@ -1077,6 +1077,34 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
+/* On an editable line, the arithmetic is also the way to correct the price. */
+button.line-each {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  text-align: left;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.price-input {
+  grid-area: each;
+  width: 7ch;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 2px solid var(--focus);
+  background: transparent;
+  font: 700 22px/1.1 var(--num);
+  font-variant-numeric: tabular-nums;
+}
+
+.price-input:focus-visible {
+  outline: none;
+}
+
 .line-ctl {
   grid-area: ctl;
   display: flex;
