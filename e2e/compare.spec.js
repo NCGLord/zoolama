@@ -50,3 +50,28 @@ test('Add to cart works on the first tap straight after typing a price', async (
   await expect(page.locator('#toast-text')).toHaveText('Adicionado ao carrinho');
   await expect(page.locator('#cart-badge')).toHaveText('1');
 });
+
+test('a multipack typed with the × key is compared by its total and named the way packs print it', async ({
+  page,
+}) => {
+  const cans = page.locator('#options .option').nth(0);
+  await cans.getByLabel('Preço').fill('29,90');
+  await cans.getByRole('radio', { name: 'ml', exact: true }).check();
+  const qty = cans.getByLabel('Quantidade');
+  await qty.fill('12');
+  await cans.getByRole('button', { name: /^Pacote/ }).click();
+  await expect(qty).toBeFocused(); // the keyboard stays up to type the size
+  await page.keyboard.type('350');
+  await expect(qty).toHaveValue('12×350');
+  await expect(cans.locator('.pack-total')).toHaveText('= 4,2 L');
+
+  const bottle = await fillOption(page, 2, { price: '9,99', qty: '2', unit: 'L' });
+  await expect(bottle).toHaveClass(/\bwinner\b/);
+  await bottle.getByLabel('Preço').fill('49,90');
+  await expect(cans).toHaveClass(/\bwinner\b/);
+
+  await cans.getByRole('button', { name: 'Adicionar ao carrinho' }).click();
+  await page.getByRole('tab', { name: /^Carrinho/ }).click();
+  await expect(page.locator('#lines .line-name')).toHaveValue('12 × 350 ml');
+  await expect(page.locator('#lines .line-sub')).toHaveText('R$ 29,90');
+});

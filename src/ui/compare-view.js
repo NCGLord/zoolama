@@ -2,10 +2,10 @@
 
 import { compare } from '../compare.js';
 import { newWinners } from '../delight.js';
-import { formatPct } from '../i18n.js';
+import { LOCALES, formatPct } from '../i18n.js';
 import { parseMoney } from '../money.js';
 import { blankOption, initialCompare } from '../state.js';
-import { BASE_UNIT, UNITS } from '../units.js';
+import { BASE_UNIT, UNITS, packLabel, parsePack, toBase } from '../units.js';
 import { persist, state } from './app-state.js';
 import { dispatchCart } from './cart-store.js';
 import { $, h, replay } from './dom.js';
@@ -43,7 +43,13 @@ function optionView(opt, i, removable) {
           h('input', { 'data-field': 'price', 'data-key': `price-${i}`, inputmode: 'decimal', value: opt.price, placeholder: pricePlaceholder() }),
         ),
       ),
-      h('label', {}, tr('quantity'), h('input', { class: 'qty-field', 'data-field': 'qty', inputmode: 'decimal', value: opt.qty, placeholder: '0' })),
+      h(
+        'div',
+        { class: 'qty-pack' },
+        h('label', {}, tr('quantity'), h('input', { class: 'qty-field', 'data-field': 'qty', inputmode: 'decimal', value: opt.qty, placeholder: '0' })),
+        // Decimal keypads have no x, so multipacks ("12 × 350") get a key of their own.
+        h('button', { type: 'button', class: 'pack-key', 'data-action': 'pack', 'aria-label': tr('multipack') }, '×'),
+      ),
       unitChoice(opt.unit, i),
     ),
     h('div', { class: 'option-result' }),
@@ -91,6 +97,13 @@ function renderResults() {
     tagPrice(price, Math.round(r.unitPrice));
     const per = BASE_UNIT[UNITS[options[i].unit].dim];
     const kids = [h('span', { class: 'unit-price' }, price, h('span', { class: 'per', text: `/${unitLabel(per)}` }))];
+    const pack = parsePack(options[i].qty, { grouping: UNITS[options[i].unit].grouping });
+    if (pack.packs > 1) {
+      // What the pack adds up to, so it's clear "12x350" was read as twelve 350 ml cans.
+      const size = toBase(pack.qty, options[i].unit).qty;
+      const total = new Intl.NumberFormat(LOCALES[state.lang], { maximumFractionDigits: 3 }).format(size);
+      kids.push(h('span', { class: 'pack-total', text: `= ${total} ${unitLabel(per)}` }));
+    }
     if (r.isCheapest) {
       kids.push(
         h('span', { class: 'verdict', text: tr('cheapest') }),
@@ -141,11 +154,25 @@ $('options').addEventListener('click', (e) => {
     renderOptions();
     $('add-option').focus();
   }
+  if (action === 'pack') {
+    const input = e.target.closest('.option').querySelector('[data-field="qty"]');
+    if (!/[x×]/i.test(input.value)) {
+      const at = document.activeElement === input ? input.selectionStart : input.value.length;
+      input.setRangeText('×', at, document.activeElement === input ? input.selectionEnd : at, 'end'); // "12×350" fits the field
+      input.dispatchEvent(new Event('input', { bubbles: true })); // saved and ranked like typing
+    }
+    input.focus();
+  }
   if (action === 'add-to-cart') {
-    const name = [opt.label.trim(), `${opt.qty.trim()} ${unitLabel(opt.unit)}`].filter(Boolean).join(' ');
+    const name = [opt.label.trim(), `${packLabel(opt.qty)} ${unitLabel(opt.unit)}`].filter(Boolean).join(' ');
     dispatchCart({ type: 'add', priceCents: parseMoney(opt.price), name });
     showToast('addedToCart');
   }
+});
+
+// Pressing the × key must not take focus (and the keyboard) away from the quantity being typed.
+$('options').addEventListener('pointerdown', (e) => {
+  if (e.target.closest('[data-action="pack"]')) e.preventDefault();
 });
 
 $('add-option').addEventListener('click', () => {

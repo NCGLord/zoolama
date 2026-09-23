@@ -29,8 +29,9 @@ Offline supermarket helper for your phone:
   amount over when you pass it. The budget stays when you clear the cart.
 - **Compare (Comparar)**: enter two or more options (e.g. 1 kg for R$ 8,99 vs 5 kg for R$ 29,90) to see the
   price per kg, L or unit, which option is cheapest, and how much more the others cost. Type sizes as the pack
-  prints them: *1.000 g* is a thousand grams, while *1,250 kg* keeps its decimals. Tap **Add to cart** on the
-  winner.
+  prints them: *1.000 g* is a thousand grams, while *1,250 kg* keeps its decimals. For a multipack, type the count,
+  tap **×** and the size (*12×350* ml): the card shows what it adds up to (*= 4,2 L*). Tap **Add to cart** on the
+  winner; a pack goes in named the way it prints (*12 × 350 ml*).
 - PT/EN and light/dark toggles in the header.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and
