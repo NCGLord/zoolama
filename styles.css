@@ -212,8 +212,17 @@ button {
   }
 }
 
-/* Photo viewer: always dark, like any photo view, whatever the app theme. */
+/* Photo viewer: always dark, like any photo view, whatever the app theme. It borrows the Feira dark tokens, but
+   keeps a neutral black behind the photo so the price tag's colours read true. */
 .viewer {
+  --ink: #e8f4e2;
+  --muted: #9db59d;
+  --rule: #25392a;
+  --dear: #ff7a59;
+  --good: #5fd07f;
+  --focus: #7fa8ff;
+  --primary: #5fd07f;
+  --primary-ink: #0e1a11;
   width: 100%;
   max-width: none;
   height: 100%;
@@ -222,7 +231,7 @@ button {
   padding: 0;
   border: 0;
   background: #0b0c0e;
-  color: #f3f5f7;
+  color: var(--ink);
 }
 
 .viewer[open] {
@@ -245,7 +254,7 @@ button {
   display: grid;
   gap: 12px;
   padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
-  border-top: 1px solid #2e333a;
+  border-top: 1px solid var(--rule);
 }
 
 .viewer-caption {
@@ -268,16 +277,16 @@ button {
 }
 
 .viewer-charged.dear {
-  color: #ff6b7a;
+  color: var(--dear);
 }
 
 .viewer-charged.good {
-  color: #5fd08a;
+  color: var(--good);
 }
 
 .viewer-caption p {
   margin: 0;
-  color: #9ba5b0;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -290,7 +299,7 @@ button {
 .viewer-actions button {
   min-height: 44px;
   padding: 0 14px;
-  border: 1.5px solid #2e333a;
+  border: 1.5px solid var(--rule);
   border-radius: var(--radius);
   background: transparent;
   color: inherit;
@@ -302,9 +311,9 @@ button {
 }
 
 .viewer-actions .primary {
-  border-color: #f3f5f7;
-  background: #f3f5f7;
-  color: #15171a;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-ink);
 }
 
 .sheet {
@@ -1110,7 +1119,7 @@ main {
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   background: var(--tag-ink); /* always dark, so the yellow Undo keeps its contrast in both themes */
-  color: #f3f5f7;
+  color: #e8f4e2;
 }
 
 .toast button {
