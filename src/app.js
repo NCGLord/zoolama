@@ -1,195 +1,22 @@
 // DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
 
-import { parseMoney, formatMoney } from './money.js';
-import { total, counts, lineTotal } from './cart.js';
+import { parseMoney } from './money.js';
 import { compare } from './compare.js';
 import { UNITS, BASE_UNIT } from './units.js';
-import { t, formatPct, LOCALES } from './i18n.js';
-import { loadHistory, saveHistory } from './store.js';
-import { tripFromCart, monthlyGroups, storeNames } from './history.js';
-import { shareText } from './share.js';
+import { formatPct } from './i18n.js';
 import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
-import { celebrates, newWinners } from './delight.js';
-import { $, reducedMotion, h, replay } from './ui/dom.js';
-import { storage, blankOption, initialCompare, state, persist } from './ui/app-state.js';
-import { tr, tagPrice, applyLang, pricePlaceholder, unitLabel, eachText } from './ui/text.js';
+import { newWinners } from './delight.js';
+import { $, h, replay } from './ui/dom.js';
+import { blankOption, initialCompare, state, persist } from './ui/app-state.js';
+import { tr, tagPrice, applyLang, pricePlaceholder, unitLabel } from './ui/text.js';
 import { showToast, offerUpdate, defineToastActions } from './ui/toast.js';
 import { collectPhotos } from './ui/photo-cache.js';
 import { dispatchCart, setCartRenderer } from './ui/cart-store.js';
-import { shareList } from './ui/share-sheet.js';
 import { renderEntryMode } from './ui/entry.js';
 import { renderCart } from './ui/cart-view.js';
-
-/* ---------- trip history ---------- */
-
-let trips = loadHistory(storage);
-let lastFinishedId = null; // trip saved by the latest Finalizar, for its Undo
-let lastDeleted = null; // { trip, index } for the latest delete's Undo
-
-function setTrips(next) {
-  trips = next;
-  const saved = saveHistory(storage, trips);
-  renderHistory();
-  return saved;
-}
-
-$('finish').addEventListener('click', () => {
-  tagPrice($('finish-total'), total(state.cart));
-  $('finish-count').textContent = tr('itemsCount', { n: counts(state.cart).units });
-  $('store-names').replaceChildren(...storeNames(trips).map((name) => h('option', { value: name })));
-  $('finish-store').value = '';
-  $('finish-sheet').showModal();
-});
-
-$('finish-cancel').addEventListener('click', () => $('finish-sheet').close());
-
-$('finish-form').addEventListener('submit', () => {
-  const party = celebrates(total(state.cart), state.budgetCents);
-  const trip = tripFromCart(state.cart, { id: crypto.randomUUID(), at: Date.now(), store: $('finish-store').value });
-  if (!setTrips([trip, ...trips])) {
-    trips = trips.filter((t) => t.id !== trip.id); // not stored: keep the cart, don't pretend
-    renderHistory();
-    showToast('tripNotSaved');
-    return;
-  }
-  lastFinishedId = trip.id;
-  persist({ ...state, checking: false });
-  dispatchCart({ type: 'clear' }); // photos stay while Undo can still bring the cart back
-  showToast('tripSaved', { action: 'undoFinish' });
-  if (party) burst();
-});
-
-/** A handful of little price tags in the theme's colours fly up from the total and fall away. */
-function burst() {
-  if (reducedMotion.matches) return;
-  const root = getComputedStyle(document.documentElement);
-  const colours = ['--tag', '--primary', '--dear', '--good'].map((v) => root.getPropertyValue(v).trim());
-  const from = $('tally').getBoundingClientRect();
-  const layer = h('div', { class: 'burst', 'aria-hidden': 'true' });
-  document.body.append(layer);
-  const PIECES = 22;
-  let landed = 0;
-  for (let i = 0; i < PIECES; i++) {
-    const tag = h('span', { class: 'burst-tag' });
-    tag.style.background = colours[i % colours.length];
-    tag.style.left = `${from.left + from.width * (0.15 + Math.random() * 0.7)}px`;
-    tag.style.top = `${from.top + 8}px`;
-    layer.append(tag);
-    const dx = (Math.random() - 0.5) * 320;
-    const dy = -(180 + Math.random() * 300);
-    const spin = (Math.random() - 0.5) * 900;
-    tag.animate(
-      [
-        { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
-        { transform: `translate(${dx}px, ${dy}px) rotate(${spin}deg)`, opacity: 1, offset: 0.55 },
-        { transform: `translate(${dx * 1.25}px, ${dy + 320}px) rotate(${spin * 1.6}deg)`, opacity: 0 },
-      ],
-      { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(0.2, 0.7, 0.4, 1)' },
-    ).onfinish = () => ++landed === PIECES && layer.remove();
-  }
-}
-
-function undoFinish() {
-  if (!state.cart.undo) return; // the cart can't come back, so the trip must stay
-  setTrips(trips.filter((t) => t.id !== lastFinishedId));
-  dispatchCart({ type: 'undo' });
-}
-
-function tripTitle(trip) {
-  const date = new Intl.DateTimeFormat(LOCALES[state.lang], { dateStyle: 'short' }).format(trip.at);
-  return `Zoolama — ${trip.store || tr('tripUnnamed')}, ${date}`;
-}
-
-$('history').addEventListener('click', (e) => {
-  const action = e.target.closest('[data-action]')?.dataset.action;
-  if (action === 'share-trip') {
-    const trip = trips.find((t) => t.id === e.target.closest('[data-trip]').dataset.trip);
-    shareList(shareText(trip.items, { lang: state.lang, title: tripTitle(trip) }));
-  }
-  if (action !== 'delete-trip') return;
-  const id = e.target.closest('[data-trip]').dataset.trip;
-  const index = trips.findIndex((t) => t.id === id);
-  lastDeleted = { trip: trips[index], index };
-  setTrips(trips.filter((t) => t.id !== id));
-  showToast('tripDeleted', { action: 'undoDelete' });
-});
-
-function undoDeleteTrip() {
-  if (!lastDeleted) return;
-  const next = [...trips];
-  next.splice(lastDeleted.index, 0, lastDeleted.trip);
-  lastDeleted = null;
-  setTrips(next);
-}
-
-function tripView(trip, whenFormat) {
-  const amount = (cents) => formatMoney(cents, state.lang);
-  return h(
-    'details',
-    { class: 'trip', 'data-trip': trip.id },
-    h(
-      'summary',
-      {},
-      h('span', { class: 'trip-store', text: trip.store || tr('tripUnnamed') }),
-      h('span', { class: 'trip-total', text: amount(trip.totalCents) }),
-      h(
-        'span',
-        { class: 'trip-meta' },
-        h('span', { text: whenFormat.format(trip.at) }),
-        h('span', { text: tr('itemsCount', { n: trip.units }) }),
-        trip.overchargeCents ? h('span', { class: 'over', text: tr('overcharged', { amount: amount(trip.overchargeCents) }) }) : '',
-      ),
-    ),
-    h(
-      'ul',
-      { class: 'trip-items' },
-      ...trip.items.map((item, i) =>
-        h(
-          'li',
-          {},
-          h('span', { text: item.name || tr('itemN', { n: i + 1 }) }),
-          h('span', { class: 'each', text: eachText(item) }),
-          h('span', { class: 'sub', text: amount(lineTotal(item)) }),
-        ),
-      ),
-    ),
-    h(
-      'div',
-      { class: 'trip-actions' },
-      h('button', { type: 'button', class: 'secondary', 'data-action': 'share-trip' }, tr('share')),
-      h('button', { type: 'button', class: 'secondary', 'data-action': 'delete-trip' }, tr('deleteTrip')),
-    ),
-  );
-}
-
-function renderHistory() {
-  $('history-empty').hidden = trips.length > 0;
-  const locale = LOCALES[state.lang];
-  const monthFormat = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
-  const whenFormat = new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-  const open = new Set([...document.querySelectorAll('.trip[open]')].map((d) => d.dataset.trip));
-  $('history').replaceChildren(
-    ...monthlyGroups(trips).map((group) =>
-      h(
-        'section',
-        { class: 'month' },
-        h(
-          'h2',
-          { class: 'month-head' },
-          h('span', { text: monthFormat.format(new Date(group.year, group.month, 1)) }),
-          h('span', { class: 'month-total', text: formatMoney(group.totalCents, state.lang) }),
-        ),
-        ...group.trips.map((trip) => {
-          const view = tripView(trip, whenFormat);
-          view.open = open.has(trip.id); // keep expanded trips expanded across re-renders
-          return view;
-        }),
-      ),
-    ),
-  );
-}
+import { renderHistory, undoFinish, undoDeleteTrip } from './ui/history-view.js';
 
 /* ---------- compare ---------- */
 
