@@ -6,6 +6,7 @@ import { compare } from './compare.js';
 import { UNITS, BASE_UNIT } from './units.js';
 import { t, detectLang, formatPct } from './i18n.js';
 import { load, save } from './store.js';
+import { effectiveTheme, toggledTheme } from './theme.js';
 
 const $ = (id) => document.getElementById(id);
 const TOAST_MS = 5000;
@@ -29,6 +30,7 @@ let state = {
   compare: saved?.compare ?? initialCompare(),
   lang: saved?.lang ?? detectLang(navigator.language),
   tab: saved?.tab ?? 'cart',
+  theme: saved?.theme ?? null,
 };
 
 const tr = (key, params) => t(key, state.lang, params);
@@ -331,6 +333,32 @@ for (const b of document.querySelectorAll('[data-tab]')) {
   });
 }
 
+/* ---------- theme ---------- */
+
+const systemDark = matchMedia('(prefers-color-scheme: dark)');
+const themeMetas = [...document.querySelectorAll('meta[name="theme-color"]')].map((m) => [m, m.content]);
+
+function renderTheme() {
+  const root = document.documentElement;
+  if (state.theme) root.dataset.theme = state.theme;
+  else delete root.dataset.theme;
+
+  const shown = effectiveTheme(state.theme, systemDark.matches);
+  $('theme').dataset.showing = shown;
+  $('theme').setAttribute('aria-label', tr(shown === 'dark' ? 'themeToLight' : 'themeToDark'));
+
+  // A forced theme must also recolour the browser chrome, whatever the system says.
+  const paper = getComputedStyle(root).getPropertyValue('--paper').trim();
+  for (const [meta, systemColor] of themeMetas) meta.content = state.theme ? paper : systemColor;
+}
+
+$('theme').addEventListener('click', () => {
+  persist({ ...state, theme: toggledTheme(state.theme, systemDark.matches) });
+  renderTheme();
+});
+
+systemDark.addEventListener('change', renderTheme);
+
 /* ---------- toast ---------- */
 
 let toastTimer;
@@ -359,6 +387,7 @@ for (const b of document.querySelectorAll('[data-lang]')) {
   b.addEventListener('click', () => {
     persist({ ...state, lang: b.dataset.lang });
     applyLang();
+    renderTheme();
     renderCart();
     renderOptions();
   });
@@ -367,6 +396,7 @@ for (const b of document.querySelectorAll('[data-lang]')) {
 /* ---------- boot ---------- */
 
 applyLang();
+renderTheme();
 renderCart();
 renderOptions();
 renderTab();

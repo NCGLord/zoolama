@@ -5,6 +5,8 @@ export const LOCALES = { pt: 'pt-BR', en: 'en-US' };
 export const STRINGS = {
   pt: {
     langLabel: 'Idioma',
+    themeToDark: 'Usar tema escuro',
+    themeToLight: 'Usar tema claro',
     tabCart: 'Carrinho',
     tabCompare: 'Comparar',
     price: 'Preço',
@@ -41,6 +43,8 @@ export const STRINGS = {
   },
   en: {
     langLabel: 'Language',
+    themeToDark: 'Use dark theme',
+    themeToLight: 'Use light theme',
     tabCart: 'Cart',
     tabCompare: 'Compare',
     price: 'Price',

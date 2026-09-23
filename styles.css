@@ -24,8 +24,9 @@
   color-scheme: light;
 }
 
+/* Dark follows the system unless the toggle forced light; the toggle can also force dark. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --paper: #121417;
     --surface: #1b1e23;
     --ink: #eceff2;
@@ -36,6 +37,18 @@
     --focus: #7fa8ff;
     color-scheme: dark;
   }
+}
+
+:root[data-theme='dark'] {
+  --paper: #121417;
+  --surface: #1b1e23;
+  --ink: #eceff2;
+  --muted: #9ba5b0;
+  --rule: #2e333a;
+  --tag-ink: #15171a;
+  --dear: #ff6b7a;
+  --focus: #7fa8ff;
+  color-scheme: dark;
 }
 
 *,
@@ -97,6 +110,38 @@ button {
   font: 700 24px/1 var(--num);
 }
 
+.bar-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 43px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: transparent;
+}
+
+.theme-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The icon shows the theme you would switch to. */
+.theme-btn[data-showing='dark'] .moon,
+.theme-btn[data-showing='light'] .sun {
+  display: none;
+}
+
 .lang {
   display: flex;
   border: 1.5px solid var(--rule);
@@ -106,7 +151,7 @@ button {
 
 .lang button {
   min-width: 44px;
-  min-height: 36px;
+  min-height: 40px;
   border: 0;
   background: transparent;
   font-size: 14px;
@@ -325,9 +370,10 @@ main {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 8px 8px 14px;
+  border: 1px solid var(--rule);
   border-radius: var(--radius);
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--tag-ink); /* always dark, so the yellow Undo keeps its contrast in both themes */
+  color: #f3f5f7;
 }
 
 .toast button {
