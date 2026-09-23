@@ -98,3 +98,35 @@ test('tapping the next line straight after typing a charged amount saves the amo
   await expect(checkLine(page, 'Café').locator('.line-charged')).toHaveText('cobrado R$ 10,00+R$ 1,01');
   await expect(checkLine(page, 'Arroz').getByRole('button', { name: 'Conferido' })).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('the receipt total is checked against the cart, and the lines can account for the difference', async ({
+  app: page,
+}) => {
+  await addItem(page, { price: '8,99', name: 'Café' });
+  await addItem(page, { price: '12,00', name: 'Arroz' });
+  await expect(page.locator('#receipt')).toBeHidden(); // only at the till
+  await page.locator('#start-check').click();
+
+  const receipt = page.getByLabel('Total do cupom');
+  await receipt.fill('20,99');
+  await receipt.press('Enter');
+  await expect(page.locator('#receipt-verdict')).toHaveText('O cupom confere com o carrinho');
+
+  await receipt.fill('22,00');
+  await receipt.press('Enter');
+  await expect(page.locator('#receipt-verdict')).toHaveText('Cupom R$ 1,01 acima do carrinho');
+  await expect(page.locator('#receipt-note')).toHaveText('Vale o menor preço (Lei 10.962/2004, art. 5º)');
+
+  await chargeLine(page, 'Café', '10,00');
+  await expect(page.locator('#receipt-note')).toHaveText('As diferenças anotadas nas linhas explicam o total');
+
+  await receipt.fill('abc');
+  await receipt.press('Enter');
+  await expect(page.locator('#toast-text')).toHaveText('Valor inválido');
+  await expect(receipt).toHaveValue('22,00');
+
+  await page.getByRole('button', { name: 'Finalizar compra' }).click();
+  await page.getByRole('button', { name: 'Salvar compra' }).click();
+  await page.getByRole('tab', { name: 'Histórico' }).click();
+  await expect(page.locator('.trip-meta')).toContainText('Cupom: R$ 22,00');
+});

@@ -1018,6 +1018,40 @@ main {
   margin: 0;
 }
 
+/* ---------- receipt check ---------- */
+
+.receipt {
+  display: grid;
+  gap: 4px;
+  margin: 16px 16px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.receipt .money-field {
+  color: var(--ink);
+}
+
+.receipt .money-field input {
+  font-size: 30px;
+}
+
+.receipt p {
+  margin: 0;
+}
+
+.receipt-verdict {
+  font: 700 18px/1.2 var(--num);
+}
+
+.receipt-verdict.dear {
+  color: var(--dear);
+}
+
+.receipt-verdict.good {
+  color: var(--good);
+}
+
 .check-summary .over {
   color: var(--dear);
   font: 700 20px/1.1 var(--num);

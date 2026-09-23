@@ -136,6 +136,15 @@
           <button type="button" data-sort="name"><span data-i18n="sortName">Nome</span><span class="dir" aria-hidden="true"></span></button>
         </div>
         <ul id="lines" class="lines"></ul>
+        <div id="receipt" class="receipt" hidden>
+          <label for="receipt-input" data-i18n="receiptTotal">Total do cupom</label>
+          <div class="money-field">
+            <span aria-hidden="true">R$</span>
+            <input id="receipt-input" inputmode="decimal" enterkeyhint="done" autocomplete="off" aria-describedby="receipt-verdict" />
+          </div>
+          <p id="receipt-verdict" class="receipt-verdict" aria-live="polite"></p>
+          <p id="receipt-note" class="receipt-note"></p>
+        </div>
         <div id="cart-actions" class="cart-actions" hidden>
           <button type="button" id="share-cart" class="secondary share-btn">
             <svg class="share-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M7 11H5.5v9.5h13V11H17" /></svg>

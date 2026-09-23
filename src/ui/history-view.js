@@ -131,6 +131,7 @@ function tripView(trip, whenFormat) {
         h('span', { text: whenFormat.format(trip.at) }),
         h('span', { text: tr('itemsCount', { n: trip.units }) }),
         trip.overchargeCents ? h('span', { class: 'over', text: tr('overcharged', { amount: amount(trip.overchargeCents) }) }) : '',
+        trip.receiptCents ? h('span', { text: tr('tripReceipt', { amount: amount(trip.receiptCents) }) }) : '',
       ),
     ),
     h(

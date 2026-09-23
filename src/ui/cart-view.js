@@ -1,7 +1,7 @@
 // The cart tab: its lines, the total tag with its budget, sorting, the tab badge, checkout mode and Clear.
 
 import { budgetStatus } from '../budget.js';
-import { cartReducer, checkSummary, counts, sortItems, total } from '../cart.js';
+import { cartReducer, checkSummary, counts, receiptCheck, sortItems, total } from '../cart.js';
 import { tweenCents } from '../delight.js';
 import { LOCALES } from '../i18n.js';
 import { formatMoney, parseMoney } from '../money.js';
@@ -12,7 +12,7 @@ import { dispatchCart, MAX_QTY, setCart } from './cart-store.js';
 import { $, keepingFocus, reconcile, reducedMotion, replay } from './dom.js';
 import { hydratePhotos } from './photo-cache.js';
 import { openViewer, takePhoto } from './photos-ui.js';
-import { pricePlaceholder, tagPrice, tr } from './text.js';
+import { pricePlaceholder, signedMoney, tagPrice, tr } from './text.js';
 import { showToast } from './toast.js';
 import { keepScreenOn } from './wake-lock.js';
 
@@ -35,7 +35,54 @@ function renderCheck() {
   $('check-favor').hidden = !favor;
   $('check-over').textContent = tr('overcharged', { amount: formatMoney(s.overchargeCents, state.lang) });
   $('check-favor').textContent = tr('inYourFavor', { amount: formatMoney(s.inFavorCents, state.lang) });
+  $('receipt').hidden = !checking;
+  renderReceipt();
 }
+
+/** The receipt total against the cart: does it match, and if not, do the lines' noted charges account for it? */
+function renderReceipt() {
+  const { cart } = state;
+  const input = $('receipt-input');
+  const bare = (cents) => formatMoney(cents, state.lang).replace(/^\D+/, '');
+  if (document.activeElement !== input) input.value = cart.receiptCents ? bare(cart.receiptCents) : '';
+  input.placeholder = bare(total(cart));
+  const check = receiptCheck(cart);
+  const verdict = $('receipt-verdict');
+  const note = $('receipt-note');
+  verdict.className = 'receipt-verdict';
+  verdict.textContent = '';
+  note.textContent = '';
+  if (!check) return;
+  const amount = formatMoney(Math.abs(check.diffCents), state.lang);
+  if (check.diffCents === 0) verdict.textContent = tr('receiptMatches');
+  else verdict.textContent = tr(check.diffCents > 0 ? 'receiptOver' : 'receiptUnder', { amount });
+  verdict.classList.add(check.diffCents > 0 ? 'dear' : 'good');
+  if (check.diffCents === 0) return;
+  // Lines with a noted charge may account for the difference; without any, a receipt over the shelf prices is what
+  // the lower-price rule is about.
+  if (check.chargedCents !== check.notedCents) {
+    note.textContent = check.unexplainedCents
+      ? tr('receiptUnexplained', { amount: signedMoney(check.unexplainedCents) })
+      : tr('receiptExplained');
+  } else if (check.diffCents > 0) {
+    note.textContent = tr('lowerPriceRule');
+  }
+}
+
+$('receipt-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') e.target.blur(); // change saves
+});
+
+$('receipt-input').addEventListener('change', (e) => {
+  const raw = e.target.value.trim();
+  const receiptCents = raw === '' ? null : parseMoney(raw);
+  if (raw !== '' && receiptCents === null) {
+    renderReceipt();
+    showToast('invalidAmount');
+    return;
+  }
+  dispatchCart({ type: 'setReceipt', receiptCents });
+});
 
 function renderCart() {
   const { cart } = state;
