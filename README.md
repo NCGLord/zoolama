@@ -8,8 +8,11 @@ Offline supermarket helper for your phone:
   cost last time, where and when (*Última vez: R$ 4,29 · Assaí, 12/09*), adding *+7% desde a última vez* when the
   price you type is higher; a cart line that costs more than last time says so too. Weighed items are remembered by
   their price per kg.
-- **Fix a price**: tap a line's arithmetic (*R$ 4,50 × 2*) to retype its price in place; the quantity, photo and
-  checkout marks stay. On a weighed line it corrects the price per kg at the same weight.
+- **Fix a price, add an atacado price**: tap a line's arithmetic (*R$ 4,50 × 2*) to open its sheet: correct the
+  price (per kg on a weighed line; quantity, photo and checkout marks stay) or note an atacarejo price — *a partir de
+  6 un, R$ 4,99* — which applies to every unit once the line reaches it. Below it, the line says what taking that many
+  would cost and save (*Levando 6: R$ 4,99 cada, economiza R$ 6,00*); tap that to take them. The **%** key beside the
+  quantity notes such a price while adding an item.
 - **Sort**: order the cart by *Adicionado* (when added), *Valor* (line total) or *Nome*; tap the active one again to
   flip ascending/descending. The choice is remembered and applies in checkout mode too.
 - **Weighed items**: switch the entry to *Peso*, type the price per kg and the weight from the scale label

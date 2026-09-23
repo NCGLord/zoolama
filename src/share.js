@@ -5,11 +5,11 @@ import { formatMoney } from './money.js';
 import { lineTotal, total, counts, unitCents } from './cart.js';
 import { t, formatKg } from './i18n.js';
 
-/** "R$ 4,50 × 2"; at an atacado price "R$ 4,99 × 6 (atacado a partir de 6)"; weighed "R$ 7,99/kg × 1,250 kg". */
+/** "R$ 4,50 × 2"; at an atacado price "R$ 4,99 × 6 (atacado)"; weighed "R$ 7,99/kg × 1,250 kg". */
 export function lineEach(item, lang) {
   if (item.perKgCents) return `${formatMoney(item.perKgCents, lang)}/kg × ${formatKg(item.grams, lang)}`;
   const each = unitCents(item);
-  const offer = each !== item.priceCents ? ` (${t('dealTier', lang, { n: item.deal.minQty })})` : '';
+  const offer = each !== item.priceCents ? ` (${t('dealTier', lang)})` : '';
   return `${formatMoney(each, lang)} × ${item.qty}${offer}`;
 }
 

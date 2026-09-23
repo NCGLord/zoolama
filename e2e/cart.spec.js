@@ -68,31 +68,35 @@ test('a weighed item is priced per kg, and its weight can be corrected', async (
   await expect(page.locator('#total')).toHaveAttribute('aria-label', brl('4,00'));
 });
 
-test('a mistyped price is corrected on its line; Escape and an invalid price leave it alone', async ({ app: page }) => {
+test('a mistyped price is corrected in the line sheet; Cancel and an invalid price leave it alone', async ({ app: page }) => {
   await addItem(page, { price: '45,00', name: 'Leite', qty: 2 });
   const leite = line(page, 'Leite');
-  const correct = async (typed, key = 'Enter') => {
-    await leite.getByRole('button', { name: /^Corrigir preço/ }).click();
-    const input = leite.locator('.price-input');
-    await expect(input).toBeFocused();
-    await input.fill(typed);
-    await input.press(key);
-  };
-
-  await correct('4,50');
+  const sheet = page.locator('#line-sheet');
+  await leite.getByRole('button', { name: /^Corrigir preço/ }).click();
+  await expect(sheet).toBeVisible();
+  await expect(page.locator('#line-sheet-title')).toHaveText('Leite');
+  await expect(page.locator('#sheet-price')).toHaveValue('45,00');
+  await page.locator('#sheet-price').fill('4,50');
+  await sheet.getByRole('button', { name: 'Salvar' }).click();
+  await expect(sheet).toBeHidden();
   await expect(leite.locator('.line-sub')).toHaveText('R$ 9,00');
-  await expect(leite.locator('.line-each')).toHaveText('R$ 4,50 × 2');
   await expect(page.locator('#total')).toHaveAttribute('aria-label', brl('9,00'));
 
-  await correct('1', 'Escape');
+  await leite.getByRole('button', { name: /^Corrigir preço/ }).click();
+  await page.locator('#sheet-price').fill('1');
+  await sheet.getByRole('button', { name: 'Cancelar' }).click();
   await expect(leite.locator('.line-sub')).toHaveText('R$ 9,00');
 
-  await correct('abc');
-  await expect(page.locator('#toast-text')).toHaveText('Preço inválido');
-  await expect(leite.locator('.line-sub')).toHaveText('R$ 9,00');
+  await leite.getByRole('button', { name: /^Corrigir preço/ }).click();
+  await page.locator('#sheet-price').fill('abc');
+  await sheet.getByRole('button', { name: 'Salvar' }).click();
+  await expect(page.locator('#line-error')).toHaveText('Preço inválido');
+  await expect(sheet).toBeVisible();
 });
 
-test('correcting a weighed line changes its price per kg, not its weight', async ({ app: page }) => {
+test('correcting a weighed line changes its price per kg, not its weight, and offers no atacado price', async ({
+  app: page,
+}) => {
   await page.getByRole('radio', { name: 'Peso' }).check();
   await page.locator('#price').fill('7,99');
   await page.locator('#weight').fill('1,250');
@@ -100,21 +104,11 @@ test('correcting a weighed line changes its price per kg, not its weight', async
 
   const weighed = page.locator('#lines .line');
   await weighed.getByRole('button', { name: /^Corrigir preço por kg/ }).click();
-  await expect(weighed.locator('.price-input')).toHaveValue('7,99');
-  await weighed.locator('.price-input').fill('6,99');
-  await weighed.locator('.price-input').press('Enter');
+  await expect(page.locator('#sheet-price-label')).toHaveText('Preço por kg');
+  await expect(page.locator('#sheet-price')).toHaveValue('7,99');
+  await expect(page.locator('#deal-fields')).toBeHidden();
+  await page.locator('#sheet-price').fill('6,99');
+  await page.locator('#sheet-price').press('Enter');
   await expect(weighed.locator('.line-each')).toHaveText('R$ 6,99/kg × 1,250 kg');
   await expect(weighed.locator('.line-sub')).toHaveText('R$ 8,74');
-});
-
-test('tapping another line straight after typing a corrected price saves the price and takes the tap', async ({
-  app: page,
-}) => {
-  await addItem(page, { price: '45,00', name: 'Leite' });
-  await addItem(page, { price: '8,99', name: 'Café' });
-  await line(page, 'Leite').getByRole('button', { name: /^Corrigir preço/ }).click();
-  await line(page, 'Leite').locator('.price-input').fill('4,50'); // no Enter: the next tap blurs it
-  await line(page, 'Café').getByRole('button', { name: 'Mais um' }).click();
-  await expect(line(page, 'Leite').locator('.line-sub')).toHaveText('R$ 4,50');
-  await expect(line(page, 'Café').locator('.line-sub')).toHaveText('R$ 17,98');
 });

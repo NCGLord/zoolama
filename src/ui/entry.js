@@ -1,6 +1,6 @@
 // The entry form at the top of the cart: price, quantity or weight, an optional name and photo, then Add.
 
-import { linePriceCents } from '../cart.js';
+import { linePriceCents, validDeal } from '../cart.js';
 import { lastPrice, priceRise } from '../history.js';
 import { formatKg, formatPct, LOCALES } from '../i18n.js';
 import { formatMoney, parseMoney } from '../money.js';
@@ -8,6 +8,7 @@ import { parseGrams } from '../units.js';
 import { state } from './app-state.js';
 import { dispatchCart, MAX_QTY } from './cart-store.js';
 import { $ } from './dom.js';
+import { openOfferSheet } from './line-sheet.js';
 import { entryPhotoAdded, entryPhotoId } from './photos-ui.js';
 import { memory } from './price-memory.js';
 import { tr } from './text.js';
@@ -25,18 +26,42 @@ function setEntryError(key, field = 'price') {
 }
 
 let entryMode = 'unit'; // 'unit' or 'weight'; stays until changed, as weighed items come in runs
+let entryDeal = null; // an atacado offer noted for the item being entered; checked against its price at Add
 
 function renderEntryMode() {
   const weighed = entryMode === 'weight';
   document.querySelector(`input[name="entry-mode"][value="${entryMode}"]`).checked = true;
   document.querySelector('.entry-qty').hidden = weighed;
   document.querySelector('.entry-weight').hidden = !weighed;
+  $('entry-offer').hidden = weighed; // weighed items have no atacado price
+  renderEntryDeal();
   $('price-label').dataset.i18n = weighed ? 'pricePerKg' : 'price';
   $('price-label').textContent = tr($('price-label').dataset.i18n);
   $('weight').placeholder = formatKg(0, state.lang).replace(' kg', '');
   renderWeightPreview();
   renderNameHint();
 }
+
+function renderEntryDeal() {
+  const shown = entryDeal && entryMode !== 'weight';
+  $('entry-deal').hidden = !shown;
+  $('entry-deal-text').textContent = shown
+    ? tr('dealPending', { n: entryDeal.minQty, each: formatMoney(entryDeal.eachCents, state.lang) })
+    : '';
+}
+
+$('entry-offer').addEventListener('click', () =>
+  openOfferSheet(entryDeal, (deal) => {
+    entryDeal = deal;
+    setEntryError(null);
+    renderEntryDeal();
+  }),
+);
+
+$('entry-deal-clear').addEventListener('click', () => {
+  entryDeal = null;
+  renderEntryDeal();
+});
 
 /** What the typed name cost last time (and where, and when), and whether the typed price is dearer. */
 function renderNameHint() {
@@ -90,9 +115,17 @@ $('entry').addEventListener('submit', (e) => {
       return;
     }
     line = { perKgCents: priceCents, grams };
+  } else if (entryDeal) {
+    line.deal = validDeal(entryDeal, priceCents);
+    if (!line.deal) {
+      setEntryError('invalidDeal');
+      $('price').focus();
+      return;
+    }
   }
   dispatchCart({ type: 'add', ...line, name: $('name').value, photoId: entryPhotoId });
   entryPhotoAdded();
+  entryDeal = null; // the next item starts without one
   $('entry').reset();
   renderEntryMode(); // reset() puts the switch back to its default; keep the chosen mode
   setEntryError(null);

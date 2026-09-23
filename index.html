@@ -101,6 +101,8 @@
               <button type="button" data-step="-1" data-i18n-aria-label="oneLess">−</button>
               <input id="qty" inputmode="numeric" value="1" />
               <button type="button" data-step="1" data-i18n-aria-label="oneMore">+</button>
+              <!-- An atacado price depends on the quantity, so it's noted from here. -->
+              <button type="button" id="entry-offer" class="offer-btn" data-i18n-aria-label="deal">%</button>
             </div>
           </div>
           <div class="entry-weight" hidden>
@@ -118,6 +120,10 @@
             <button class="primary" type="submit" data-i18n="add">Adicionar</button>
           </div>
           <p id="name-hint" class="name-hint" aria-live="polite"></p>
+          <p id="entry-deal" class="entry-deal" hidden>
+            <span id="entry-deal-text"></span>
+            <button type="button" id="entry-deal-clear" class="entry-deal-clear" data-i18n-aria-label="removeDeal">✕</button>
+          </p>
         </form>
         <details id="plan" class="plan" open hidden>
           <summary><span data-i18n="planTitle">Lista de compras</span> <span id="plan-progress" class="plan-progress"></span></summary>
@@ -229,6 +235,35 @@
         <div class="sheet-actions">
           <button type="button" id="finish-cancel" class="secondary" data-i18n="cancel">Cancelar</button>
           <button type="submit" class="primary" autofocus data-i18n="saveTrip">Salvar compra</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="line-sheet" class="sheet" aria-labelledby="line-sheet-title">
+      <form id="line-form" method="dialog" novalidate>
+        <h2 id="line-sheet-title"></h2>
+        <div id="price-row" class="sheet-field">
+          <label for="sheet-price" id="sheet-price-label" data-i18n="price">Preço</label>
+          <div class="money-field">
+            <span aria-hidden="true">R$</span>
+            <input id="sheet-price" inputmode="decimal" enterkeyhint="done" autocomplete="off" />
+          </div>
+        </div>
+        <fieldset id="deal-fields" class="deal-fields">
+          <legend data-i18n="deal">Preço de atacado</legend>
+          <label for="deal-min" data-i18n="tierFrom">A partir de (un)</label>
+          <label for="deal-each" data-i18n="tierEach">Preço cada</label>
+          <input id="deal-min" class="deal-min" inputmode="numeric" enterkeyhint="next" autocomplete="off" />
+          <div class="money-field">
+            <span aria-hidden="true">R$</span>
+            <input id="deal-each" inputmode="decimal" enterkeyhint="done" autocomplete="off" />
+          </div>
+        </fieldset>
+        <p id="line-error" class="field-error" aria-live="polite"></p>
+        <div class="sheet-actions">
+          <button type="button" id="deal-remove" class="secondary" data-i18n="removeDeal">Remover promoção</button>
+          <button type="button" id="line-cancel" class="secondary" data-i18n="cancel">Cancelar</button>
+          <button type="submit" class="primary" data-i18n="save">Salvar</button>
         </div>
       </form>
     </dialog>

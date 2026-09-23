@@ -1,6 +1,6 @@
 // A cart line as it looks while shopping (editable) and at the till (tick, what the till charged).
 
-import { chargedDiff, lineTotal } from '../cart.js';
+import { chargedDiff, lineTotal, tierNudge } from '../cart.js';
 import { priceRise } from '../history.js';
 import { formatKg, formatPct } from '../i18n.js';
 import { formatMoney } from '../money.js';
@@ -28,7 +28,6 @@ const lineView = (item, n) => (state.checking ? checkLineView(item, n) : editLin
 // Which line has a field open, and which tick just snapped. The line views read these; the #lines handlers set them.
 const editing = {
   weightId: null, // weighed line whose weight field is open
-  priceId: null, // line whose price field is open
   chargeId: null, // line whose "charged" field is open in checkout mode
   justTicked: null, // line ticked by the latest tap: its tick snaps in once
 };
@@ -59,26 +58,26 @@ function weightControl(item) {
   );
 }
 
-/** A line's arithmetic ("R$ 4,50 × 2"); tapping it corrects the price: per unit, or per kg for a weighed line. */
+/** A line's arithmetic ("R$ 4,50 × 2"); tapping it opens the line sheet to correct its price or offer. */
 function priceControl(item) {
-  const id = item.id;
   const label = tr(item.perKgCents ? 'editPricePerKg' : 'editPrice');
-  if (editing.priceId === id) {
-    return h('input', {
-      class: 'price-input',
-      'data-action': 'price',
-      'data-key': `line-price-${id}`,
-      inputmode: 'decimal',
-      enterkeyhint: 'done',
-      value: formatMoney(item.perKgCents ?? item.priceCents, state.lang).replace(/^\D+/, ''),
-      'aria-label': label,
-    });
-  }
   return h(
     'button',
-    { type: 'button', class: 'line-each', 'data-action': 'edit-price', 'data-key': `each-${id}`, 'aria-label': `${label}: ${eachText(item)}` },
+    { type: 'button', class: 'line-each', 'data-action': 'edit-price', 'data-key': `each-${item.id}`, 'aria-label': `${label}: ${eachText(item)}` },
     eachText(item),
   );
+}
+
+/** Below an atacado tier: what taking its quantity would cost and save. Tapping it takes that many. */
+function tierNudgeView(item) {
+  const nudge = tierNudge(item);
+  if (!nudge) return '';
+  const money = (cents) => formatMoney(cents, state.lang);
+  const text =
+    nudge.extraCents > 0
+      ? tr('tierNudge', { n: nudge.qty, each: money(item.deal.eachCents), saves: money(nudge.savesCents) })
+      : tr('tierCheaper', { n: nudge.qty, total: money(nudge.totalCents) });
+  return h('button', { type: 'button', class: 'tier-nudge', 'data-action': 'take-tier', 'data-key': `tier-${item.id}` }, text);
 }
 
 function editLineView(item, n) {
@@ -113,6 +112,7 @@ function editLineView(item, n) {
       h('button', { type: 'button', class: 'remove', 'data-action': 'remove', 'aria-label': tr('remove') }, '✕'),
     ),
     rise ? h('span', { class: 'line-rise', text: tr('priceRise', { pct: formatPct(rise.pct, state.lang) }) }) : '',
+    tierNudgeView(item),
   );
 }
 
@@ -184,7 +184,7 @@ const looks = new WeakMap();
  * price-rise note) and which field is open. */
 function lineLook(item, n) {
   const id = item.id;
-  const open = [editing.weightId, editing.priceId, editing.chargeId, editing.justTicked].map((x) => x === id);
+  const open = [editing.weightId, editing.chargeId, editing.justTicked].map((x) => x === id);
   return JSON.stringify([item, n, state.checking, state.lang, memoryVersion, ...open]);
 }
 

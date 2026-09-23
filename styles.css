@@ -1103,6 +1103,78 @@ main {
   margin: 0;
 }
 
+/* ---------- atacado offers ---------- */
+
+.stepper .offer-btn {
+  margin-left: 4px;
+  font: 700 22px/1 var(--num);
+}
+
+.entry-deal {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding-left: 12px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  color: var(--good);
+  font-weight: 700;
+}
+
+.entry-deal-clear {
+  width: 44px;
+  height: 40px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+}
+
+.sheet-field {
+  margin-bottom: 12px;
+}
+
+.sheet-field label,
+.deal-fields label,
+.deal-fields legend {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.deal-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  align-items: end;
+  margin: 0 0 4px;
+  padding: 0;
+  border: 0;
+}
+
+.deal-fields legend {
+  grid-column: 1 / -1;
+  margin-bottom: 6px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.deal-min {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: 700 26px/1.2 var(--num);
+}
+
+.deal-fields .money-field input,
+.sheet-field .money-field input {
+  font-size: 26px;
+}
+
 /* ---------- receipt check ---------- */
 
 .receipt {
@@ -1218,25 +1290,23 @@ button.line-each {
   text-underline-offset: 3px;
 }
 
-.price-input {
-  grid-area: each;
-  width: 7ch;
-  padding: 2px 0;
+.tier-nudge {
+  grid-column: 2 / -1;
+  justify-self: start;
+  min-height: 36px;
+  padding: 0;
   border: 0;
-  border-bottom: 2px solid var(--focus);
-  background: transparent;
-  font: 700 22px/1.1 var(--num);
-  font-variant-numeric: tabular-nums;
-}
-
-.price-input:focus-visible {
-  outline: none;
+  background: none;
+  color: var(--good);
+  font-size: 14px;
+  text-align: left;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
 }
 
 /* "+7% desde a última vez", under a line that costs more than it did on the last trip. */
 .line-rise {
   grid-column: 2 / -1;
-  grid-row: 3;
   color: var(--dear);
   font-size: 13px;
 }
