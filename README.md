@@ -11,6 +11,8 @@ Offline supermarket helper for your phone:
 - **Checkout (Conferir no caixa)**: at the till, tick each item as it's scanned. If the till charges a different
   amount for a line, tap ≠ and type it: the app shows the difference, the total overcharge (and the lower-price
   rule), and anything charged in your favour.
+- **Budget**: tap *+ Orçamento* under the total to set a limit. The tag shows what's left, and turns red with the
+  amount over when you pass it. The budget stays when you clear the cart.
 - **Compare (Comparar)**: enter two or more options (e.g. 1 kg for R$ 8,99 vs 5 kg for R$ 29,90) to see the
   price per kg, L or unit, which option is cheapest, and how much more the others cost. Tap **Add to cart**
   on the winner.

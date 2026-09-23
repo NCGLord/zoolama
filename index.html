@@ -146,6 +146,22 @@
       </div>
     </dialog>
 
+    <dialog id="budget-sheet" class="sheet" aria-labelledby="budget-title">
+      <form id="budget-form" method="dialog" novalidate>
+        <h2 id="budget-title" data-i18n="budgetTitle">Orçamento da compra</h2>
+        <div class="money-field budget-field">
+          <span aria-hidden="true">R$</span>
+          <input id="budget-input" inputmode="decimal" enterkeyhint="done" data-i18n-aria-label="budgetTitle" aria-describedby="budget-error" />
+        </div>
+        <p id="budget-error" class="field-error" aria-live="polite"></p>
+        <div class="sheet-actions">
+          <button type="button" id="budget-remove" class="secondary" data-i18n="removeBudget">Remover orçamento</button>
+          <button type="button" id="budget-cancel" class="secondary" data-i18n="cancel">Cancelar</button>
+          <button type="submit" class="primary" data-i18n="save">Salvar</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="ios-install" class="sheet" aria-labelledby="ios-install-title">
       <h2 id="ios-install-title" data-i18n="iosInstallTitle">Instalar no iPhone</h2>
       <ol>
@@ -168,10 +184,11 @@
         <p id="check-law" class="law" data-i18n="lowerPriceRule">Vale o menor preço (Lei 10.962/2004, art. 5º)</p>
         <p id="check-favor" class="favor"></p>
       </div>
-      <footer class="tally">
+      <footer id="tally" class="tally">
         <div class="tally-tag">
           <span class="tally-label" data-i18n="total">Total</span>
           <output id="total" class="tag-price" aria-live="polite"></output>
+          <button type="button" id="budget" class="budget-line"></button>
         </div>
         <div class="tally-meta">
           <span id="count"></span>

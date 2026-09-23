@@ -10,6 +10,7 @@ import { effectiveTheme, toggledTheme } from './theme.js';
 import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
 import { shrinkPhoto, newPhotoId, savePhoto, getPhoto, photoIds, deletePhotos, orphans } from './photos.js';
+import { budgetStatus } from './budget.js';
 
 const $ = (id) => document.getElementById(id);
 const TOAST_MS = 5000;
@@ -35,6 +36,7 @@ let state = {
   tab: saved?.tab ?? 'cart',
   theme: saved?.theme ?? null,
   checking: saved?.checking ?? false, // checkout mode ("Conferir no caixa")
+  budgetCents: saved?.budgetCents ?? null, // the shopper's limit; survives clearing the cart
 };
 
 const tr = (key, params) => t(key, state.lang, params);
@@ -238,11 +240,52 @@ function renderCart() {
   hydratePhotos($('lines'));
   $('empty').hidden = cart.items.length > 0;
   tagPrice($('total'), total(cart));
+  renderBudget(total(cart));
   const { units } = counts(cart);
   $('count').textContent = tr('itemsCount', { n: units });
   $('clear').disabled = cart.items.length === 0;
   renderBadge(units);
 }
+
+function renderBudget(totalCents) {
+  const status = budgetStatus(totalCents, state.budgetCents);
+  $('tally').classList.toggle('over', Boolean(status?.over));
+  $('budget').textContent = !status
+    ? tr('setBudget')
+    : status.over
+      ? tr('budgetOver', { over: formatMoney(status.overCents, state.lang) })
+      : tr('budgetLeft', { left: formatMoney(status.leftCents, state.lang), budget: formatMoney(status.budgetCents, state.lang) });
+}
+
+$('budget').addEventListener('click', () => {
+  const has = state.budgetCents != null;
+  $('budget-input').value = has ? formatMoney(state.budgetCents, state.lang).replace(/^\D+/, '') : '';
+  $('budget-input').placeholder = pricePlaceholder();
+  $('budget-remove').hidden = !has;
+  $('budget-error').textContent = '';
+  $('budget-sheet').showModal();
+  $('budget-input').focus();
+});
+
+// method="dialog" closes the sheet on submit; stop that only when the amount is invalid.
+$('budget-form').addEventListener('submit', (e) => {
+  const cents = parseMoney($('budget-input').value);
+  if (cents === null) {
+    e.preventDefault();
+    $('budget-error').textContent = tr('invalidAmount');
+    return;
+  }
+  persist({ ...state, budgetCents: cents });
+  renderCart();
+});
+
+$('budget-remove').addEventListener('click', () => {
+  persist({ ...state, budgetCents: null });
+  $('budget-sheet').close();
+  renderCart();
+});
+
+$('budget-cancel').addEventListener('click', () => $('budget-sheet').close());
 
 let badgeUnits = null;
 
