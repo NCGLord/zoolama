@@ -669,6 +669,7 @@ main {
 }
 
 .tab-icon {
+  position: relative;
   display: grid;
   place-items: center;
   width: 60px;
@@ -688,6 +689,33 @@ main {
 
 .tabs button[aria-selected='true'] {
   color: var(--ink);
+}
+
+/* Item count on the Cart tab; the surface-coloured ring keeps it legible on the bar and on the yellow pill. */
+.badge {
+  position: absolute;
+  top: -3px;
+  left: calc(50% + 5px);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 0 0 2px var(--surface);
+  font: 700 14px/20px var(--num);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.badge.bump {
+  animation: badge-bump 260ms cubic-bezier(0.3, 1.6, 0.6, 1);
+}
+
+@keyframes badge-bump {
+  from {
+    transform: scale(1.5);
+  }
 }
 
 /* The active tab wears a little shelf tag; it pops in when tapped. */

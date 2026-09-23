@@ -129,8 +129,28 @@ function renderCart() {
   });
   $('empty').hidden = cart.items.length > 0;
   tagPrice($('total'), total(cart));
-  $('count').textContent = tr('itemsCount', { n: counts(cart).units });
+  const { units } = counts(cart);
+  $('count').textContent = tr('itemsCount', { n: units });
   $('clear').disabled = cart.items.length === 0;
+  renderBadge(units);
+}
+
+let badgeUnits = null;
+
+/** Item count on the Cart tab; bumps when it grows, so Add to cart from Compare is visible. */
+function renderBadge(units) {
+  const badge = $('cart-badge');
+  badge.hidden = units === 0;
+  badge.textContent = units > 99 ? '99+' : units;
+  if (badgeUnits !== null && units > badgeUnits) {
+    badge.classList.remove('bump');
+    void badge.offsetWidth; // restart the animation
+    badge.classList.add('bump');
+  }
+  badgeUnits = units;
+  // The icon is aria-hidden, so carry the count in the tab's accessible name.
+  if (units) $('tab-cart').setAttribute('aria-label', `${tr('tabCart')}, ${tr('itemsCount', { n: units })}`);
+  else $('tab-cart').removeAttribute('aria-label');
 }
 
 function readQty() {
