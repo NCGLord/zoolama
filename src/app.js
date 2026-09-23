@@ -17,31 +17,11 @@ import { tweenCents, celebrates, newWinners } from './delight.js';
 import { $, reducedMotion, h, keepingFocus, icon, replay } from './ui/dom.js';
 import { storage, blankOption, initialCompare, state, persist } from './ui/app-state.js';
 import { tr, tagPrice, applyLang, pricePlaceholder, unitLabel, signedMoney, eachText } from './ui/text.js';
-import { showToast, offerUpdate, dropStaleUndo, defineToastActions } from './ui/toast.js';
+import { showToast, offerUpdate, defineToastActions } from './ui/toast.js';
 import { pendingPhotos, photoUrl, hydratePhotos, collectPhotos } from './ui/photo-cache.js';
+import { MAX_QTY, setCart, dispatchCart, setCartRenderer } from './ui/cart-store.js';
 
 const COUNT_MS = 480; // total count-up
-const MAX_QTY = 999;
-
-function setCart(cart) {
-  persist({ ...state, cart });
-  dropStaleUndo();
-}
-
-// The cart view draws the cart and also changes it, so it can't be imported here without a cycle: boot hands it over.
-let cartRenderer = () => {
-  throw new Error('cart renderer not wired');
-};
-
-function setCartRenderer(render) {
-  cartRenderer = render;
-}
-
-function dispatchCart(action) {
-  setCart(cartReducer(state.cart, action));
-  cartRenderer();
-  collectPhotos();
-}
 
 /* ---------- cart ---------- */
 
