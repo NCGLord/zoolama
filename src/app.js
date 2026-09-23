@@ -721,13 +721,13 @@ $('viewer-remove').addEventListener('click', () => {
 
 /* ---------- trip history ---------- */
 
-let history = loadHistory(storage);
+let trips = loadHistory(storage);
 let lastFinishedId = null; // trip saved by the latest Finalizar, for its Undo
 let lastDeleted = null; // { trip, index } for the latest delete's Undo
 
-function setHistory(next) {
-  history = next;
-  const saved = saveHistory(storage, history);
+function setTrips(next) {
+  trips = next;
+  const saved = saveHistory(storage, trips);
   renderHistory();
   return saved;
 }
@@ -735,7 +735,7 @@ function setHistory(next) {
 $('finish').addEventListener('click', () => {
   tagPrice($('finish-total'), total(state.cart));
   $('finish-count').textContent = tr('itemsCount', { n: counts(state.cart).units });
-  $('store-names').replaceChildren(...storeNames(history).map((name) => h('option', { value: name })));
+  $('store-names').replaceChildren(...storeNames(trips).map((name) => h('option', { value: name })));
   $('finish-store').value = '';
   $('finish-sheet').showModal();
 });
@@ -745,8 +745,8 @@ $('finish-cancel').addEventListener('click', () => $('finish-sheet').close());
 $('finish-form').addEventListener('submit', () => {
   const party = celebrates(total(state.cart), state.budgetCents);
   const trip = tripFromCart(state.cart, { id: crypto.randomUUID(), at: Date.now(), store: $('finish-store').value });
-  if (!setHistory([trip, ...history])) {
-    history = history.filter((t) => t.id !== trip.id); // not stored: keep the cart, don't pretend
+  if (!setTrips([trip, ...trips])) {
+    trips = trips.filter((t) => t.id !== trip.id); // not stored: keep the cart, don't pretend
     renderHistory();
     showToast('tripNotSaved');
     return;
@@ -790,7 +790,7 @@ function burst() {
 
 function undoFinish() {
   if (!state.cart.undo) return; // the cart can't come back, so the trip must stay
-  setHistory(history.filter((t) => t.id !== lastFinishedId));
+  setTrips(trips.filter((t) => t.id !== lastFinishedId));
   dispatchCart({ type: 'undo' });
 }
 
@@ -825,23 +825,23 @@ function tripTitle(trip) {
 $('history').addEventListener('click', (e) => {
   const action = e.target.closest('[data-action]')?.dataset.action;
   if (action === 'share-trip') {
-    const trip = history.find((t) => t.id === e.target.closest('[data-trip]').dataset.trip);
+    const trip = trips.find((t) => t.id === e.target.closest('[data-trip]').dataset.trip);
     shareList(shareText(trip.items, { lang: state.lang, title: tripTitle(trip) }));
   }
   if (action !== 'delete-trip') return;
   const id = e.target.closest('[data-trip]').dataset.trip;
-  const index = history.findIndex((t) => t.id === id);
-  lastDeleted = { trip: history[index], index };
-  setHistory(history.filter((t) => t.id !== id));
+  const index = trips.findIndex((t) => t.id === id);
+  lastDeleted = { trip: trips[index], index };
+  setTrips(trips.filter((t) => t.id !== id));
   showToast('tripDeleted', { action: 'undoDelete' });
 });
 
 function undoDeleteTrip() {
   if (!lastDeleted) return;
-  const next = [...history];
+  const next = [...trips];
   next.splice(lastDeleted.index, 0, lastDeleted.trip);
   lastDeleted = null;
-  setHistory(next);
+  setTrips(next);
 }
 
 function tripView(trip, whenFormat) {
@@ -885,13 +885,13 @@ function tripView(trip, whenFormat) {
 }
 
 function renderHistory() {
-  $('history-empty').hidden = history.length > 0;
+  $('history-empty').hidden = trips.length > 0;
   const locale = LOCALES[state.lang];
   const monthFormat = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' });
   const whenFormat = new Intl.DateTimeFormat(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   const open = new Set([...document.querySelectorAll('.trip[open]')].map((d) => d.dataset.trip));
   $('history').replaceChildren(
-    ...monthlyGroups(history).map((group) =>
+    ...monthlyGroups(trips).map((group) =>
       h(
         'section',
         { class: 'month' },
