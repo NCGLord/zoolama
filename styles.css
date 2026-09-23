@@ -1087,6 +1087,17 @@ main {
   color: var(--tag-ink);
 }
 
+.tally-tag.pop {
+  transform-origin: left bottom;
+  animation: tag-pop 320ms cubic-bezier(0.3, 1.6, 0.6, 1);
+}
+
+@keyframes tag-pop {
+  40% {
+    transform: scale(1.06);
+  }
+}
+
 .tally-tag {
   display: flex;
   flex-direction: column;

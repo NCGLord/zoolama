@@ -13,9 +13,12 @@ import { installMode, isIOS } from './install.js';
 import { dueForUpdateCheck } from './update.js';
 import { shrinkPhoto, newPhotoId, savePhoto, getPhoto, photoIds, deletePhotos, orphans } from './photos.js';
 import { budgetStatus } from './budget.js';
+import { tweenCents, celebrates, newWinners } from './delight.js';
 
 const $ = (id) => document.getElementById(id);
 const TOAST_MS = 5000;
+const COUNT_MS = 480; // total count-up
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)'); // JS animations check it too; CSS can't reach them
 const MAX_QTY = 999;
 
 // Reading window.localStorage itself throws when storage is blocked; store.js copes with null.
@@ -278,7 +281,7 @@ function renderCart() {
   });
   hydratePhotos($('lines'));
   $('empty').hidden = cart.items.length > 0;
-  tagPrice($('total'), total(cart));
+  showTotal(total(cart));
   renderBudget(total(cart));
   const { units } = counts(cart);
   $('count').textContent = tr('itemsCount', { n: units });
@@ -286,6 +289,38 @@ function renderCart() {
   $('cart-actions').hidden = cart.items.length === 0;
   renderSort();
   renderBadge(units);
+}
+
+/** Restarts a CSS animation on an element, even if it is still running. */
+function replay(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
+
+let shownTotal = null; // cents on the tag right now
+let countFrame = 0;
+
+/** The total counts up (or down) to its new value, and the tag pops when it grows. */
+function showTotal(cents) {
+  const from = shownTotal;
+  shownTotal = cents;
+  cancelAnimationFrame(countFrame);
+  if (from === null || from === cents || reducedMotion.matches) {
+    tagPrice($('total'), cents);
+    $('total').removeAttribute('aria-busy');
+    return;
+  }
+  $('total').setAttribute('aria-busy', 'true'); // screen readers hear only the final amount
+  const start = performance.now();
+  const step = (now) => {
+    const progress = (now - start) / COUNT_MS;
+    tagPrice($('total'), tweenCents(from, cents, progress));
+    if (progress < 1) countFrame = requestAnimationFrame(step);
+    else $('total').removeAttribute('aria-busy');
+  };
+  countFrame = requestAnimationFrame(step);
+  if (cents > from) replay(document.querySelector('.tally-tag'), 'pop');
 }
 
 function renderBudget(totalCents) {
