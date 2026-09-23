@@ -401,3 +401,12 @@ renderCart();
 renderOptions();
 renderTab();
 navigator.storage?.persist?.().catch(() => {});
+
+if ('serviceWorker' in navigator) {
+  const firstInstall = !navigator.serviceWorker.controller;
+  navigator.serviceWorker
+    .register('./sw.js')
+    .then(() => navigator.serviceWorker.ready)
+    .then(() => firstInstall && showToast('offlineReady'))
+    .catch(() => {}); // no SW (e.g. private mode): the app still works while the page is open
+}
