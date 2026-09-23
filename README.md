@@ -8,6 +8,9 @@ Offline supermarket helper for your phone:
   thumbnail at checkout to show the photo full-screen with the price you noted. By law (Lei 10.962/2004, art. 5º),
   when the shelf and the checkout disagree, you pay the lower price. Photos stay on the phone and are deleted
   with their item.
+- **Checkout (Conferir no caixa)**: at the till, tick each item as it's scanned. If the till charges a different
+  amount for a line, tap ≠ and type it: the app shows the difference, the total overcharge (and the lower-price
+  rule), and anything charged in your favour.
 - **Compare (Comparar)**: enter two or more options (e.g. 1 kg for R$ 8,99 vs 5 kg for R$ 29,90) to see the
   price per kg, L or unit, which option is cheapest, and how much more the others cost. Tap **Add to cart**
   on the winner.

@@ -16,6 +16,7 @@
   --tag: #ffd60a;
   --tag-ink: #1b1f24;
   --dear: #c8102e;
+  --good: #0a7d3b;
   --focus: #1d5fd1;
   --num: 'Barlow Condensed', 'Avenir Next Condensed', 'Roboto Condensed', 'Arial Narrow', sans-serif-condensed,
     sans-serif;
@@ -34,6 +35,7 @@
     --rule: #2e333a;
     --tag-ink: #15171a;
     --dear: #ff6b7a;
+    --good: #5fd08a;
     --focus: #7fa8ff;
     color-scheme: dark;
   }
@@ -47,6 +49,7 @@
   --rule: #2e333a;
   --tag-ink: #15171a;
   --dear: #ff6b7a;
+  --good: #5fd08a;
   --focus: #7fa8ff;
   color-scheme: dark;
 }
@@ -241,6 +244,18 @@ button {
 .viewer .tag-price {
   color: var(--tag);
   font-size: 48px;
+}
+
+.viewer-charged {
+  font-weight: 700;
+}
+
+.viewer-charged.dear {
+  color: #ff6b7a;
+}
+
+.viewer-charged.good {
+  color: #5fd08a;
 }
 
 .viewer-caption p {
@@ -519,6 +534,172 @@ main {
   margin: 0;
   padding: 28px 16px;
   color: var(--muted);
+}
+
+/* ---------- checkout mode ---------- */
+
+.start-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: calc(100% - 32px);
+  min-height: 48px;
+  margin: 12px 16px 0;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: transparent;
+  font-weight: 700;
+}
+
+.start-check svg,
+.tick-mark {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.check-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+}
+
+.check-head h2 {
+  margin: 0;
+  font: 700 26px/1 var(--num);
+}
+
+.check-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.line.check {
+  grid-template-columns: 44px 44px 1fr auto;
+  grid-template-areas:
+    'tick photo name sub'
+    'tick photo each ne';
+  cursor: pointer;
+}
+
+.line.check .line-name {
+  overflow: hidden;
+  padding: 4px 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ticked lines fade but stay put, so the list doesn't jump while the cashier scans. A mismatch stays at full
+   strength: it's the one thing on a ticked line you still need to see. */
+.line.checked > :not(.tick, .line-charged) {
+  opacity: 0.5;
+}
+
+.tick {
+  display: grid;
+  grid-area: tick;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid var(--rule);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--surface);
+}
+
+.tick[aria-pressed='true'] {
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.tick:not([aria-pressed='true']) .tick-mark {
+  opacity: 0;
+}
+
+.charge-btn {
+  grid-area: ne;
+  justify-self: end;
+  width: 44px;
+  height: 40px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: transparent;
+  font: 700 22px/1 var(--num);
+}
+
+.charge-btn.set {
+  border-color: var(--ink);
+}
+
+.line-charged {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: each;
+  gap: 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.line-charged.dear {
+  color: var(--dear);
+}
+
+.line-charged.good {
+  color: var(--good);
+}
+
+.charge-input {
+  grid-area: each;
+  width: 100%;
+  min-width: 0;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 2px solid var(--focus);
+  background: transparent;
+  font: 700 22px/1.1 var(--num);
+  font-variant-numeric: tabular-nums;
+}
+
+.charge-input:focus-visible {
+  outline: none;
+}
+
+.check-summary {
+  display: grid;
+  gap: 2px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--rule);
+}
+
+.check-summary p {
+  margin: 0;
+}
+
+.check-summary .over {
+  color: var(--dear);
+  font: 700 20px/1.1 var(--num);
+}
+
+.check-summary .law {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.check-summary .favor {
+  color: var(--good);
+  font: 700 18px/1.1 var(--num);
 }
 
 .lines {

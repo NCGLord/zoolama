@@ -1,7 +1,7 @@
 // DOM wiring only: events → reducers → save → render. Business rules live in the other modules.
 
 import { parseMoney, formatMoney, formatMoneyParts } from './money.js';
-import { initialCart, cartReducer, total, counts, referencedPhotos } from './cart.js';
+import { initialCart, cartReducer, total, counts, referencedPhotos, checkSummary } from './cart.js';
 import { compare } from './compare.js';
 import { UNITS, BASE_UNIT } from './units.js';
 import { t, detectLang, formatPct, LOCALES } from './i18n.js';
@@ -34,6 +34,7 @@ let state = {
   lang: saved?.lang ?? detectLang(navigator.language),
   tab: saved?.tab ?? 'cart',
   theme: saved?.theme ?? null,
+  checking: saved?.checking ?? false, // checkout mode ("Conferir no caixa")
 };
 
 const tr = (key, params) => t(key, state.lang, params);
@@ -95,22 +96,31 @@ const unitLabel = (unit) => (unit === 'un' ? tr('unitCount') : unit);
 
 /* ---------- cart ---------- */
 
-function lineView(item, n) {
+const icon = (id) => $(id).content.firstElementChild.cloneNode(true);
+const signedMoney = (cents) => `${cents > 0 ? '+' : '−'}${formatMoney(Math.abs(cents), state.lang)}`;
+
+function photoCell(item) {
+  return item.photoId
+    ? h(
+        'button',
+        { type: 'button', class: 'line-photo', 'data-action': 'view-photo', 'aria-label': tr('photoOf') },
+        h('img', { alt: '', 'data-photo': item.photoId }),
+      )
+    : h(
+        'button',
+        { type: 'button', class: 'line-photo empty', 'data-action': 'take-photo', 'aria-label': tr('takePhoto') },
+        icon('camera-icon'),
+      );
+}
+
+const lineView = (item, n) => (state.checking ? checkLineView(item, n) : editLineView(item, n));
+
+function editLineView(item, n) {
   const id = item.id;
   return h(
     'li',
     { class: 'line', 'data-id': id },
-    item.photoId
-      ? h(
-          'button',
-          { type: 'button', class: 'line-photo', 'data-action': 'view-photo', 'aria-label': tr('photoOf') },
-          h('img', { alt: '', 'data-photo': item.photoId }),
-        )
-      : h(
-          'button',
-          { type: 'button', class: 'line-photo empty', 'data-action': 'take-photo', 'aria-label': tr('takePhoto') },
-          $('camera-icon').content.firstElementChild.cloneNode(true),
-        ),
+    photoCell(item),
     h('input', {
       class: 'line-name',
       value: item.name,
@@ -136,8 +146,91 @@ function lineView(item, n) {
   );
 }
 
+let editingChargeId = null; // line whose "charged" field is open in checkout mode
+
+/** A line at the till: tick, photo, name, noted total, and what the till charged when it differs. */
+function checkLineView(item, n) {
+  const id = item.id;
+  const noted = item.priceCents * item.qty;
+  const diff = item.chargedCents == null ? 0 : item.chargedCents - noted;
+  let detail;
+  if (editingChargeId === id) {
+    detail = h('input', {
+      class: 'charge-input',
+      'data-action': 'charge',
+      'data-key': `charge-${id}`,
+      inputmode: 'decimal',
+      enterkeyhint: 'done',
+      value: item.chargedCents == null ? '' : formatMoney(item.chargedCents, state.lang).replace(/^\D+/, ''),
+      placeholder: formatMoney(noted, state.lang).replace(/^\D+/, ''),
+      'aria-label': tr('chargedAmount'),
+    });
+  } else if (diff !== 0) {
+    detail = h(
+      'span',
+      { class: `line-charged ${diff > 0 ? 'dear' : 'good'}` },
+      h('span', { text: tr('chargedLine', { amount: formatMoney(item.chargedCents, state.lang) }) }),
+      h('span', { text: signedMoney(diff) }),
+    );
+  } else {
+    detail = h('span', { class: 'line-each', text: `${formatMoney(item.priceCents, state.lang)} × ${item.qty}` });
+  }
+  return h(
+    'li',
+    { class: `line check${item.checked ? ' checked' : ''}`, 'data-id': id, 'data-action': 'toggle-check' },
+    h(
+      'button',
+      {
+        type: 'button',
+        class: 'tick',
+        'data-action': 'toggle-check',
+        'data-key': `tick-${id}`,
+        'aria-pressed': String(Boolean(item.checked)),
+        'aria-label': tr('markChecked'),
+      },
+      icon('tick-icon'),
+    ),
+    photoCell(item),
+    h('span', { class: 'line-name', text: item.name || tr('itemN', { n }) }),
+    h('span', { class: 'line-sub', text: formatMoney(noted, state.lang) }),
+    detail,
+    h(
+      'button',
+      {
+        type: 'button',
+        class: `charge-btn${item.chargedCents == null ? '' : ' set'}`,
+        'data-action': 'edit-charge',
+        'data-key': `ne-${id}`,
+        'aria-label': tr('chargedDifferent'),
+      },
+      '≠',
+    ),
+  );
+}
+
+function renderCheck() {
+  const { cart } = state;
+  const checking = state.checking;
+  $('entry').hidden = checking;
+  $('check-head').hidden = !checking;
+  $('start-check').hidden = checking || cart.items.length === 0;
+  const s = checkSummary(cart);
+  $('check-progress').textContent = tr('checkedProgress', { n: s.checked, total: s.lines });
+  const over = checking && s.overchargeCents > 0;
+  const favor = checking && s.inFavorCents > 0;
+  $('check-summary').hidden = !(over || favor);
+  $('check-over').hidden = !over;
+  $('check-law').hidden = !over;
+  $('check-favor').hidden = !favor;
+  $('check-over').textContent = tr('overcharged', { amount: formatMoney(s.overchargeCents, state.lang) });
+  $('check-favor').textContent = tr('inYourFavor', { amount: formatMoney(s.inFavorCents, state.lang) });
+}
+
 function renderCart() {
   const { cart } = state;
+  if (state.checking && cart.items.length === 0) persist({ ...state, checking: false }); // nothing left to check
+  if (!state.checking) editingChargeId = null;
+  renderCheck();
   keepingFocus(() => {
     // Newest first, so the line just added sits right under the entry form.
     $('lines').replaceChildren(...cart.items.map((item, i) => lineView(item, i + 1)).reverse());
@@ -210,6 +303,14 @@ $('lines').addEventListener('click', (e) => {
   if (!item) return;
   if (action === 'take-photo') takePhoto(id);
   if (action === 'view-photo') openViewer(item);
+  if (action === 'toggle-check') dispatchCart({ type: 'toggleChecked', id });
+  if (action === 'edit-charge') {
+    editingChargeId = id;
+    renderCart();
+    const input = document.querySelector(`[data-key="charge-${id}"]`);
+    input?.focus();
+    input?.select();
+  }
   if (action === 'inc') dispatchCart({ type: 'setQty', id, qty: Math.min(MAX_QTY, item.qty + 1) });
   if (action === 'dec' && item.qty > 1) dispatchCart({ type: 'setQty', id, qty: item.qty - 1 });
   if (action === 'remove' || (action === 'dec' && item.qty === 1)) {
@@ -227,6 +328,39 @@ $('lines').addEventListener('change', (e) => {
 
 $('lines').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.dataset.action === 'rename') e.target.blur();
+  if (e.target.dataset.action !== 'charge') return;
+  if (e.key === 'Enter') e.target.blur(); // focusout saves
+  if (e.key === 'Escape') {
+    editingChargeId = null; // cancel: re-render without saving
+    renderCart();
+  }
+});
+
+// The charged field saves when it loses focus. Guarded, so a re-render can never save it twice.
+$('lines').addEventListener('focusout', (e) => {
+  if (e.target.dataset.action !== 'charge') return;
+  const id = Number(e.target.closest('[data-id]').dataset.id);
+  if (editingChargeId !== id) return;
+  editingChargeId = null;
+  const raw = e.target.value.trim();
+  const chargedCents = raw === '' ? null : parseMoney(raw);
+  if (raw !== '' && chargedCents === null) {
+    renderCart();
+    showToast('invalidPrice');
+    return;
+  }
+  dispatchCart({ type: 'setCharged', id, chargedCents });
+});
+
+$('start-check').addEventListener('click', () => {
+  persist({ ...state, checking: true });
+  renderCart();
+  $('panel-cart').scrollIntoView({ block: 'start' });
+});
+
+$('exit-check').addEventListener('click', () => {
+  persist({ ...state, checking: false });
+  renderCart();
 });
 
 $('clear').addEventListener('click', () => {
@@ -323,6 +457,12 @@ async function openViewer(item) {
   $('viewer-img').alt = tr('photoOf');
   $('viewer-title').textContent = item.name || tr('itemN', { n });
   tagPrice($('viewer-price'), item.priceCents);
+  const diff = item.chargedCents == null ? 0 : item.chargedCents - item.priceCents * item.qty;
+  $('viewer-charged').hidden = diff === 0;
+  $('viewer-charged').className = `viewer-charged ${diff > 0 ? 'dear' : 'good'}`;
+  $('viewer-charged').textContent = diff
+    ? `${tr('chargedLine', { amount: formatMoney(item.chargedCents, state.lang) })} (${signedMoney(diff)})`
+    : '';
   const when = photo && new Intl.DateTimeFormat(LOCALES[state.lang], { dateStyle: 'short', timeStyle: 'short' }).format(photo.takenAt);
   $('viewer-when').textContent = when ? tr('photoTakenAt', { when }) : '';
   $('viewer').showModal();
