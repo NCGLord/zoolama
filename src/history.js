@@ -21,6 +21,30 @@ export function tripFromCart(cart, { id, at, store = '' }) {
   };
 }
 
+const isPositive = (n) => Number.isSafeInteger(n) && n > 0;
+const isCount = (n) => Number.isSafeInteger(n) && n >= 0;
+
+function isTripItem(item) {
+  if (typeof item?.name !== 'string' || !isPositive(item.priceCents) || !isPositive(item.qty)) return false;
+  const weighed = item.perKgCents !== undefined || item.grams !== undefined;
+  return !weighed || (isPositive(item.perKgCents) && isPositive(item.grams));
+}
+
+/** Whether a stored trip has the shape tripFromCart builds, so History can show and share it. */
+export function isTrip(trip) {
+  return (
+    typeof trip?.id === 'string' &&
+    trip.id !== '' &&
+    Number.isFinite(trip.at) &&
+    typeof trip.store === 'string' &&
+    Array.isArray(trip.items) &&
+    trip.items.every(isTripItem) &&
+    isCount(trip.totalCents) &&
+    isCount(trip.units) &&
+    (trip.overchargeCents === undefined || isPositive(trip.overchargeCents))
+  );
+}
+
 /** Trips grouped by the phone's local month, newest month and newest trip first. month is 0-based, like Date. */
 export function monthlyGroups(trips) {
   const groups = new Map();

@@ -75,6 +75,21 @@ test('unreadable trip history is backed up and starts empty', () => {
   assert.equal(s.getItem(`${HISTORY_KEY}:corrupt`), '[{"id":');
 });
 
+test('a malformed trip is left out, and the stored history is backed up before anything overwrites it', () => {
+  const s = new FakeStorage();
+  const raw = JSON.stringify([trip, { id: 'x', at: 'yesterday' }]);
+  s.setItem(HISTORY_KEY, raw);
+  assert.deepEqual(loadHistory(s), [trip]);
+  assert.equal(s.getItem(`${HISTORY_KEY}:corrupt`), raw);
+});
+
+test('well-formed history is not backed up', () => {
+  const s = new FakeStorage();
+  saveHistory(s, [trip]);
+  loadHistory(s);
+  assert.equal(s.getItem(`${HISTORY_KEY}:corrupt`), null);
+});
+
 test('saveHistory reports false instead of throwing when storage is full', () => {
   assert.equal(saveHistory(throwing('setItem'), [trip]), false);
 });

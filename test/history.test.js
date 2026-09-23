@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { initialCart, cartReducer } from '../src/cart.js';
-import { tripFromCart, monthlyGroups, storeNames } from '../src/history.js';
+import { tripFromCart, monthlyGroups, storeNames, isTrip } from '../src/history.js';
 
 const cartOf = (...actions) => actions.reduce(cartReducer, initialCart());
 const at = (y, m, d, h = 12) => new Date(y, m - 1, d, h).getTime(); // local time, like the phone's clock
@@ -55,4 +55,34 @@ test('storeNames suggests each store once, most recent first, skipping unnamed t
     { at: at(2026, 9, 1), store: 'Assaí' },
   ];
   assert.deepEqual(storeNames(trips), ['Assaí', 'Atacadão']);
+});
+
+test('isTrip accepts every trip tripFromCart builds', () => {
+  const cart = cartOf(
+    { type: 'add', priceCents: 450, qty: 2, name: 'Leite' },
+    { type: 'add', perKgCents: 799, grams: 1250 },
+    { type: 'setCharged', id: 1, chargedCents: 1000 },
+  );
+  assert.equal(isTrip(tripFromCart(cart, { id: 't1', at: at(2026, 9, 22), store: 'Assaí' })), true);
+  assert.equal(isTrip(tripFromCart(initialCart(), { id: 't2', at: 0 })), true);
+});
+
+test('isTrip rejects a trip History could not show', () => {
+  const good = { id: 't', at: 0, store: '', items: [{ name: '', priceCents: 450, qty: 1 }], totalCents: 450, units: 1 };
+  const broken = [
+    null,
+    { ...good, id: '' },
+    { ...good, at: 'yesterday' },
+    { ...good, store: undefined },
+    { ...good, items: 'Leite' },
+    { ...good, items: [{ name: 'Leite', priceCents: 4.5, qty: 1 }] },
+    { ...good, items: [{ name: 'Leite', priceCents: 450, qty: 0 }] },
+    { ...good, items: [{ priceCents: 450, qty: 1 }] },
+    { ...good, items: [{ name: 'Tomate', priceCents: 999, qty: 1, perKgCents: 799 }] },
+    { ...good, totalCents: -1 },
+    { ...good, units: undefined },
+    { ...good, overchargeCents: 0 },
+  ];
+  for (const trip of broken) assert.equal(isTrip(trip), false, JSON.stringify(trip));
+  assert.equal(isTrip(good), true);
 });

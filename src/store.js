@@ -1,6 +1,8 @@
 // Persistence over an injected Web Storage (localStorage in the app, a fake in tests).
 // Never throws: private mode, a full quota or blocked storage must not break shopping.
 
+import { isTrip } from './history.js';
+
 export const KEY = 'zoolama:v1';
 // Trips live apart from the cart state, which is saved on every keystroke; history only changes on a finished trip.
 export const HISTORY_KEY = 'zoolama:v1:history';
@@ -25,12 +27,17 @@ function read(storage, key, valid) {
   } catch {
     // fall through to the backup below
   }
+  backUp(storage, key, raw);
+  return null;
+}
+
+/** Keeps a stored value we can't fully use under `key:corrupt`, so the next save doesn't destroy it. */
+function backUp(storage, key, raw) {
   try {
-    storage.setItem(`${key}:corrupt`, raw);
+    storage.setItem(`${key}:corrupt`, raw ?? storage.getItem(key));
   } catch {
     // nothing more we can do
   }
-  return null;
 }
 
 function write(storage, key, value) {
@@ -52,9 +59,15 @@ export function save(storage, state) {
   return write(storage, KEY, { schema: SCHEMA, ...state });
 }
 
-/** Finished trips, newest first; [] when there are none or they cannot be trusted. */
+/**
+ * Finished trips, newest first; [] when there are none or they cannot be read. A trip without the shape the app
+ * saves is left out, so it can't break History, and the stored list is backed up before anything overwrites it.
+ */
 export function loadHistory(storage) {
-  return read(storage, HISTORY_KEY, Array.isArray) ?? [];
+  const trips = read(storage, HISTORY_KEY, Array.isArray) ?? [];
+  const valid = trips.filter(isTrip);
+  if (valid.length < trips.length) backUp(storage, HISTORY_KEY);
+  return valid;
 }
 
 /** Returns whether the history was written. */
