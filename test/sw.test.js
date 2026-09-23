@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { sep } from 'node:path';
 import { ROOT, readSw, assetsHash } from '../tools/sw-assets.mjs';
 
 const { version, assets } = readSw();
@@ -11,8 +12,12 @@ test('every precached asset exists on disk', () => {
   for (const a of assets) assert.ok(existsSync(new URL(a, ROOT)), a);
 });
 
-test('every JS module in src/ is precached', () => {
-  for (const f of readdirSync(new URL('src/', ROOT))) assert.ok(assets.includes(`./src/${f}`), `./src/${f}`);
+test('every JS module in src/, subfolders included, is precached', () => {
+  const modules = readdirSync(new URL('src/', ROOT), { recursive: true }).filter((f) => f.endsWith('.js'));
+  for (const f of modules) {
+    const path = `./src/${f.split(sep).join('/')}`;
+    assert.ok(assets.includes(path), path);
+  }
 });
 
 test('every local file referenced by index.html, the manifest and the stylesheet is precached', () => {
