@@ -76,7 +76,8 @@ function registerServiceWorker() {
     .then((registered) => {
       registration = registered;
       lastCheck = Date.now(); // registering has just checked
-      // On coming to the front, and once a minute while there; only in the background does it never look.
+      // On coming to the front, and every minute while there, it asks whether a check is due (UPDATE_CHECK_MS since
+      // the last) and checks only then; in the background it never looks.
       const check = () => {
         if (document.visibilityState !== 'visible' || !dueForUpdateCheck(Date.now(), lastCheck)) return;
         lastCheck = Date.now();
