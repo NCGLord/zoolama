@@ -133,14 +133,14 @@ font's real letter outlines and needs `pip install fonttools brotli`. Run `npm r
 
 | Path | What |
 |---|---|
-| `src/money.js`, `units.js`, `compare.js`, `cart.js`, `budget.js`, `history.js`, `share.js`, `store.js`, `i18n.js`, `theme.js`, `install.js`, `update.js`, `delight.js`, `magnifier.js` | Pure logic, unit-tested |
+| `src/money.js`, `units.js`, `compare.js`, `cart.js`, `budget.js`, `history.js`, `plan.js`, `backup.js`, `share.js`, `store.js`, `state.js`, `i18n.js`, `theme.js`, `tabs.js`, `keyboard.js`, `install.js`, `update.js`, `launch.js`, `delight.js`, `magnifier.js` | Pure logic, unit-tested |
 | `src/photos.js` | Shelf-tag photos: shrinks them on a canvas and keeps them in IndexedDB; its pure helpers are unit-tested |
 | `src/app.js` | Entry point: wires the views together and boots them |
-| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `photo-cache`, `cart-store` (every cart change), `share-sheet`, `photos-ui`, `entry`, `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker), `magnifier-ui`, `about-view`, `about-screen` (About full screen, from the logo) |
+| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `photo-cache`, `price-memory` (what an item cost last time), `cart-store` (every cart change), `share-sheet`, `wake-lock` (the screen stays on at the till), `photos-ui`, `line-sheet` (a line's price and offer), `entry`, `plan-view` (the shopping list), `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker), `magnifier-ui`, `about-view`, `about-screen` (About full screen, from the logo) |
 | `sw.js` | Service worker: atomic precache, cache-first |
 | `test/` | Unit tests (`node --test`) |
 | `e2e/`, `playwright.config.js` | Browser tests (`npm run e2e`) |
-| `tools/` | `stamp-sw.mjs`, `sw-assets.mjs`, `icons.sh`, `wordmark.py` |
+| `tools/` | `stamp-sw.mjs`, `sw-assets.mjs`, `site.mjs`, `icons.sh`, `wordmark.py`, `screenshots.mjs` |
 | `docs/superpowers/specs/` | The MVP design record; this README describes the app as it is now |
 
 The price font is Barlow Condensed Bold (SIL OFL 1.1, see `fonts/OFL.txt`).
