@@ -252,10 +252,22 @@ test('sortItems by name orders numbers naturally', () => {
   assert.deepEqual(order(sortItems(named('Lata 10', 'Lata 2'), { key: 'name', dir: 'asc' })), ['Lata 2', 'Lata 10']);
 });
 
-test('unnamed items go last in both directions, in the order they were added', () => {
+test('unnamed items go last in both directions, ordered by the N of their "Item N" label', () => {
   const items = named('', 'Café', '', 'arroz');
   assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'asc' })), ['arroz', 'Café', '#1', '#3']);
-  assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'desc' })), ['Café', 'arroz', '#1', '#3']);
+  assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'desc' })), ['Café', 'arroz', '#3', '#1']);
+});
+
+test('a cart of unnamed items flips when the name sort does', () => {
+  const items = named('', '', '', '');
+  assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'asc' })), ['#1', '#2', '#3', '#4']);
+  assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'desc' })), ['#4', '#3', '#2', '#1']);
+});
+
+test('items with the same name are a true tie, and keep the order they were added in both directions', () => {
+  const items = named('Leite', 'Café', 'Leite');
+  assert.deepEqual(order(sortItems(items, { key: 'name', dir: 'asc' })), ['Café', 'Leite', 'Leite']);
+  assert.deepEqual(sortItems(items, { key: 'name', dir: 'desc' }).map((r) => r.n), [1, 3, 2]);
 });
 
 test('lineTotal is price × qty, and a weighed line is already its price', () => {

@@ -220,8 +220,9 @@ export function linePriceCents(perKgCents, grams) {
 
 /**
  * The cart in display order, each item with n = its 1-based added position (for the "Item N" label).
- * key: 'added' | 'total' (the line total) | 'name'; dir: 'asc' | 'desc'. Ties keep the order items were added,
- * and unnamed items go last in both directions, since they have no name to sort by.
+ * key: 'added' | 'total' (the line total) | 'name'; dir: 'asc' | 'desc'. Ties keep the order items were added.
+ * Unnamed items go after the named ones in both directions, ordered among themselves by the N of the "Item N" label
+ * they show, so the sort flips them too.
  */
 export function sortItems(items, { key = 'added', dir = 'desc' } = {}, locale = 'pt-BR') {
   const rows = items.map((item, i) => ({ item, n: i + 1 }));
@@ -234,7 +235,8 @@ export function sortItems(items, { key = 'added', dir = 'desc' } = {}, locale = 
     name: (a, b) => {
       const [an, bn] = [a.item.name, b.item.name];
       if (!an !== !bn) return an ? -1 : 1;
-      return (an && sign * collator.compare(an, bn)) || byAdded(a, b);
+      if (!an) return sign * byAdded(a, b); // "Item 1" and "Item 3" differ on screen, so they are not a tie
+      return sign * collator.compare(an, bn) || byAdded(a, b);
     },
   }[key];
   return rows.sort(compare);
