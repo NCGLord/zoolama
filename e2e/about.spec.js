@@ -42,6 +42,35 @@ test('About shows the version this phone runs, and checks for a newer one on dem
   await expect(page.locator('#about-update-result')).toHaveText('Você já tem a versão mais recente.');
 });
 
+// On a first visit there's no worker to ask until one has installed and claimed the page.
+test('on a first visit, About names the version once the app is ready offline', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await expect(page.locator('#about-version')).toHaveText(VERSION);
+});
+
+// A new version takes over as soon as it has installed, but the open app goes on running the code it started with until
+// it is reloaded, so About goes on naming that one: "Sobre shows X" has to mean X is what runs.
+test('when an update takes over, About keeps naming the version still running until the reload', async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await expect(page.locator('#about-version')).toHaveText(VERSION);
+  const shown = await page.evaluate(async () => {
+    // The new worker takes over, and would answer with its own version if asked.
+    const worker = { postMessage: (_, [port]) => port.postMessage('new000000000') };
+    Object.defineProperty(navigator.serviceWorker, 'controller', { get: () => worker });
+    navigator.serviceWorker.dispatchEvent(new Event('controllerchange'));
+    // Messages arrive in the order they were sent: once this one is in, any answer from the worker has been shown.
+    await new Promise((resolve) => {
+      const { port1, port2 } = new MessageChannel();
+      port1.onmessage = resolve;
+      port2.postMessage(null);
+    });
+    return document.getElementById('about-version').textContent;
+  });
+  expect(shown).toBe(VERSION);
+  await expect(page.locator('#toast-text')).toHaveText('Nova versão disponível');
+});
+
 // The browser fetches sw.js for an update check itself, out of reach of Playwright's offline mode and routing, and a
 // real new version can't be published mid-test; so these make the registration answer the way the browser would.
 test('when the check finds a new version, About says it is on its way', async ({ app: page }) => {

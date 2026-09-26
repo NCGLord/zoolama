@@ -20,14 +20,18 @@ async function renderAbout() {
 renderAbout();
 $('tab-about').addEventListener('click', renderAbout);
 
-// Asked again when a new service worker takes over: on a first visit there is none to ask until then.
+/** The version this page runs: that of the worker that served it. */
 async function renderVersion() {
   const version = await appVersion();
   $('about-version').hidden = !version;
   $('about-version').textContent = version ?? '';
 }
 renderVersion();
-navigator.serviceWorker?.addEventListener('controllerchange', renderVersion);
+// A first visit has no worker to ask until one claims the page. Once the line shows a version, a worker that takes over
+// is a newer one that the page only runs after a reload (the update toast offers it), so the line stays as it is.
+navigator.serviceWorker?.addEventListener('controllerchange', () => {
+  if ($('about-version').hidden) renderVersion();
+});
 
 const RESULT = { found: 'updateFound', latest: 'updateLatest', offline: 'updateOffline', unavailable: 'updateUnavailable' };
 
