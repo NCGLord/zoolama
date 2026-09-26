@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { test as base, expect } from './fixtures.js';
+
+const VERSION = readFileSync(new URL('../sw.js', import.meta.url), 'utf8').match(/const VERSION = '([^']+)'/)[1];
 
 // The page's clock is Playwright's, so minutes pass on demand. registration.update() is counted, and the page's
 // visibility is flipped by the test, since Playwright can't send a page to the background.
@@ -183,6 +186,7 @@ test('asked for in the full-screen About, a new version goes on screen at once, 
   await Promise.all([page.waitForEvent('load'), takeOver(page)]);
   await expect(page.locator('#panel-about')).toBeVisible();
   await expect(page.locator('#toast-text')).toHaveText('App atualizado');
+  await expect(page.locator('#about-update-result')).toHaveText(`Atualizado agora para ${VERSION}`); // stays, unlike the toast
 });
 
 // The phone's case: a newer version installed and active, but the page never heard it take over (no controllerchange).

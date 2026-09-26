@@ -38,13 +38,14 @@ const LINE = {
   failed: 'updateFailed',
 };
 let updateState = null;
-let waitingVersion = ''; // the number of the version waiting, asked of it as it takes over
+let shownVersion = ''; // the number About names: the version waiting, or the one just updated to
 
 /** The update line and its button: Procurar atualização, or Atualizar while a new version waits to go on screen. */
 function renderUpdate() {
   const waiting = updateState === 'waiting';
   let line = '';
-  if (waiting) line = waitingVersion ? tr('updatePending', { version: waitingVersion }) : tr('updateReady');
+  if (waiting) line = shownVersion ? tr('updatePending', { version: shownVersion }) : tr('updateReady');
+  else if (updateState === 'updated') line = tr('updateDone', { version: shownVersion });
   else if (updateState) line = tr(LINE[updateState]);
   $('about-update-result').textContent = line;
   $('about-update').dataset.i18n = waiting ? 'update' : 'aboutCheckUpdate';
@@ -54,7 +55,7 @@ function renderUpdate() {
 
 onUpdateState(async (next) => {
   updateState = next;
-  if (next === 'waiting') waitingVersion = (await appVersion()) ?? ''; // the worker answering now is the new one
+  if (next === 'waiting' || next === 'updated') shownVersion = (await appVersion()) ?? ''; // the new one answers now
   renderUpdate();
 });
 

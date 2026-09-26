@@ -160,6 +160,8 @@ function resumeAfterUpdate() {
   if (!updated) return;
   if (updated.about) persist({ ...state, tab: 'about' });
   showToast('appUpdated');
+  setUpdateState('updated'); // About says so too, until the next look
+
 }
 
 /** One look for a new version, the app's own or the shopper's (`asking`); its outcome goes into the update state. */
