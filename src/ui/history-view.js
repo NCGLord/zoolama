@@ -128,6 +128,7 @@ function undoDeleteTrip() {
   setTrips(next);
 }
 
+/** A trip as History lists it: its heading. What it shows once opened comes from tripBody, on its first opening. */
 function tripView(trip, whenFormat) {
   const amount = (cents) => formatMoney(cents, state.lang);
   return h(
@@ -147,6 +148,13 @@ function tripView(trip, whenFormat) {
         trip.receiptCents ? h('span', { text: tr('tripReceipt', { amount: amount(trip.receiptCents) }) }) : '',
       ),
     ),
+  );
+}
+
+/** An opened trip under its heading: its lines, then Buy again, Share and Delete. */
+function tripBody(trip) {
+  const amount = (cents) => formatMoney(cents, state.lang);
+  return [
     h(
       'ul',
       { class: 'trip-items' },
@@ -167,8 +175,32 @@ function tripView(trip, whenFormat) {
       h('button', { type: 'button', class: 'secondary', 'data-action': 'share-trip' }, tr('share')),
       h('button', { type: 'button', class: 'secondary', 'data-action': 'delete-trip' }, tr('deleteTrip')),
     ),
-  );
+  ];
 }
+
+/**
+ * Builds an opened trip's body, once. Building every trip's lines whenever History was drawn (at each start and each
+ * change) took most of the app's start on a phone once it held a few hundred trips, for a tab that's mostly closed.
+ */
+function fillTrip(details) {
+  if (details.querySelector('.trip-items')) return;
+  const trip = trips.find((t) => t.id === details.dataset.trip);
+  if (trip) details.append(...tripBody(trip));
+}
+
+// A tap on a heading builds the body before the trip opens, so it never opens empty for a frame. Any other way a trip
+// opens (find in page, say) is caught when it has.
+$('history').addEventListener('click', (e) => {
+  const summary = e.target.closest('.trip > summary');
+  if (summary) fillTrip(summary.parentElement);
+});
+$('history').addEventListener(
+  'toggle',
+  (e) => {
+    if (e.target.open) fillTrip(e.target);
+  },
+  true, // toggle doesn't bubble
+);
 
 function renderHistory() {
   rememberPrices(trips); // every change to the history comes through here
@@ -195,7 +227,10 @@ function renderHistory() {
         ),
         ...group.trips.map((trip) => {
           const view = tripView(trip, whenFormat);
-          view.open = open.has(trip.id); // keep expanded trips expanded across re-renders
+          if (open.has(trip.id)) {
+            view.append(...tripBody(trip)); // keep expanded trips expanded across re-renders
+            view.open = true;
+          }
           return view;
         }),
       ),
