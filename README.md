@@ -54,6 +54,8 @@ Offline supermarket helper for your phone:
   prints them: *1.000 g* is a thousand grams, while *1,250 kg* keeps its decimals. For a multipack, type the count,
   tap **×** and the size (*12×350* ml): the card shows what it adds up to (*= 4,2 L*). Tap **Add to cart** on the
   winner; a pack goes in named the way it prints (*12 × 350 ml*).
+- **About (Sobre)**: the fourth tab says what zoolama is, its MIT licence, and links to the source code, to report a
+  problem and to e-mail the author.
 - PT/EN and light/dark toggles in the header.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and
@@ -131,7 +133,7 @@ font's real letter outlines and needs `pip install fonttools brotli`. Run `npm r
 | `src/money.js`, `units.js`, `compare.js`, `cart.js`, `budget.js`, `history.js`, `share.js`, `store.js`, `i18n.js`, `theme.js`, `install.js`, `update.js`, `delight.js` | Pure logic, unit-tested |
 | `src/photos.js` | Shelf-tag photos: shrinks them on a canvas and keeps them in IndexedDB; its pure helpers are unit-tested |
 | `src/app.js` | Entry point: wires the views together and boots them |
-| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `photo-cache`, `cart-store` (every cart change), `share-sheet`, `photos-ui`, `entry`, `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker) |
+| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `photo-cache`, `cart-store` (every cart change), `share-sheet`, `photos-ui`, `entry`, `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker), `about-view` |
 | `sw.js` | Service worker: atomic precache, cache-first |
 | `test/` | Unit tests (`node --test`) |
 | `e2e/`, `playwright.config.js` | Browser tests (`npm run e2e`) |

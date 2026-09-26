@@ -2,7 +2,7 @@
 // ./?tab=compare opens Compare, ./?check=1 opens the cart in checkout mode, ./?magnifier=1 opens the magnifier. Any
 // other start opens the app as it was.
 
-const TABS = ['cart', 'compare', 'history'];
+const TABS = ['cart', 'compare', 'history', 'about'];
 
 /** The state to open with, given the start URL's query; `state` itself when the query asks for nothing. */
 export function launchState(state, search) {

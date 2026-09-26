@@ -17,9 +17,11 @@ test('the tab bar works from the keyboard: arrows, Home and End select, and only
   await selected('Comparar', 'compare');
   await expect(tab(/^Carrinho/)).toHaveAttribute('tabindex', '-1');
   await page.keyboard.press('End');
-  await selected('Histórico', 'history');
+  await selected('Sobre', 'about');
   await page.keyboard.press('ArrowRight'); // wraps
   await selected(/^Carrinho/, 'cart');
+  await page.keyboard.press('ArrowLeft');
+  await selected('Sobre', 'about');
   await page.keyboard.press('ArrowLeft');
   await selected('Histórico', 'history');
   await page.keyboard.press('Home');

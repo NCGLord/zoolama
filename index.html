@@ -206,6 +206,27 @@
           <button type="button" id="reset-compare" class="secondary" data-i18n="reset">Recomeçar</button>
         </div>
       </section>
+
+      <section id="panel-about" class="panel about" role="tabpanel" aria-labelledby="tab-about" hidden>
+        <!-- A copy of the header logo goes here (src/ui/about-view.js), so tools/wordmark.py stays its one source. -->
+        <div id="about-logo" class="about-logo"></div>
+        <p class="about-lede" data-i18n="aboutLede"></p>
+        <h2 data-i18n="aboutLicenceTitle">Licença</h2>
+        <p data-i18n="aboutLicence"></p>
+        <ul class="about-links">
+          <li><a href="https://github.com/NCGLord/zoolama/blob/main/LICENSE" target="_blank" rel="noopener" data-i18n="aboutLicenceText">Texto da licença MIT</a></li>
+          <li>
+            <span data-i18n="aboutFont">Fonte dos preços:</span>
+            <a href="https://github.com/NCGLord/zoolama/blob/main/fonts/OFL.txt" target="_blank" rel="noopener">Barlow Condensed, SIL OFL 1.1</a>
+          </li>
+        </ul>
+        <h2 data-i18n="aboutLinksTitle">Links</h2>
+        <ul class="about-links">
+          <li><a href="https://github.com/NCGLord/zoolama" target="_blank" rel="noopener" data-i18n="aboutSource">Código-fonte no GitHub</a></li>
+          <li><a href="https://github.com/NCGLord/zoolama/issues/new" target="_blank" rel="noopener" data-i18n="aboutIssue">Relatar um problema</a></li>
+          <li><a href="mailto:nulaya@gmail.com"><span data-i18n="aboutContact">Contato</span>: nulaya@gmail.com</a></li>
+        </ul>
+      </section>
     </main>
 
     <input type="file" id="photo-input" accept="image/*" capture="environment" hidden />
@@ -402,6 +423,12 @@
             <svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3-2 1.3Z" /><path d="M9 8h6M9 11.5h6M9 15h3.5" /></svg>
           </span>
           <span data-i18n="tabHistory">Histórico</span>
+        </button>
+        <button type="button" role="tab" id="tab-about" aria-controls="panel-about" data-tab="about">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5M12 7.8v.1" /></svg>
+          </span>
+          <span data-i18n="tabAbout">Sobre</span>
         </button>
       </nav>
     </div>

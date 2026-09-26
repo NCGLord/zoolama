@@ -2053,6 +2053,58 @@ button.line-each {
   gap: 12px;
 }
 
+/* ---------- about ---------- */
+
+.about {
+  padding: 8px 16px 24px;
+}
+
+.about-logo {
+  display: grid;
+  place-items: center;
+  padding: 16px 0 8px;
+}
+
+.about-logo .wordmark {
+  height: 72px;
+}
+
+.about-lede {
+  margin: 0;
+  text-align: center;
+}
+
+/* Section heads as in History's summary. */
+.about h2 {
+  margin: 20px 0 2px;
+  color: var(--muted);
+  font: 700 15px/1.2 var(--text);
+}
+
+.about h2 + p {
+  margin: 0;
+}
+
+.about-links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-links li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 6px;
+  min-height: 44px; /* a thumb-sized row for every link */
+}
+
+.about-links a {
+  color: inherit;
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
 .compare-actions {
   display: flex;
   gap: 12px;

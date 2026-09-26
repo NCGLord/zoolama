@@ -9,7 +9,7 @@ import { STRINGS } from './i18n.js';
 export const blankOption = (unit = 'g') => ({ label: '', price: '', qty: '', unit });
 export const initialCompare = () => ({ options: [blankOption(), blankOption()] });
 
-const TABS = ['cart', 'compare', 'history'];
+const TABS = ['cart', 'compare', 'history', 'about'];
 const THEMES = ['light', 'dark'];
 const SORT_KEYS = ['added', 'total', 'name'];
 const SORT_DIRS = ['asc', 'desc'];

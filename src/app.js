@@ -17,6 +17,7 @@ import { renderTab, renderTheme } from './ui/shell.js';
 import { renderInstall, registerServiceWorker } from './ui/pwa.js';
 import { openMagnifier } from './ui/magnifier-ui.js';
 import './ui/logo-view.js';
+import './ui/about-view.js';
 
 /* ---------- language ---------- */
 
