@@ -14,7 +14,7 @@ import { hydratePhotos } from './photo-cache.js';
 import { openLineSheet } from './line-sheet.js';
 import { openViewer, takePhoto } from './photos-ui.js';
 import { renderPlan } from './plan-view.js';
-import { pricePlaceholder, signedMoney, tagPrice, tr } from './text.js';
+import { bareMoney, pricePlaceholder, signedMoney, tagPrice, tr } from './text.js';
 import { showToast } from './toast.js';
 import { keepScreenOn } from './wake-lock.js';
 
@@ -45,9 +45,8 @@ function renderCheck() {
 function renderReceipt() {
   const { cart } = state;
   const input = $('receipt-input');
-  const bare = (cents) => formatMoney(cents, state.lang).replace(/^\D+/, '');
-  if (document.activeElement !== input) input.value = cart.receiptCents ? bare(cart.receiptCents) : '';
-  input.placeholder = bare(total(cart));
+  if (document.activeElement !== input) input.value = cart.receiptCents ? bareMoney(cart.receiptCents) : '';
+  input.placeholder = bareMoney(total(cart));
   const check = receiptCheck(cart);
   const verdict = $('receipt-verdict');
   const note = $('receipt-note');
@@ -146,7 +145,7 @@ function renderBudget(totalCents) {
 
 $('budget').addEventListener('click', () => {
   const has = state.budgetCents != null;
-  $('budget-input').value = has ? formatMoney(state.budgetCents, state.lang).replace(/^\D+/, '') : '';
+  $('budget-input').value = has ? bareMoney(state.budgetCents) : '';
   $('budget-input').placeholder = pricePlaceholder();
   $('budget-remove').hidden = !has;
   $('budget-error').textContent = '';

@@ -29,11 +29,13 @@ function applyLang() {
   $('price').placeholder = pricePlaceholder();
 }
 
-const pricePlaceholder = () => formatMoney(0, state.lang).replace(/^\D+/, '');
+/** An amount the way a money field holds it, without the currency the field already shows: "4,50". */
+const bareMoney = (cents) => formatMoney(cents, state.lang).replace(/^\D+/, '');
+const pricePlaceholder = () => bareMoney(0);
 const unitLabel = (unit) => (unit === 'un' ? tr('unitCount') : unit);
 
 const signedMoney = (cents) => `${cents > 0 ? '+' : '−'}${formatMoney(Math.abs(cents), state.lang)}`;
 
 const eachText = (item) => lineEach(item, state.lang);
 
-export { tr, tagPrice, applyLang, pricePlaceholder, unitLabel, signedMoney, eachText };
+export { tr, tagPrice, applyLang, bareMoney, pricePlaceholder, unitLabel, signedMoney, eachText };

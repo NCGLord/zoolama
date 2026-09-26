@@ -3,28 +3,26 @@
 // adding; there the price is the entry form's, so the sheet asks only for the offer and hands it back.
 
 import { validDeal } from '../cart.js';
-import { formatMoney, parseMoney } from '../money.js';
+import { parseMoney } from '../money.js';
 import { state } from './app-state.js';
 import { dispatchCart } from './cart-store.js';
 import { $ } from './dom.js';
-import { tr } from './text.js';
+import { bareMoney, tr } from './text.js';
 import { showToast } from './toast.js';
 
 let target = null; // {id} of the cart line being edited, or {onSave} for the entry form's offer
-
-const bare = (cents) => formatMoney(cents, state.lang).replace(/^\D+/, '');
 
 function show({ title, priceCents, perKg = false, deal = null }) {
   $('line-sheet-title').textContent = title;
   $('price-row').hidden = priceCents === undefined;
   $('sheet-price-label').textContent = tr(perKg ? 'pricePerKg' : 'price');
-  $('sheet-price').value = priceCents === undefined ? '' : bare(priceCents);
+  $('sheet-price').value = priceCents === undefined ? '' : bareMoney(priceCents);
   $('deal-fields').hidden = perKg; // weighed lines have no offers
   const tier = deal?.kind === 'tier' ? deal : null;
   const multibuy = deal?.kind === 'multibuy' ? deal : null;
   document.querySelector(`input[name="deal-kind"][value="${multibuy ? 'multibuy' : 'tier'}"]`).checked = true;
   $('deal-min').value = tier ? String(tier.minQty) : '';
-  $('deal-each').value = tier ? bare(tier.eachCents) : '';
+  $('deal-each').value = tier ? bareMoney(tier.eachCents) : '';
   $('deal-buy').value = multibuy ? String(multibuy.buy) : '';
   $('deal-pay').value = multibuy ? String(multibuy.pay) : '';
   renderKind();

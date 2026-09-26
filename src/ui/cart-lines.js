@@ -7,7 +7,7 @@ import { formatMoney } from '../money.js';
 import { state } from './app-state.js';
 import { h, icon } from './dom.js';
 import { memory, version as memoryVersion } from './price-memory.js';
-import { eachText, signedMoney, tr } from './text.js';
+import { bareMoney, eachText, signedMoney, tr } from './text.js';
 
 function photoCell(item) {
   return item.photoId
@@ -143,8 +143,8 @@ function checkLineView(item, n) {
       'data-key': `charge-${id}`,
       inputmode: 'decimal',
       enterkeyhint: 'done',
-      value: item.chargedCents == null ? '' : formatMoney(item.chargedCents, state.lang).replace(/^\D+/, ''),
-      placeholder: formatMoney(noted, state.lang).replace(/^\D+/, ''),
+      value: item.chargedCents == null ? '' : bareMoney(item.chargedCents),
+      placeholder: bareMoney(noted),
       'aria-label': tr('chargedAmount'),
     });
   } else if (diff !== 0) {
