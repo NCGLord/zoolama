@@ -201,3 +201,15 @@ test.describe('sharing zoolama', () => {
     );
   });
 });
+
+// A record of what the update machinery did, kept across restarts, to see on the phone where an update stopped.
+test('About keeps a log of update steps, across restarts', async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(page.locator('#about-update-result')).toHaveText('Você já tem a versão mais recente.');
+  await page.reload();
+  await page.locator('#about-log summary').click();
+  await expect(page.locator('#about-log pre')).toContainText('look asked');
+  await expect(page.locator('#about-log pre')).toContainText('latest');
+  await expect(page.locator('#about-log pre')).toContainText(`start ${VERSION}`);
+});

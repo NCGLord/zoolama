@@ -2287,3 +2287,16 @@ button.line-each {
     animation: none !important;
   }
 }
+
+/* The update log in About: small print, for finding where an update stopped. */
+.about-log {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.about-log pre {
+  margin: 6px 0 0;
+  font: 12px/1.5 ui-monospace, 'Roboto Mono', monospace;
+  white-space: pre-wrap;
+}

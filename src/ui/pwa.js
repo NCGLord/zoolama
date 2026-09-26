@@ -45,6 +45,28 @@ let controlled = false; // a version of the app runs here: before that, a downlo
 let lastCheck = 0;
 let takenOver = false; // a newer version took over after this page loaded; the page runs it once reloaded
 let pageVersion = null; // the version on screen: that of the worker that served this page, asked at start
+
+// A short record of what the update machinery did, kept across restarts (About shows it), to see on the phone where an
+// update stopped. Never breaks anything: without storage it just isn't kept.
+const LOG = 'zoolama:update-log';
+
+function note(event) {
+  try {
+    const log = JSON.parse(localStorage.getItem(LOG)) ?? [];
+    log.push([Date.now(), event]);
+    localStorage.setItem(LOG, JSON.stringify(log.slice(-40)));
+  } catch {
+    // not kept
+  }
+}
+
+function updateLog() {
+  try {
+    return JSON.parse(localStorage.getItem(LOG)) ?? [];
+  } catch {
+    return [];
+  }
+}
 let asked = false; // Procurar atualização found a version: it goes on screen as soon as it lands
 let touched = false; // touched since the app last came to the front
 
@@ -75,6 +97,7 @@ function onUpdateState(listener) {
 }
 
 function setUpdateState(next) {
+  note(next);
   updateState = nextUpdateState(updateState, next);
   stateListener(updateState); // a second version waiting is news too: About asks its number again
 }
@@ -82,6 +105,7 @@ function setUpdateState(next) {
 /** Follows a download: one that doesn't finish (the signal dropped, say) is 'failed', and no longer asked for. */
 function watch(worker) {
   worker?.addEventListener('statechange', () => {
+    note(`download ${worker.state}`);
     if (worker.state !== 'redundant' || takenOver) return; // a worker that took over goes redundant when replaced
     asked = false;
     setUpdateState('failed');
@@ -101,6 +125,7 @@ let reloading = false; // one reload per page: leaving the page fires visibility
 function reloadIntoUpdate({ about = false } = {}) {
   if (reloading) return;
   reloading = true;
+  note(`reload${about ? ' to About' : ''}`);
   try {
     sessionStorage.setItem(UPDATED, JSON.stringify({ about }));
   } catch {
@@ -113,7 +138,12 @@ function reloadIntoUpdate({ about = false } = {}) {
 /** Puts a version that has taken over on screen by itself, when nothing can be lost. Returns whether it did. */
 function applyUpdate() {
   const visible = document.visibilityState === 'visible';
-  if (!takenOver || !reloadsForUpdate({ asked, touched, visible, busy: busy() })) return false;
+  if (!takenOver) return false;
+  const facts = { asked, touched, visible, busy: busy() };
+  if (!reloadsForUpdate(facts)) {
+    note(`waits: ${Object.entries(facts).map(([k, v]) => `${k} ${v}`).join(', ')}`);
+    return false;
+  }
   reloadIntoUpdate({ about: asked });
   return true;
 }
@@ -138,6 +168,7 @@ async function look({ asking = false } = {}) {
     if (asking) setUpdateState('unavailable'); // no service worker (e.g. private mode), or not running one yet
     return;
   }
+  note(`look ${asking ? 'asked' : 'own'}`);
   if (asking) {
     asked = true; // set before looking: a small update can land before the look even returns
     setUpdateState('checking');
@@ -167,6 +198,7 @@ async function look({ asking = false } = {}) {
  * (Android) can miss the event and must not stay behind for want of it.
  */
 function noticeTakeover() {
+  note('taken over');
   takenOver = true;
   if (!applyUpdate()) {
     offerUpdate();
@@ -207,7 +239,12 @@ function registerServiceWorker() {
   const sw = navigator.serviceWorker;
   controlled = Boolean(sw.controller);
   const firstInstall = !controlled;
-  if (controlled) appVersion().then((version) => (pageVersion = version));
+  if (controlled) {
+    appVersion().then((version) => {
+      pageVersion = version;
+      note(`start ${version}`);
+    });
+  } else note('start, first install');
 
   sw.register('./sw.js')
     .then((registered) => {
@@ -215,6 +252,7 @@ function registerServiceWorker() {
       lastCheck = Date.now(); // registering has just checked
       // Any download, whoever started it (opening the app makes the browser look too), is followed from its start.
       registration.addEventListener('updatefound', () => {
+        note('download started');
         if (!controlled) return; // the first install, not an update
         setUpdateState('found');
         watch(registration.installing);
@@ -248,6 +286,7 @@ export {
   renderInstall,
   registerServiceWorker,
   resumeAfterUpdate,
+  updateLog,
   reloadIntoUpdate,
   checkForUpdate,
   appVersion,
