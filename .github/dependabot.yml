@@ -1,6 +1,7 @@
-# Keeps the actions in .github/workflows/, pinned to commit SHAs, up to date. Once a week Dependabot looks for new
-# releases and opens one pull request with all of them, rewriting each SHA with the release comment beside it. CI runs
-# on that branch like on any push; nothing is deployed until the pull request is merged into main.
+# Keeps what the repo depends on up to date, once a week, through pull requests: the actions in .github/workflows/
+# (pinned to commit SHAs; one pull request for all of them, each SHA rewritten with the release comment beside it) and
+# the npm dev dependency, @playwright/test, which also fixes the browser build the e2e job downloads. CI runs on each
+# branch like on any push; nothing is deployed until a pull request is merged into main.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -12,3 +13,11 @@ updates:
         patterns: ['*']
     commit-message:
       prefix: ci
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope # "chore(deps-dev): bump @playwright/test from … to …"
