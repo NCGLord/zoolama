@@ -55,6 +55,9 @@ if (launched !== state) persist(launched);
 const magnify = opensMagnifier(location.search);
 if (location.search) window.history.replaceState(null, '', location.pathname);
 
+// First, so a view that throws while being drawn below can't also stop the updates that would bring its fix.
+registerServiceWorker();
+
 applyLang();
 renderTheme();
 renderCart();
@@ -65,5 +68,4 @@ renderHistory();
 renderInstall();
 collectPhotos();
 navigator.storage?.persist?.().catch(() => {});
-registerServiceWorker();
 if (magnify) openMagnifier();
