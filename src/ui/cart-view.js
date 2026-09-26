@@ -1,14 +1,14 @@
 // The cart tab: its lines, the total tag with its budget, sorting, the tab badge, checkout mode and Clear.
 
 import { budgetStatus } from '../budget.js';
-import { cartReducer, checkSummary, counts, receiptCheck, sortItems, total } from '../cart.js';
+import { cartReducer, checkSummary, counts, MAX_QTY, receiptCheck, sortItems, total } from '../cart.js';
 import { tweenCents } from '../delight.js';
 import { LOCALES } from '../i18n.js';
 import { formatMoney, parseMoney } from '../money.js';
 import { parseGrams } from '../units.js';
 import { persist, state } from './app-state.js';
 import { editing, lineNodes } from './cart-lines.js';
-import { dispatchCart, MAX_QTY, setCart } from './cart-store.js';
+import { dispatchCart, setCart } from './cart-store.js';
 import { $, keepingFocus, reconcile, reducedMotion, replay } from './dom.js';
 import { hydratePhotos } from './photo-cache.js';
 import { openLineSheet } from './line-sheet.js';

@@ -5,8 +5,6 @@ import { persist, state } from './app-state.js';
 import { collectPhotos } from './photo-cache.js';
 import { dropStaleUndo } from './toast.js';
 
-const MAX_QTY = 999;
-
 function setCart(cart) {
   persist({ ...state, cart });
   dropStaleUndo();
@@ -27,4 +25,4 @@ function dispatchCart(action) {
   collectPhotos();
 }
 
-export { MAX_QTY, setCart, dispatchCart, setCartRenderer };
+export { setCart, dispatchCart, setCartRenderer };

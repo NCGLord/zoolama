@@ -9,6 +9,9 @@
 // pague M", where every N units cost M. lineTotal applies it, so totals, budget, checkout, sorting, sharing and History
 // all see the same price.
 
+/** The most units one line can hold. */
+export const MAX_QTY = 999;
+
 export function initialCart() {
   return { items: [], nextId: 1, undo: null };
 }

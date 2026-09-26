@@ -1,12 +1,12 @@
 // The entry form at the top of the cart: price, quantity or weight, an optional name and photo, then Add.
 
-import { linePriceCents, validDeal } from '../cart.js';
+import { linePriceCents, MAX_QTY, validDeal } from '../cart.js';
 import { lastPrice, priceRise } from '../history.js';
 import { formatKg, formatPct, LOCALES } from '../i18n.js';
 import { formatMoney, parseMoney } from '../money.js';
 import { parseGrams } from '../units.js';
 import { state } from './app-state.js';
-import { dispatchCart, MAX_QTY } from './cart-store.js';
+import { dispatchCart } from './cart-store.js';
 import { $ } from './dom.js';
 import { openOfferSheet } from './line-sheet.js';
 import { entryPhotoAdded, entryPhotoId } from './photos-ui.js';
