@@ -102,9 +102,13 @@ function setUpdateState(next) {
   stateListener(updateState); // a second version waiting is news too: About asks its number again
 }
 
+const watched = new WeakSet(); // each download is followed once, however many looks find it
+
 /** Follows a download: one that doesn't finish (the signal dropped, say) is 'failed', and no longer asked for. */
 function watch(worker) {
-  worker?.addEventListener('statechange', () => {
+  if (!worker || watched.has(worker)) return;
+  watched.add(worker);
+  worker.addEventListener('statechange', () => {
     note(`download ${worker.state}`);
     if (worker.state !== 'redundant' || takenOver) return; // a worker that took over goes redundant when replaced
     asked = false;

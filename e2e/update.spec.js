@@ -215,3 +215,23 @@ test('the update log tells an event from a look, and when the app went out of si
   const log = await page.evaluate(() => JSON.parse(localStorage.getItem('zoolama:update-log')).map(([, e]) => e));
   expect(log).toEqual(expect.arrayContaining(['app hidden', 'app visible', 'controller changed', 'taken over (event)']));
 });
+
+// On the phone, four taps on one download logged "download installed" four times: each look watched it again.
+test('the update log records each download step once, however often the check is tapped', async ({ app: page }) => {
+  await page.evaluate(() => {
+    const worker = Object.assign(new EventTarget(), { state: 'installing' });
+    window.install = () => {
+      worker.state = 'installed';
+      worker.dispatchEvent(new Event('statechange'));
+    };
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', { get: () => worker });
+  });
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole('button', { name: 'Procurar atualização' }).click();
+    await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
+  }
+  await page.evaluate(() => window.install());
+  const log = await page.evaluate(() => JSON.parse(localStorage.getItem('zoolama:update-log')).map(([, e]) => e));
+  expect(log.filter((e) => e === 'download installed')).toHaveLength(1);
+});
