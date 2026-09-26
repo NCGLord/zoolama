@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { STRINGS, LOCALES, t, detectLang, formatPct, formatExposure, formatKg, formatZoom } from '../src/i18n.js';
+import { STRINGS, LOCALES, t, detectLang, formatPct, formatBytes, formatExposure, formatKg, formatZoom } from '../src/i18n.js';
 
 const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
@@ -72,6 +72,16 @@ test('formatExposure shows EV signed, with one decimal, the way camera apps do',
   assert.equal(formatExposure(0.02, 'pt'), '0,0', 'no sign on what rounds to zero');
   assert.equal(formatExposure(-0.02, 'pt'), '0,0', 'nor on a tiny negative, which rounds to -0');
   assert.equal(formatExposure(2 / 3, 'en'), '+0.7');
+});
+
+test("formatBytes counts in thousands, as Android's storage screen does: kB whole, MB and GB to one decimal", () => {
+  assert.equal(formatBytes(340_000, 'pt'), '340 kB');
+  assert.equal(formatBytes(1_234_567, 'pt'), '1,2 MB');
+  assert.equal(formatBytes(1_234_567, 'en'), '1.2 MB');
+  assert.equal(formatBytes(12_000_000, 'pt'), '12 MB');
+  assert.equal(formatBytes(1_500_000_000, 'pt'), '1,5 GB');
+  assert.equal(formatBytes(999_499, 'pt'), '999 kB');
+  assert.equal(formatBytes(0, 'pt'), '0 kB');
 });
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');

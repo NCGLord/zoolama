@@ -54,7 +54,8 @@ Offline supermarket helper for your phone:
   prints them: *1.000 g* is a thousand grams, while *1,250 kg* keeps its decimals. For a multipack, type the count,
   tap **×** and the size (*12×350* ml): the card shows what it adds up to (*= 4,2 L*). Tap **Add to cart** on the
   winner; a pack goes in named the way it prints (*12 × 350 ml*).
-- **About (Sobre)**: the fourth tab says what zoolama is, the version this phone runs (*Procurar atualização* checks for
+- **About (Sobre)**: the fourth tab says what zoolama is, that what you enter stays on this phone (and how much space
+  it takes there), the version this phone runs (*Procurar atualização* checks for
   a newer one right away), its MIT licence, and links to the source code, to report a problem and to e-mail the author.
 - PT/EN and light/dark toggles in the header.
 

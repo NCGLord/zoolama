@@ -1,12 +1,23 @@
-// The About tab: what zoolama is, the version this phone runs (with a check for a newer one), its licence, and where
-// its code and its author are. The logo is a copy of the header one, so tools/wordmark.py stays its one source; the
+// The About tab: what zoolama is, what it keeps on this phone and how much space that takes, the version this phone
+// runs (with a check for a newer one), its licence, and where its code and its author are. The logo is a copy of the header one, so tools/wordmark.py stays its one source; the
 // rest is plain markup in index.html.
 
+import { formatBytes } from '../i18n.js';
+import { state } from './app-state.js';
 import { $ } from './dom.js';
 import { appVersion, checkForUpdate } from './pwa.js';
 import { tr } from './text.js';
 
 $('about-logo').append(document.querySelector('.brand .wordmark').cloneNode(true));
+
+/** What the About tab says that changes: the space in use, which photos grow. Where the browser won't say, nothing. */
+async function renderAbout() {
+  const usage = await navigator.storage?.estimate?.().then((e) => e.usage).catch(() => undefined);
+  $('about-storage').hidden = usage === undefined;
+  if (usage !== undefined) $('about-storage').textContent = tr('aboutStorage', { size: formatBytes(usage, state.lang) });
+}
+renderAbout();
+$('tab-about').addEventListener('click', renderAbout);
 
 // Asked again when a new service worker takes over: on a first visit there is none to ask until then.
 async function renderVersion() {
@@ -31,3 +42,5 @@ $('about-update').addEventListener('click', async () => {
   showResult(RESULT[await checkForUpdate()]);
   $('about-update').disabled = false;
 });
+
+export { renderAbout };

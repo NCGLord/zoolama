@@ -126,6 +126,9 @@ export const STRINGS = {
     tabHistory: 'Histórico',
     tabAbout: 'Sobre',
     aboutLede: 'Ajudante de supermercado que funciona offline: soma o carrinho, lembra os preços, compara o preço por kg e confere a conta no caixa.',
+    aboutDataTitle: 'Seus dados',
+    aboutPrivacy: 'Sem conta e sem rastreamento. Seus itens, preços, compras e fotos das etiquetas ficam só neste aparelho: nada do que você anota é enviado a lugar nenhum.',
+    aboutStorage: 'Usando {size} neste aparelho.',
     aboutVersionTitle: 'Versão',
     aboutCheckUpdate: 'Procurar atualização',
     updateChecking: 'Procurando…',
@@ -306,6 +309,9 @@ export const STRINGS = {
     tabHistory: 'History',
     tabAbout: 'About',
     aboutLede: 'An offline supermarket helper: adds up the cart, remembers prices, compares the price per kg and checks the bill at the till.',
+    aboutDataTitle: 'Your data',
+    aboutPrivacy: 'No account and no tracking. Your items, prices, trips and shelf-tag photos stay on this phone: nothing you enter is sent anywhere.',
+    aboutStorage: 'Using {size} on this phone.',
     aboutVersionTitle: 'Version',
     aboutCheckUpdate: 'Check for updates',
     updateChecking: 'Checking…',
@@ -397,4 +403,12 @@ export function formatExposure(ev, lang) {
   const rounded = Math.round(ev * 10) / 10;
   const x = new Intl.NumberFormat(LOCALES[lang], { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.abs(rounded));
   return `${rounded > 0 ? '+' : rounded < 0 ? '−' : ''}${x}`;
+}
+
+/** A size the way Android's storage screen shows it, in thousands: 340 kB, 1,2 MB, 1,5 GB. */
+export function formatBytes(bytes, lang) {
+  const kB = Math.round(bytes / 1e3);
+  // The unit is chosen after rounding, so 999,6 kB reads 1 MB rather than 1.000 kB.
+  const [value, unit] = kB < 1000 ? [kB, 'kilobyte'] : bytes < 999.95e6 ? [bytes / 1e6, 'megabyte'] : [bytes / 1e9, 'gigabyte'];
+  return new Intl.NumberFormat(LOCALES[lang], { style: 'unit', unit, maximumFractionDigits: 1 }).format(value);
 }

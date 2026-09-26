@@ -61,3 +61,13 @@ test('with no signal, the check says so', async ({ app: page }) => {
   await page.getByRole('button', { name: 'Procurar atualização' }).click();
   await expect(page.locator('#about-update-result')).toHaveText('Sem conexão. Tente de novo com sinal.');
 });
+
+test('About says your data stays on this phone, and how much space zoolama takes on it', async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  const about = page.locator('#panel-about');
+  await expect(about).toContainText('Sem conta e sem rastreamento');
+  await expect(page.locator('#about-storage')).toHaveText(/^Usando \d+(,\d)? (kB|MB|GB) neste aparelho\.$/);
+
+  await page.getByRole('button', { name: 'English' }).click();
+  await expect(page.locator('#about-storage')).toHaveText(/^Using \d+(\.\d)? (kB|MB|GB) on this phone\.$/);
+});
