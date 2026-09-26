@@ -26,8 +26,8 @@ const cart = (extra = {}) => ({
 });
 
 // The magnifier's camera, for the shot: a canvas showing a pack's inkjet-printed dates in a 5×7 dot font (drawn from the
-// glyphs below, so it looks the same on every machine). It reports a zoom and redraws larger as the magnifier zooms,
-// staying sharp the way a phone camera's own zoom does.
+// glyphs below, so it looks the same on every machine). It reports a zoom, a torch and an exposure range, and redraws
+// larger as the magnifier zooms, staying sharp the way a phone camera's own zoom does.
 function packCamera() {
   const GLYPHS = {
     0: [14, 17, 19, 21, 25, 17, 14], 1: [4, 12, 4, 4, 4, 4, 14], 2: [14, 17, 1, 2, 4, 8, 31],
@@ -98,7 +98,11 @@ function packCamera() {
     })();
     const stream = canvas.captureStream(30);
     const [track] = stream.getVideoTracks();
-    track.getCapabilities = () => ({ zoom: { min: 1, max: 8, step: 0.1 }, torch: true });
+    track.getCapabilities = () => ({
+      zoom: { min: 1, max: 8, step: 0.1 },
+      torch: true,
+      exposureCompensation: { min: -2, max: 2, step: 1 / 3 },
+    });
     track.applyConstraints = async ({ advanced: [wanted] = [] } = {}) => {
       zoom = wanted.zoom ?? zoom;
       window.cameraZoom = zoom;
