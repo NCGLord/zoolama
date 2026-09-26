@@ -1,6 +1,6 @@
 // Finished trips: the Finalizar sheet (and its celebration), the History tab, and sharing or deleting a past trip.
 
-import { backupFileName, backupJson, mergeTrips, readBackup } from '../backup.js';
+import { backupFileName, backupJson, mergeTrips, readBackupFile } from '../backup.js';
 import { counts, lineTotal, total } from '../cart.js';
 import { celebrates } from '../delight.js';
 import { averageTripCents, monthlyGroups, monthlySeries, storeNames, storeStats, tripFromCart } from '../history.js';
@@ -297,7 +297,7 @@ $('import-input').addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
   e.target.value = ''; // so picking the same file again still fires change
   if (!file) return;
-  const backup = readBackup(await file.text().catch(() => ''));
+  const backup = await readBackupFile(file);
   if (backup.error) return showToast(backup.error);
   const { trips: merged, added } = mergeTrips(trips, backup.trips);
   if (!added) return showToast('importNothing');

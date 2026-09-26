@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { backupJson, backupFileName, readBackup, mergeTrips } from '../src/backup.js';
+import { backupJson, backupFileName, readBackup, readBackupFile, mergeTrips, MAX_BACKUP_BYTES } from '../src/backup.js';
 
 const trip = (id, at, extra = {}) => ({
   id,
@@ -56,6 +56,16 @@ test('malformed trips in an export are left out and the rest imported', () => {
 test('a trip dated beyond what a Date can hold is left out of an import', () => {
   const text = JSON.stringify({ app: 'zoolama', kind: 'history', version: 1, trips: [trips[0], trip('far', 1e300)] });
   assert.deepEqual(readBackup(text), { trips: [trips[0]] });
+});
+
+test('a picked file is read as an export', async () => {
+  assert.deepEqual(await readBackupFile(new File([backupJson(trips, 3000)], 'backup.json')), { trips });
+  assert.deepEqual(await readBackupFile(new File(['not json'], 'x.json')), { error: 'importInvalid' });
+});
+
+test('a file too big to be a history is refused without being read', async () => {
+  const huge = { size: MAX_BACKUP_BYTES + 1, text: () => assert.fail('a file that big is never read') };
+  assert.deepEqual(await readBackupFile(huge), { error: 'importInvalid' });
 });
 
 test('merging adds only trips the history lacks, newest first', () => {

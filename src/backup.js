@@ -34,6 +34,16 @@ export function readBackup(text) {
   return trips.length || !data.trips.length ? { trips } : { error: 'importInvalid' };
 }
 
+// Far past any history browser storage can hold (localStorage keeps 5–10 MB a site): a bigger file is something else,
+// picked by mistake, and reading all of it could stall the phone.
+export const MAX_BACKUP_BYTES = 50_000_000;
+
+/** readBackup for a picked file; one bigger than MAX_BACKUP_BYTES is refused without being read. */
+export async function readBackupFile(file) {
+  if (file.size > MAX_BACKUP_BYTES) return { error: 'importInvalid' };
+  return readBackup(await file.text().catch(() => ''));
+}
+
 /** History with the incoming trips it doesn't already have (same id), newest first; `added` counts them. */
 export function mergeTrips(current, incoming) {
   const known = new Set(current.map((t) => t.id));
