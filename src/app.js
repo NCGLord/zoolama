@@ -1,11 +1,11 @@
 // The entry point. Business rules live in src/*.js and the screen in src/ui/*.js; this file only wires the views
-// together (the language switch re-renders all of them, and two calls that would point up the module stack are
+// together (the language switch re-renders all of them, and the calls that would point up the module stack are
 // registered here) and boots them.
 
 import { launchState, opensMagnifier } from './launch.js';
-import { state, persist } from './ui/app-state.js';
+import { state, persist, onSaveFailed } from './ui/app-state.js';
 import { applyLang } from './ui/text.js';
-import { defineToastActions } from './ui/toast.js';
+import { acknowledgeNotSaved, defineToastActions, warnNotSaved } from './ui/toast.js';
 import { collectPhotos } from './ui/photo-cache.js';
 import { dispatchCart, setCartRenderer } from './ui/cart-store.js';
 import { undoPlan } from './ui/plan-view.js';
@@ -46,7 +46,9 @@ defineToastActions({
   undoDelete: { label: 'undo', run: () => undoDeleteTrip() },
   undoImport: { label: 'undo', run: () => undoImport() },
   undoPlan: { label: 'undo', run: () => undoPlan(), planUndo: true },
+  notSavedSeen: { label: 'gotIt', run: () => acknowledgeNotSaved() },
 });
+onSaveFailed(warnNotSaved);
 
 // A home-screen shortcut opens a tab, checkout mode or the magnifier; then the query goes, so a reload doesn't apply it
 // again.

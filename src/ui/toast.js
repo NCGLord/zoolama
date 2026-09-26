@@ -45,6 +45,17 @@ function offerUpdate() {
   showToast('updateReady', { action: 'update', persist: true });
 }
 
+let notSavedSeen = false;
+
+/** A change couldn't be saved: say so on every change that isn't, until the warning is acknowledged this session. */
+function warnNotSaved() {
+  if (!notSavedSeen) showToast('notSaved', { action: 'notSavedSeen', persist: true });
+}
+
+function acknowledgeNotSaved() {
+  notSavedSeen = true;
+}
+
 /** An Undo that can no longer undo anything must not stay on screen. */
 function dropStaleUndo() {
   const action = toastActions[toastAction];
@@ -58,4 +69,4 @@ $('toast-action').addEventListener('click', () => {
   toastActions[action]?.run();
 });
 
-export { showToast, offerUpdate, dropStaleUndo, defineToastActions };
+export { showToast, offerUpdate, warnNotSaved, acknowledgeNotSaved, dropStaleUndo, defineToastActions };

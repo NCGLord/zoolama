@@ -18,9 +18,17 @@ const storage = (() => {
 // Field by field: a bad value falls back to its default instead of breaking a view (see src/state.js).
 let state = restoreState(load(storage), { lang: detectLang(navigator.language) });
 
-function persist(next) {
-  state = next;
-  save(storage, state);
+// A change the browser wouldn't keep (its storage is full, or blocked) must not go unnoticed: it would be gone at the
+// next start. The toast says so, but it imports this module, so boot hands the warning over instead.
+let saveFailed = () => {};
+
+function onSaveFailed(warn) {
+  saveFailed = warn;
 }
 
-export { storage, state, persist };
+function persist(next) {
+  state = next;
+  if (!save(storage, state)) saveFailed();
+}
+
+export { storage, state, persist, onSaveFailed };

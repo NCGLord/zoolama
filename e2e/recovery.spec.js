@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.js';
+import { test, expect, addItem } from './fixtures.js';
 
 // Saved data can be half-written, hand-edited or from another version. A bad field must fall back to its default,
 // never blank the app in the middle of a shop.
@@ -47,4 +47,27 @@ test('a malformed past trip is set aside and the others still show', async ({ ap
   // The raw value is kept for recovery, not silently overwritten.
   const backup = await page.evaluate(() => localStorage.getItem('zoolama:v1:history:corrupt'));
   expect(backup).toContain('"yesterday"');
+});
+
+// Years of trips can fill the browser's storage, and then nothing more is saved: the cart on screen would be lost on
+// the next start, silently. The first change that can't be saved says so, until it's acknowledged.
+test('a change that cannot be saved says so, until acknowledged', async ({ app: page }) => {
+  await addItem(page, { price: '4,29', name: 'Leite' });
+  await page.evaluate(() => {
+    for (let chunk = 'x'.repeat(512 * 1024), i = 0; chunk.length >= 16; ) {
+      try {
+        localStorage.setItem(`fill-${i++}`, chunk);
+      } catch {
+        chunk = chunk.slice(chunk.length / 2); // full: fill what's left with smaller pieces
+      }
+    }
+  });
+
+  await addItem(page, { price: '18,90', name: 'Café' });
+  await expect(page.locator('#toast-text')).toHaveText('Não foi possível salvar neste aparelho. Libere espaço excluindo compras antigas.');
+  await page.locator('#toast-action').filter({ hasText: 'Entendi' }).click();
+  await expect(page.locator('#toast')).toBeHidden();
+
+  await addItem(page, { price: '7,50', name: 'Pão' }); // acknowledged: not said again this session
+  await expect(page.locator('#toast')).toBeHidden();
 });
