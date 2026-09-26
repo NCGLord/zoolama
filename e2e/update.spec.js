@@ -198,3 +198,16 @@ test('a look notices a newer version installed without word of it, and puts it o
   await expect(page.locator('#panel-about')).toBeVisible();
   await expect(page.locator('#toast-text')).toHaveText('App atualizado');
 });
+
+// The log says how a takeover was seen (the event, or a look comparing versions) and when the app left the screen:
+// on the phone, that's what tells a missed event from a paused app.
+test('the update log tells an event from a look, and when the app went out of sight', async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Comparar' }).click();
+  await page.evaluate(() => {
+    window.setVisibility('hidden');
+    window.setVisibility('visible');
+  });
+  await Promise.all([page.waitForEvent('load'), takeOver(page)]);
+  const log = await page.evaluate(() => JSON.parse(localStorage.getItem('zoolama:update-log')).map(([, e]) => e));
+  expect(log).toEqual(expect.arrayContaining(['app hidden', 'app visible', 'controller changed', 'taken over (event)']));
+});

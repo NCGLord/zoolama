@@ -183,7 +183,7 @@ async function look({ asking = false } = {}) {
   }
   const incoming = registration.installing ?? registration.waiting;
   if (!incoming) {
-    if (await pageBehind()) return noticeTakeover(); // installed already: this page just hasn't caught up
+    if (await pageBehind()) return noticeTakeover('look'); // installed already: this page just hasn't caught up
     asked = false; // nothing coming: a later update isn't "asked for"
     setUpdateState('latest');
     return;
@@ -197,8 +197,8 @@ async function look({ asking = false } = {}) {
  * lost, otherwise offered. Reached by the takeover event, or by a look that finds the page behind, since a paused page
  * (Android) can miss the event and must not stay behind for want of it.
  */
-function noticeTakeover() {
-  note('taken over');
+function noticeTakeover(how) {
+  note(`taken over (${how})`);
   takenOver = true;
   if (!applyUpdate()) {
     offerUpdate();
@@ -271,12 +271,14 @@ function registerServiceWorker() {
   // still runs the old one. It goes on screen by itself when nothing can be lost (see reloadsForUpdate); otherwise
   // Atualizar offers it, rather than a reload in the middle of typing.
   sw.addEventListener('controllerchange', () => {
-    if (controlled) noticeTakeover();
+    note('controller changed');
+    if (controlled) noticeTakeover('event');
     controlled = true; // the first claim after a fresh install is not an update
   });
 
   // Coming back to the front starts afresh, as opening the app does; going out of sight is the other safe moment.
   document.addEventListener('visibilitychange', () => {
+    note(`app ${document.visibilityState}`);
     if (document.visibilityState === 'visible') touched = false;
     applyUpdate();
   });
