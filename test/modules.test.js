@@ -31,6 +31,24 @@ test('nothing imports app.js: it is the entry point, and importing it would run 
   for (const [m, deps] of graph) assert.ok(!deps.includes('./src/app.js'), `${m} imports app.js`);
 });
 
+// A first visit, before the service worker has cached anything, finds the modules one import level at a time: app.js,
+// then what it imports, then what those import, a network round-trip each. index.html names them all, in ASSETS order,
+// so they load at once instead.
+test('index.html preloads every module app.js reaches, and nothing else', () => {
+  const reached = new Set();
+  const visit = (m) => {
+    for (const d of graph.get(m) ?? []) {
+      if (reached.has(d)) continue;
+      reached.add(d);
+      visit(d);
+    }
+  };
+  visit('./src/app.js');
+  const html = readFileSync(new URL('index.html', ROOT), 'utf8');
+  const preloaded = [...html.matchAll(/<link rel="modulepreload" href="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(preloaded, assets.filter((a) => reached.has(a)));
+});
+
 // A cycle only breaks when a module's top level reads a binding of one that hasn't finished evaluating. That is easy
 // to add by accident and fails on the phone as a blank app, so the graph stays acyclic.
 test('the module graph has no cycle', () => {

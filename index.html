@@ -31,6 +31,51 @@
     <link rel="preload" href="./fonts/barlow-condensed-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="./styles.css" />
     <script type="module" src="./src/app.js"></script>
+    <!-- Everything app.js imports, directly or not: a first visit, with nothing cached yet, fetches them all at once
+         instead of one import level at a time. test/modules.test.js keeps the list complete. -->
+    <link rel="modulepreload" href="./src/backup.js" />
+    <link rel="modulepreload" href="./src/budget.js" />
+    <link rel="modulepreload" href="./src/cart.js" />
+    <link rel="modulepreload" href="./src/compare.js" />
+    <link rel="modulepreload" href="./src/delight.js" />
+    <link rel="modulepreload" href="./src/history.js" />
+    <link rel="modulepreload" href="./src/i18n.js" />
+    <link rel="modulepreload" href="./src/install.js" />
+    <link rel="modulepreload" href="./src/keyboard.js" />
+    <link rel="modulepreload" href="./src/launch.js" />
+    <link rel="modulepreload" href="./src/magnifier.js" />
+    <link rel="modulepreload" href="./src/money.js" />
+    <link rel="modulepreload" href="./src/photos.js" />
+    <link rel="modulepreload" href="./src/plan.js" />
+    <link rel="modulepreload" href="./src/share.js" />
+    <link rel="modulepreload" href="./src/state.js" />
+    <link rel="modulepreload" href="./src/store.js" />
+    <link rel="modulepreload" href="./src/tabs.js" />
+    <link rel="modulepreload" href="./src/theme.js" />
+    <link rel="modulepreload" href="./src/units.js" />
+    <link rel="modulepreload" href="./src/update.js" />
+    <link rel="modulepreload" href="./src/ui/about-screen.js" />
+    <link rel="modulepreload" href="./src/ui/about-view.js" />
+    <link rel="modulepreload" href="./src/ui/app-state.js" />
+    <link rel="modulepreload" href="./src/ui/cart-lines.js" />
+    <link rel="modulepreload" href="./src/ui/cart-store.js" />
+    <link rel="modulepreload" href="./src/ui/cart-view.js" />
+    <link rel="modulepreload" href="./src/ui/compare-view.js" />
+    <link rel="modulepreload" href="./src/ui/dom.js" />
+    <link rel="modulepreload" href="./src/ui/entry.js" />
+    <link rel="modulepreload" href="./src/ui/history-view.js" />
+    <link rel="modulepreload" href="./src/ui/line-sheet.js" />
+    <link rel="modulepreload" href="./src/ui/magnifier-ui.js" />
+    <link rel="modulepreload" href="./src/ui/photo-cache.js" />
+    <link rel="modulepreload" href="./src/ui/photos-ui.js" />
+    <link rel="modulepreload" href="./src/ui/plan-view.js" />
+    <link rel="modulepreload" href="./src/ui/price-memory.js" />
+    <link rel="modulepreload" href="./src/ui/pwa.js" />
+    <link rel="modulepreload" href="./src/ui/share-sheet.js" />
+    <link rel="modulepreload" href="./src/ui/shell.js" />
+    <link rel="modulepreload" href="./src/ui/text.js" />
+    <link rel="modulepreload" href="./src/ui/toast.js" />
+    <link rel="modulepreload" href="./src/ui/wake-lock.js" />
   </head>
   <body>
     <header class="bar">

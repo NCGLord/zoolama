@@ -115,7 +115,9 @@ npm run stamp                 # rewrites sw.js VERSION = hash of the precached f
 ```
 
 `npm test` fails until you do. This is deliberate: an unchanged `VERSION` would leave phones on the old cache
-forever. New files the app references must also be added to `ASSETS`, and the tests catch it when they aren't.
+forever. New files the app references must also be added to `ASSETS`, and a new module also gets a
+`<link rel="modulepreload">` in `index.html`, so a first visit fetches it with the rest; the tests catch either one
+when it's missing.
 
 **CI:** every push runs `npm test` and `npm run e2e` on GitHub Actions (`.github/workflows/test-and-deploy.yml`).
 Only a `main` where both pass is published to GitHub Pages, whose source is set to *GitHub Actions*, so a failing
