@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  MAX_QTY,
   initialCart,
   cartReducer,
   total,
@@ -393,6 +394,14 @@ test('a multibuy offer holds up only as N units for fewer than N', () => {
   for (const bad of [multibuy(3, 3), multibuy(3, 0), multibuy(1, 1), multibuy(3, 1.5), multibuy(2.5, 1)]) {
     assert.equal(validDeal(bad, 350), null, JSON.stringify(bad));
   }
+});
+
+// Taking the tier's quantity sets the line to it, so a tier past the cap would take the line past it too.
+test('an offer never asks for more units than a line can hold', () => {
+  assert.deepEqual(validDeal(tier(MAX_QTY, 499), 599), tier(MAX_QTY, 499));
+  assert.equal(validDeal(tier(MAX_QTY + 1, 499), 599), null);
+  assert.deepEqual(validDeal(multibuy(MAX_QTY, 2), 350), multibuy(MAX_QTY, 2));
+  assert.equal(validDeal(multibuy(MAX_QTY + 1, 2), 350), null);
 });
 
 test('nextUnitFree says when one more unit costs nothing', () => {

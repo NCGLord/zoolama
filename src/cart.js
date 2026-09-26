@@ -9,7 +9,7 @@
 // pague M", where every N units cost M. lineTotal applies it, so totals, budget, checkout, sorting, sharing and History
 // all see the same price.
 
-/** The most units one line can hold. */
+/** The most units one line can hold, and so the most an offer can ask for. */
 export const MAX_QTY = 999;
 
 export function initialCart() {
@@ -120,19 +120,19 @@ const isPositive = (n) => Number.isSafeInteger(n) && n > 0;
 
 /**
  * An offer checked against the line's price, keeping only its known fields; null when it doesn't hold up.
- * {kind: 'tier', minQty, eachCents}: from minQty units (at least 2), each costs eachCents, below the price.
- * {kind: 'multibuy', buy, pay}: "leve buy pague pay", every buy units cost pay of them, fewer than buy.
+ * {kind: 'tier', minQty, eachCents}: from minQty units (2 to MAX_QTY), each costs eachCents, below the price.
+ * {kind: 'multibuy', buy, pay}: "leve buy pague pay", every buy units (up to MAX_QTY) cost pay of them, fewer than buy.
  */
 export function validDeal(deal, priceCents) {
   if (deal?.kind === 'tier') {
     const { minQty, eachCents } = deal;
-    return isPositive(minQty) && minQty >= 2 && isPositive(eachCents) && eachCents < priceCents
+    return isPositive(minQty) && minQty >= 2 && minQty <= MAX_QTY && isPositive(eachCents) && eachCents < priceCents
       ? { kind: 'tier', minQty, eachCents }
       : null;
   }
   if (deal?.kind === 'multibuy') {
     const { buy, pay } = deal;
-    return isPositive(buy) && isPositive(pay) && pay < buy ? { kind: 'multibuy', buy, pay } : null;
+    return isPositive(buy) && buy <= MAX_QTY && isPositive(pay) && pay < buy ? { kind: 'multibuy', buy, pay } : null;
   }
   return null;
 }
