@@ -2,6 +2,7 @@
 
 import { installMode, isIOS } from '../install.js';
 import { UPDATE_POLL_MS, dueForUpdateCheck, nextUpdateState, reloadsForUpdate } from '../update.js';
+import { persist, state } from './app-state.js';
 import { $, isTextField } from './dom.js';
 import { offerUpdate, showToast } from './toast.js';
 
@@ -53,11 +54,12 @@ addEventListener('keydown', touch, true);
 
 /**
  * What a reload would lose: an open sheet, the photo viewer or the magnifier, a field being typed in, or an item
- * half-entered in the form (its price, name, weight or photo). Everything else is saved as it changes.
+ * half-entered in the form (its price, name, weight or photo). Everything else is saved as it changes. The full-screen
+ * About isn't among them: updates are asked for there, and it holds nothing to lose.
  */
 function busy() {
   return (
-    Boolean(document.querySelector('dialog[open]')) ||
+    Boolean(document.querySelector('dialog[open]:not(#about-view)')) ||
     isTextField(document.activeElement) ||
     ['price', 'name', 'weight'].some((id) => $(id).value.trim() !== '') ||
     !$('entry-photo-img').hidden
@@ -89,12 +91,35 @@ function watch(worker) {
   });
 }
 
+// Carried across an update's reload, for the new version to say it's on screen, and, when the shopper asked for it in
+// About, to open back there.
+const UPDATED = 'zoolama:updated';
+
 /** Puts a version that has taken over on screen, by reloading, when nothing can be lost. Returns whether it did. */
 function applyUpdate() {
   const visible = document.visibilityState === 'visible';
   if (!takenOver || !reloadsForUpdate({ asked, touched, visible, busy: busy() })) return false;
+  try {
+    sessionStorage.setItem(UPDATED, JSON.stringify({ about: asked }));
+  } catch {
+    // no session storage: the new version just won't say so
+  }
   location.reload();
   return true;
+}
+
+/** Right after an update's reload: back in About if it was asked for there, and saying the app is up to date. */
+function resumeAfterUpdate() {
+  let updated = null;
+  try {
+    updated = JSON.parse(sessionStorage.getItem(UPDATED));
+    sessionStorage.removeItem(UPDATED);
+  } catch {
+    return;
+  }
+  if (!updated) return;
+  if (updated.about) persist({ ...state, tab: 'about' });
+  showToast('appUpdated');
 }
 
 /** One look for a new version, the app's own or the shopper's (`asking`); its outcome goes into the update state. */
@@ -190,4 +215,4 @@ function registerServiceWorker() {
   });
 }
 
-export { renderInstall, registerServiceWorker, checkForUpdate, appVersion, onUpdateState };
+export { renderInstall, registerServiceWorker, resumeAfterUpdate, checkForUpdate, appVersion, onUpdateState };

@@ -64,9 +64,9 @@ async function takeOver(page) {
 }
 const stillOld = (page) => page.evaluate(() => window.oldPage === true);
 
-test('a new version that arrives before the first touch goes on screen at once', async ({ app: page }) => {
+test('a new version that arrives before the first touch goes on screen at once, and says so', async ({ app: page }) => {
   await Promise.all([page.waitForEvent('load'), takeOver(page)]);
-  await expect(page.locator('#toast')).toBeHidden();
+  await expect(page.locator('#toast-text')).toHaveText('App atualizado');
 });
 
 test('after a touch, a new version waits: Atualizar offers it, and leaving the app puts it on screen', async ({ app: page }) => {
@@ -107,4 +107,18 @@ test('asked for, a new version goes on screen as soon as it lands', async ({ app
   await page.getByRole('button', { name: 'Procurar atualização' }).click();
   await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
   await Promise.all([page.waitForEvent('load'), takeOver(page)]);
+});
+
+// The full-screen About (from the logo) is where updates are asked for: it holds nothing a reload could lose, so it
+// mustn't hold an update back; and the shopper lands back in About, told it's done.
+test('asked for in the full-screen About, a new version goes on screen at once, back in About', async ({ app: page }) => {
+  await page.evaluate(() =>
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', { get: () => Object.assign(new EventTarget(), { state: 'installing' }) }),
+  );
+  await page.locator('#brand-btn').click();
+  await page.locator('#about-update').click();
+  await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
+  await Promise.all([page.waitForEvent('load'), takeOver(page)]);
+  await expect(page.locator('#panel-about')).toBeVisible();
+  await expect(page.locator('#toast-text')).toHaveText('App atualizado');
 });

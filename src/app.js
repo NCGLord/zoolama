@@ -15,7 +15,7 @@ import { renderCart } from './ui/cart-view.js';
 import { renderHistory, reloadTrips, undoFinish, undoDeleteTrip, undoImport } from './ui/history-view.js';
 import { renderOptions } from './ui/compare-view.js';
 import { renderTab, renderTheme } from './ui/shell.js';
-import { renderInstall, registerServiceWorker } from './ui/pwa.js';
+import { renderInstall, registerServiceWorker, resumeAfterUpdate } from './ui/pwa.js';
 import { openMagnifier } from './ui/magnifier-ui.js';
 import './ui/about-screen.js';
 import { renderAbout } from './ui/about-view.js';
@@ -85,6 +85,7 @@ if (location.search) window.history.replaceState(null, '', location.pathname);
 
 // First, so a view that throws while being drawn below can't also stop the updates that would bring its fix.
 registerServiceWorker();
+resumeAfterUpdate(); // before the tabs are drawn: an update asked for in About reopens there
 
 applyLang();
 renderTheme();
