@@ -38,6 +38,33 @@ $('install').addEventListener('click', () => {
   }
 });
 
+let registration = null;
+let lastCheck = 0;
+
+/** Looks for a new version now: 'found' (it downloads, then Atualizar is offered), 'latest', 'offline' or 'unavailable'. */
+async function checkForUpdate() {
+  if (!registration) return 'unavailable'; // no service worker (e.g. private mode), or not registered yet
+  try {
+    await registration.update();
+  } catch {
+    return 'offline';
+  }
+  lastCheck = Date.now();
+  return registration.installing || registration.waiting ? 'found' : 'latest';
+}
+
+/** The version the running service worker was built as (sw.js VERSION), or null where none answers. */
+function appVersion() {
+  const worker = navigator.serviceWorker?.controller;
+  if (!worker) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const { port1, port2 } = new MessageChannel();
+    port1.onmessage = (e) => resolve(typeof e.data === 'string' ? e.data : null);
+    worker.postMessage('version', [port2]);
+    setTimeout(() => resolve(null), 2000); // a worker from before it was asked this never answers
+  });
+}
+
 /** Registers the service worker, looks for a new version while in front, and offers a reload once one takes over. */
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
@@ -46,8 +73,9 @@ function registerServiceWorker() {
   const firstInstall = !controlled;
 
   sw.register('./sw.js')
-    .then((registration) => {
-      let lastCheck = Date.now(); // registering has just checked
+    .then((registered) => {
+      registration = registered;
+      lastCheck = Date.now(); // registering has just checked
       // On coming to the front, and once a minute while there; only in the background does it never look.
       const check = () => {
         if (document.visibilityState !== 'visible' || !dueForUpdateCheck(Date.now(), lastCheck)) return;
@@ -69,4 +97,4 @@ function registerServiceWorker() {
   });
 }
 
-export { renderInstall, registerServiceWorker };
+export { renderInstall, registerServiceWorker, checkForUpdate, appVersion };

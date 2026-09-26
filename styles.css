@@ -2085,6 +2085,24 @@ button.line-each {
   margin: 0;
 }
 
+.about-version {
+  margin: 0;
+  font: 600 15px/1.4 ui-monospace, 'Roboto Mono', monospace;
+}
+
+.about-update {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+.about-update-result {
+  margin: 0;
+  color: var(--muted);
+}
+
 .about-links {
   margin: 0;
   padding: 0;
