@@ -82,8 +82,8 @@ Launch it from the home-screen icon. It works in airplane mode from then on. On 
 shortcuts: *Comparar preços* opens Compare, *Conferir no caixa* opens the cart ready to check at the till, and *Lupa*
 opens the magnifier.
 
-**Updates:** the app checks for a new version when you open it, and again when you bring it back to the front
-(at most every 30 minutes). A new version downloads in the background; when it's ready you see
+**Updates:** the app checks for a new version when you open it, every 7 minutes while it's open, and when you bring it
+back to the front after 7 minutes or more. A new version downloads in the background; when it's ready you see
 *Nova versão disponível · Atualizar*. Tap it to switch now, or keep shopping and get it on the next launch.
 
 ## Develop

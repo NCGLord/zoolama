@@ -1,7 +1,7 @@
 // Living on the home screen: the Install button, and the service worker that keeps the app offline and up to date.
 
 import { installMode, isIOS } from '../install.js';
-import { dueForUpdateCheck } from '../update.js';
+import { UPDATE_POLL_MS, dueForUpdateCheck } from '../update.js';
 import { $ } from './dom.js';
 import { offerUpdate, showToast } from './toast.js';
 
@@ -38,7 +38,7 @@ $('install').addEventListener('click', () => {
   }
 });
 
-/** Registers the service worker, looks for a new version on resume, and offers a reload once one takes over. */
+/** Registers the service worker, looks for a new version while in front, and offers a reload once one takes over. */
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   const sw = navigator.serviceWorker;
@@ -48,11 +48,14 @@ function registerServiceWorker() {
   sw.register('./sw.js')
     .then((registration) => {
       let lastCheck = Date.now(); // registering has just checked
-      document.addEventListener('visibilitychange', () => {
+      // On coming to the front, and once a minute while there; only in the background does it never look.
+      const check = () => {
         if (document.visibilityState !== 'visible' || !dueForUpdateCheck(Date.now(), lastCheck)) return;
         lastCheck = Date.now();
-        registration.update().catch(() => {}); // offline: the next foregrounding tries again
-      });
+        registration.update().catch(() => {}); // offline: the next check tries again
+      };
+      document.addEventListener('visibilitychange', check);
+      setInterval(check, UPDATE_POLL_MS);
       return sw.ready;
     })
     .then(() => firstInstall && showToast('offlineReady'))

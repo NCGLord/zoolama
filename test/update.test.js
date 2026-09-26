@@ -1,9 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { UPDATE_CHECK_MS, dueForUpdateCheck } from '../src/update.js';
+import { UPDATE_CHECK_MS, UPDATE_POLL_MS, dueForUpdateCheck } from '../src/update.js';
 
-test('the app re-checks for a new version at most every 30 minutes', () => {
-  assert.equal(UPDATE_CHECK_MS, 30 * 60 * 1000);
+test('the app checks for a new version every 7 minutes', () => {
+  assert.equal(UPDATE_CHECK_MS, 7 * 60 * 1000);
+});
+
+test('while open, it looks every minute whether a check is due, so none waits much past 7 minutes', () => {
+  assert.equal(UPDATE_POLL_MS, 60 * 1000);
+  assert.ok(UPDATE_POLL_MS < UPDATE_CHECK_MS);
 });
 
 test('a check is not due before the interval has passed', () => {
