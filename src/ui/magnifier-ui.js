@@ -3,7 +3,7 @@
 // (Fechar, Esc, the back gesture) or leaving the app turns it off, and coming back turns it on at the same zoom.
 
 import { formatZoom } from '../i18n.js';
-import { clampZoom, hasTorch, pinchZoom, zoomRange } from '../magnifier.js';
+import { hasTorch, pinchZoom, snapToRange, zoomRange } from '../magnifier.js';
 import { state } from './app-state.js';
 import { $ } from './dom.js';
 import { tr } from './text.js';
@@ -70,7 +70,7 @@ async function applySettings() {
 }
 
 function setZoom(value) {
-  zoom = clampZoom(value, range);
+  zoom = snapToRange(value, range);
   renderZoom();
   if (range.hardware) applySettings();
 }
@@ -111,7 +111,7 @@ async function start() {
   torch = hasTorch(caps);
   torchBtn.hidden = !torch;
   setFrozen(false);
-  zoom = clampZoom(zoom, range);
+  zoom = snapToRange(zoom, range);
   renderZoom();
   applySettings();
 }

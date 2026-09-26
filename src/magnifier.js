@@ -15,7 +15,7 @@ export function zoomRange(caps) {
 }
 
 /** `value` inside the range, on its step grid counted from `min` (max always counts, even off the grid). */
-export function clampZoom(value, { min, max, step }) {
+export function snapToRange(value, { min, max, step }) {
   const inside = Math.min(max, Math.max(min, value));
   const snapped = Number((min + Math.round((inside - min) / step) * step).toFixed(6)); // toFixed: 2.5, not 2.5000000000000004
   return Math.min(max, snapped);
@@ -23,7 +23,7 @@ export function clampZoom(value, { min, max, step }) {
 
 /** The zoom after a pinch: the one it started at, scaled by how far the fingers spread since. */
 export function pinchZoom(startZoom, startGap, gap, range) {
-  return startGap > 0 ? clampZoom((startZoom * gap) / startGap, range) : startZoom;
+  return startGap > 0 ? snapToRange((startZoom * gap) / startGap, range) : startZoom;
 }
 
 /** Whether the camera has a torch: Chrome reports `torch: true`; the spec now reports a list, `[false, true]`. */

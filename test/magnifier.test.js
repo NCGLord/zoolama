@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DIGITAL_MAX, clampZoom, hasTorch, pinchZoom, zoomRange } from '../src/magnifier.js';
+import { DIGITAL_MAX, hasTorch, pinchZoom, snapToRange, zoomRange } from '../src/magnifier.js';
 
 const lens = { min: 1, max: 8, step: 0.1, hardware: true };
 
@@ -17,16 +17,16 @@ test('without camera zoom the picture is enlarged on screen instead, up to DIGIT
 });
 
 test('a zoom stays inside the range', () => {
-  assert.equal(clampZoom(0.5, lens), 1);
-  assert.equal(clampZoom(9, lens), 8);
+  assert.equal(snapToRange(0.5, lens), 1);
+  assert.equal(snapToRange(9, lens), 8);
 });
 
 test('a zoom snaps to the nearest step from the minimum, without float drift', () => {
-  assert.equal(clampZoom(2.53, lens), 2.5);
-  assert.equal(clampZoom(1 + 15 * 0.1, lens), 2.5);
-  assert.equal(clampZoom(1.3, { min: 0.5, max: 10, step: 0.5, hardware: true }), 1.5);
-  assert.equal(clampZoom(8.04, { min: 1, max: 8.05, step: 0.1, hardware: true }), 8, 'the grid below max');
-  assert.equal(clampZoom(8.05, { min: 1, max: 8.05, step: 0.1, hardware: true }), 8.05, 'max, even off the grid');
+  assert.equal(snapToRange(2.53, lens), 2.5);
+  assert.equal(snapToRange(1 + 15 * 0.1, lens), 2.5);
+  assert.equal(snapToRange(1.3, { min: 0.5, max: 10, step: 0.5, hardware: true }), 1.5);
+  assert.equal(snapToRange(8.04, { min: 1, max: 8.05, step: 0.1, hardware: true }), 8, 'the grid below max');
+  assert.equal(snapToRange(8.05, { min: 1, max: 8.05, step: 0.1, hardware: true }), 8.05, 'max, even off the grid');
 });
 
 test('pinching scales the zoom by how far the fingers spread', () => {
