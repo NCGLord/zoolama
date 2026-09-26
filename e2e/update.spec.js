@@ -86,9 +86,71 @@ test('coming back to the front counts as opening: before the next touch, a new v
   await Promise.all([page.waitForEvent('load'), takeOver(page)]);
 });
 
-test('never while an item is half-entered: the new version waits for Atualizar, and nothing is lost', async ({ app: page }) => {
+// The item being entered doesn't hold an update back: it's carried across the reload, photo and offer included.
+test('an item half-entered by weight comes back after an update puts the new version on screen', async ({ app: page }) => {
+  await page.locator('#entry .entry-mode label', { hasText: 'Peso' }).click();
+  await page.locator('#price').fill('7,99');
+  await page.locator('#weight').fill('1,250');
+  await page.locator('#name').fill('Tomate');
+  await page.locator('#name').blur(); // no longer typing, but the item isn't added yet
+  await takeOver(page);
+  await Promise.all([page.waitForEvent('load'), page.evaluate(() => window.setVisibility('hidden'))]);
+  await expect(page.locator('input[name="entry-mode"][value="weight"]')).toBeChecked();
+  await expect(page.locator('#price')).toHaveValue('7,99');
+  await expect(page.locator('#weight')).toHaveValue('1,250');
+  await expect(page.locator('#name')).toHaveValue('Tomate');
+  await expect(page.locator('#weight-preview')).toHaveText('= R$ 9,99');
+});
+
+test('an item half-entered with its quantity, offer and shelf-tag photo comes back whole', async ({ app: page }) => {
+  await page.locator('#price').fill('5,99');
+  await page.locator('#entry [data-step="1"]').click();
+  await page.locator('#entry-offer').click();
+  await page.locator('#deal-min').fill('6');
+  await page.locator('#deal-each').fill('4,99');
+  await page.locator('#line-form button[type="submit"]').click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: 'Fotografar a etiqueta' }).click();
+  await (await chooser).setFiles(new URL('../icons/icon-512.png', import.meta.url).pathname);
+  await expect(page.locator('#entry-photo-img')).toHaveAttribute('src', /^blob:/);
+  await takeOver(page);
+  await Promise.all([page.waitForEvent('load'), page.evaluate(() => window.setVisibility('hidden'))]);
+  await expect(page.locator('#qty')).toHaveValue('2');
+  await expect(page.locator('#entry-deal-text')).toHaveText('A partir de 6: R$ 4,99');
+  await expect(page.locator('#entry-photo-img')).toHaveAttribute('src', /^blob:/); // kept, not cleaned up as unused
+  await page.locator('#name').fill('Leite');
+  await page.locator('#entry button[type="submit"]').click();
+  await expect(page.locator('#lines .line-photo img')).toHaveAttribute('src', /^blob:/);
+});
+
+// Waiting (the app in use), a new version goes on screen with Atualizar, the toast's or About's; the item being entered
+// comes across that reload too.
+test('Atualizar puts the new version on screen and brings the half-entered item across', async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Comparar' }).click();
+  await page.getByRole('tab', { name: /^Carrinho/ }).click();
   await page.locator('#price').fill('4,29');
-  await page.locator('#price').blur(); // no longer typing, but the item isn't added yet
+  await page.locator('#name').fill('Leite');
+  await page.locator('#name').blur();
+  await takeOver(page);
+  await expect(page.locator('#toast-text')).toHaveText('Nova versão disponível');
+  await Promise.all([page.waitForEvent('load'), page.locator('#toast-action').click()]);
+  await expect(page.locator('#toast-text')).toHaveText('App atualizado');
+  await expect(page.locator('#price')).toHaveValue('4,29');
+  await expect(page.locator('#name')).toHaveValue('Leite');
+});
+
+test("About's Atualizar puts the waiting version on screen and opens back in About", async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Comparar' }).click(); // in use: a version that lands waits
+  await page.locator('#brand-btn').click();
+  await takeOver(page);
+  await expect(page.locator('#about-update-result')).toHaveText('Nova versão pronta: new000000000');
+  await Promise.all([page.waitForEvent('load'), page.locator('#about-update').click()]);
+  await expect(page.locator('#panel-about')).toBeVisible();
+  await expect(page.locator('#toast-text')).toHaveText('App atualizado');
+});
+
+test('never while a field is being typed in: the new version waits, and the typing goes on', async ({ app: page }) => {
+  await page.locator('#price').fill('4,29'); // focus stays in the field: typing
   await takeOver(page);
   await expect(page.locator('#toast-text')).toHaveText('Nova versão disponível');
   await page.evaluate(() => {

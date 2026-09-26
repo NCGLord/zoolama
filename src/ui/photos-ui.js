@@ -28,6 +28,13 @@ function renderEntryPhoto() {
   $('entry-photo').setAttribute('aria-label', tr($('entry-photo').dataset.i18nAriaLabel));
 }
 
+/** The entry's photo, back after an update's reload (see entry.js): pending again, so cleanup keeps it. */
+function restoreEntryPhoto(id) {
+  entryPhotoId = id;
+  pendingPhotos.add(id);
+  renderEntryPhoto();
+}
+
 /** The entry's photo went into the cart with its item: the cart keeps it now, and the next item starts without one. */
 function entryPhotoAdded() {
   pendingPhotos.delete(entryPhotoId);
@@ -99,4 +106,4 @@ $('viewer-remove').addEventListener('click', () => {
   showToast('photoRemoved', { action: 'undo' });
 });
 
-export { entryPhotoId, entryPhotoAdded, takePhoto, openViewer };
+export { entryPhotoId, entryPhotoAdded, restoreEntryPhoto, takePhoto, openViewer };

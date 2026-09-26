@@ -9,7 +9,7 @@ import { state } from './app-state.js';
 import { dispatchCart } from './cart-store.js';
 import { $ } from './dom.js';
 import { openOfferSheet } from './line-sheet.js';
-import { entryPhotoAdded, entryPhotoId } from './photos-ui.js';
+import { entryPhotoAdded, entryPhotoId, restoreEntryPhoto } from './photos-ui.js';
 import { memory } from './price-memory.js';
 import { tr } from './text.js';
 
@@ -166,4 +166,36 @@ function enterName(name) {
   $('price').focus();
 }
 
-export { renderEntryMode, enterName };
+/* ---------- across an update ---------- */
+
+// The item being entered is carried across the reload that puts a new version on screen (see pwa.js), so it never has
+// to hold an update back: its fields, mode, offer and shelf-tag photo.
+const DRAFT = 'zoolama:draft';
+
+function keepDraft() {
+  const fields = Object.fromEntries(['price', 'qty', 'weight', 'name'].map((id) => [id, $(id).value]));
+  try {
+    sessionStorage.setItem(DRAFT, JSON.stringify({ ...fields, mode: entryMode, deal: entryDeal, photoId: entryPhotoId }));
+  } catch {
+    // no session storage: the reload starts the form afresh
+  }
+}
+
+/** Right after an update's reload: the item that was being entered, back in the form. */
+function restoreDraft() {
+  let draft = null;
+  try {
+    draft = JSON.parse(sessionStorage.getItem(DRAFT));
+    sessionStorage.removeItem(DRAFT);
+  } catch {
+    return;
+  }
+  if (!draft) return;
+  for (const id of ['price', 'qty', 'weight', 'name']) if (typeof draft[id] === 'string') $(id).value = draft[id];
+  entryMode = draft.mode === 'weight' ? 'weight' : 'unit';
+  entryDeal = validDeal(draft.deal, Infinity); // its shape; the price is checked at Add
+  if (typeof draft.photoId === 'string' && draft.photoId) restoreEntryPhoto(draft.photoId);
+  renderEntryMode();
+}
+
+export { renderEntryMode, enterName, keepDraft, restoreDraft };

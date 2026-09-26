@@ -4,6 +4,7 @@ import { installMode, isIOS } from '../install.js';
 import { UPDATE_POLL_MS, dueForUpdateCheck, nextUpdateState, reloadsForUpdate } from '../update.js';
 import { persist, state } from './app-state.js';
 import { $, isTextField } from './dom.js';
+import { keepDraft } from './entry.js';
 import { offerUpdate, showToast } from './toast.js';
 
 let installPrompt = null;
@@ -53,17 +54,12 @@ addEventListener('pointerdown', touch, true);
 addEventListener('keydown', touch, true);
 
 /**
- * What a reload would lose: an open sheet, the photo viewer or the magnifier, a field being typed in, or an item
- * half-entered in the form (its price, name, weight or photo). Everything else is saved as it changes. The full-screen
- * About isn't among them: updates are asked for there, and it holds nothing to lose.
+ * What a reload would interrupt: an open sheet, the photo viewer or the magnifier, or a field being typed in. The rest
+ * is saved as it changes, and the item half-entered in the form is carried across (entry.js). The full-screen About
+ * isn't among them: updates are asked for there, and it holds nothing to lose.
  */
 function busy() {
-  return (
-    Boolean(document.querySelector('dialog[open]:not(#about-view)')) ||
-    isTextField(document.activeElement) ||
-    ['price', 'name', 'weight'].some((id) => $(id).value.trim() !== '') ||
-    !$('entry-photo-img').hidden
-  );
+  return Boolean(document.querySelector('dialog[open]:not(#about-view)')) || isTextField(document.activeElement);
 }
 
 /* ---------- where updates stand ---------- */
@@ -95,16 +91,29 @@ function watch(worker) {
 // About, to open back there.
 const UPDATED = 'zoolama:updated';
 
-/** Puts a version that has taken over on screen, by reloading, when nothing can be lost. Returns whether it did. */
-function applyUpdate() {
-  const visible = document.visibilityState === 'visible';
-  if (!takenOver || !reloadsForUpdate({ asked, touched, visible, busy: busy() })) return false;
+/**
+ * Reloads into the version that has taken over, the one way every update reaches the screen (by itself, or by an
+ * Atualizar): the item being entered comes across, and the new version says it's there, opening in About when `about`.
+ */
+let reloading = false; // one reload per page: leaving the page fires visibilitychange, which must not start another
+
+function reloadIntoUpdate({ about = false } = {}) {
+  if (reloading) return;
+  reloading = true;
   try {
-    sessionStorage.setItem(UPDATED, JSON.stringify({ about: asked }));
+    sessionStorage.setItem(UPDATED, JSON.stringify({ about }));
   } catch {
     // no session storage: the new version just won't say so
   }
+  keepDraft();
   location.reload();
+}
+
+/** Puts a version that has taken over on screen by itself, when nothing can be lost. Returns whether it did. */
+function applyUpdate() {
+  const visible = document.visibilityState === 'visible';
+  if (!takenOver || !reloadsForUpdate({ asked, touched, visible, busy: busy() })) return false;
+  reloadIntoUpdate({ about: asked });
   return true;
 }
 
@@ -215,4 +224,12 @@ function registerServiceWorker() {
   });
 }
 
-export { renderInstall, registerServiceWorker, resumeAfterUpdate, checkForUpdate, appVersion, onUpdateState };
+export {
+  renderInstall,
+  registerServiceWorker,
+  resumeAfterUpdate,
+  reloadIntoUpdate,
+  checkForUpdate,
+  appVersion,
+  onUpdateState,
+};

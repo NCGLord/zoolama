@@ -10,12 +10,12 @@ import { acknowledgeNotSaved, defineToastActions, dropStaleUndo, warnNotSaved } 
 import { collectPhotos } from './ui/photo-cache.js';
 import { dispatchCart, setCartRenderer } from './ui/cart-store.js';
 import { undoPlan } from './ui/plan-view.js';
-import { renderEntryMode } from './ui/entry.js';
+import { renderEntryMode, restoreDraft } from './ui/entry.js';
 import { renderCart } from './ui/cart-view.js';
 import { renderHistory, reloadTrips, undoFinish, undoDeleteTrip, undoImport } from './ui/history-view.js';
 import { renderOptions } from './ui/compare-view.js';
 import { renderTab, renderTheme } from './ui/shell.js';
-import { renderInstall, registerServiceWorker, resumeAfterUpdate } from './ui/pwa.js';
+import { reloadIntoUpdate, renderInstall, registerServiceWorker, resumeAfterUpdate } from './ui/pwa.js';
 import { openMagnifier } from './ui/magnifier-ui.js';
 import './ui/about-screen.js';
 import { renderAbout } from './ui/about-view.js';
@@ -67,7 +67,7 @@ onPricesChanged(() => {
 // cartUndo / planUndo: it needs the cart's or the list's one-level undo snapshot, which any later change drops.
 defineToastActions({
   undo: { label: 'undo', run: () => dispatchCart({ type: 'undo' }), cartUndo: true },
-  update: { label: 'update', run: () => location.reload() },
+  update: { label: 'update', run: () => reloadIntoUpdate() },
   undoFinish: { label: 'undo', run: () => undoFinish(), cartUndo: true },
   undoDelete: { label: 'undo', run: () => undoDeleteTrip() },
   undoImport: { label: 'undo', run: () => undoImport() },
@@ -93,6 +93,7 @@ renderCart();
 renderOptions();
 renderTab();
 renderEntryMode();
+restoreDraft(); // after an update's reload, the item being entered; before collectPhotos, which keeps its photo
 renderHistory();
 renderInstall();
 collectPhotos();

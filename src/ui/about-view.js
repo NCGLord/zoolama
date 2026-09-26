@@ -6,7 +6,7 @@
 import { formatBytes } from '../i18n.js';
 import { state } from './app-state.js';
 import { $ } from './dom.js';
-import { appVersion, checkForUpdate, onUpdateState } from './pwa.js';
+import { appVersion, checkForUpdate, onUpdateState, reloadIntoUpdate } from './pwa.js';
 import { shareList } from './share-sheet.js';
 import { tr } from './text.js';
 
@@ -59,7 +59,7 @@ onUpdateState(async (next) => {
 });
 
 $('about-update').addEventListener('click', () => {
-  if (updateState === 'waiting') location.reload(); // Atualizar: the waiting version goes on screen
+  if (updateState === 'waiting') reloadIntoUpdate({ about: true }); // Atualizar: the waiting version, on screen
   else checkForUpdate();
 });
 
