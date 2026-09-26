@@ -40,9 +40,14 @@ $('install').addEventListener('click', () => {
 
 let registration = null;
 let lastCheck = 0;
+let takenOver = false; // a newer version took over after this page loaded; the page runs it once reloaded (Atualizar)
 
-/** Looks for a new version now: 'found' (it downloads, then Atualizar is offered), 'latest', 'offline' or 'unavailable'. */
+/**
+ * Looks for a new version now: 'ready' (one has already taken over, and Atualizar runs it), 'found' (it downloads,
+ * then Atualizar is offered), 'latest', 'offline' or 'unavailable'.
+ */
 async function checkForUpdate() {
+  if (takenOver) return 'ready'; // opening the app often fetches it before anyone asks
   if (!registration) return 'unavailable'; // no service worker (e.g. private mode), or not registered yet
   try {
     await registration.update();
@@ -93,7 +98,10 @@ function registerServiceWorker() {
   // sw.js skips waiting and claims the page, so a new version takes over as soon as it has installed.
   // The screen still shows the old one; offer a reload rather than forcing it mid-typing.
   sw.addEventListener('controllerchange', () => {
-    if (controlled) offerUpdate();
+    if (controlled) {
+      takenOver = true;
+      offerUpdate();
+    }
     controlled = true; // the first claim after a fresh install is not an update
   });
 }

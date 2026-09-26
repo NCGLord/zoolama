@@ -33,7 +33,13 @@ navigator.serviceWorker?.addEventListener('controllerchange', () => {
   if ($('about-version').hidden) renderVersion();
 });
 
-const RESULT = { found: 'updateFound', latest: 'updateLatest', offline: 'updateOffline', unavailable: 'updateUnavailable' };
+const RESULT = {
+  ready: 'updatePending',
+  found: 'updateFound',
+  latest: 'updateLatest',
+  offline: 'updateOffline',
+  unavailable: 'updateUnavailable',
+};
 
 /** The check's outcome, kept as a data-i18n key so a language switch translates it too. */
 function showResult(key) {
