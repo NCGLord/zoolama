@@ -71,3 +71,31 @@ test('About says your data stays on this phone, and how much space zoolama takes
   await page.getByRole('button', { name: 'English' }).click();
   await expect(page.locator('#about-storage')).toHaveText(/^Using \d+(\.\d)? (kB|MB|GB) on this phone\.$/);
 });
+
+test.describe('sharing zoolama', () => {
+  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
+
+  const appLink = (page) => new URL('./', page.url()).href;
+
+  test("goes through the phone's share sheet, with the app's link", async ({ app: page }) => {
+    await page.evaluate(() => {
+      navigator.share = async (data) => {
+        window.shared = data;
+      };
+    });
+    await page.getByRole('tab', { name: 'Sobre' }).click();
+    await page.getByRole('button', { name: 'Compartilhar o Zoolama' }).click();
+    await expect.poll(() => page.evaluate(() => window.shared?.text)).toBe(
+      `Zoolama: ajudante de supermercado que funciona offline. ${appLink(page)}`,
+    );
+  });
+
+  test('copies the link where there is no share sheet', async ({ app: page }) => {
+    await page.getByRole('tab', { name: 'Sobre' }).click();
+    await page.getByRole('button', { name: 'Compartilhar o Zoolama' }).click();
+    await expect(page.locator('#toast-text')).toHaveText('Link copiado');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      `Zoolama: ajudante de supermercado que funciona offline. ${appLink(page)}`,
+    );
+  });
+});

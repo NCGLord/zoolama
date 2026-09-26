@@ -2123,6 +2123,10 @@ button.line-each {
   text-underline-offset: 3px;
 }
 
+.about-share {
+  margin-top: 8px;
+}
+
 .compare-actions {
   display: flex;
   gap: 12px;

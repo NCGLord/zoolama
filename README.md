@@ -55,8 +55,9 @@ Offline supermarket helper for your phone:
   tap **×** and the size (*12×350* ml): the card shows what it adds up to (*= 4,2 L*). Tap **Add to cart** on the
   winner; a pack goes in named the way it prints (*12 × 350 ml*).
 - **About (Sobre)**: the fourth tab says what zoolama is, that what you enter stays on this phone (and how much space
-  it takes there), the version this phone runs (*Procurar atualização* checks for
-  a newer one right away), its MIT licence, and links to the source code, to report a problem and to e-mail the author.
+  it takes there), the version this phone runs (*Procurar atualização* checks for a newer one right away), its MIT
+  licence, and links to the source code, to report a problem and to e-mail the author. *Compartilhar o Zoolama* sends
+  the app's link through the share sheet.
 - PT/EN and light/dark toggles in the header.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and
