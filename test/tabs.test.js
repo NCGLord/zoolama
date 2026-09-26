@@ -1,6 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { rovingIndex } from '../src/tabs.js';
+import { TABS } from '../src/state.js';
+
+// The saved tab and a shortcut's ?tab= are both checked against TABS, so a tab missing from it could never be reopened.
+test('the tabs the app knows are the tab bar\'s buttons, in order', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  assert.deepEqual([...html.matchAll(/data-tab="([^"]+)"/g)].map((m) => m[1]), TABS);
+});
 
 test('arrows move to the next and previous tab, wrapping around the ends', () => {
   assert.equal(rovingIndex(0, 'ArrowRight', 3), 1);
