@@ -58,4 +58,4 @@ $('toast-action').addEventListener('click', () => {
   toastActions[action]?.run();
 });
 
-export { showToast, hideToast, offerUpdate, dropStaleUndo, defineToastActions };
+export { showToast, offerUpdate, dropStaleUndo, defineToastActions };
