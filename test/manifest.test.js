@@ -29,12 +29,30 @@ test('index.html links the manifest and the iOS home-screen icon, and they exist
 });
 
 // Chrome paints an installed app's Android navigation bar in the manifest theme_color, fixed at install, and reads no
-// dark-mode alternative. A light one gave a near-white bar that One UI, in dark mode, drew light buttons on: all but
-// invisible. The dark theme's page colour gives a dark bar with light buttons, legible in both themes; the status bar
-// still follows the app's theme through the page's theme-color metas.
-test('the manifest theme colour is the dark theme\'s, so the Android navigation bar is dark with light buttons', () => {
-  const dark = html.match(/<meta name="theme-color" content="(#[0-9a-f]{6})" media="\(prefers-color-scheme: dark\)"/)[1];
-  assert.equal(manifest.theme_color, dark);
+// dark-mode alternative from the manifest. It asks Android for light buttons only when white on that colour reaches a
+// 3:1 WCAG contrast (ColorUtils.shouldUseLightForegroundOnBackground in Chromium); below that it asks for dark ones,
+// which One UI in dark mode ignores, drawing light buttons anyway. A light theme_color (#f4faef, until 2026-09-25) so
+// gave Samsung M51/M52 phones a near-white bar with near-invisible controls. White must reach 3:1 on the bar: then
+// Chrome asks for light buttons, and One UI's light ones stay visible too. The status bar is unaffected: it follows
+// the app's theme through the page's theme-color metas.
+const channel = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+const luminance = (hex) => {
+  const [r, g, b] = [1, 3, 5].map((i) => channel(parseInt(hex.slice(i, i + 2), 16) / 255));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+/** Chromium's rule, as in ColorUtils.getContrastForColor: the WCAG contrast of white on the colour is 3 or more. */
+const chromeUsesLightButtons = (hex) => 1.05 / (luminance(hex) + 0.05) >= 3;
+
+test('the rule behind the navigation bar test is Chrome\'s: light buttons on dark colours, dark ones on light', () => {
+  assert.equal(chromeUsesLightButtons('#0e1a11'), true);
+  assert.equal(chromeUsesLightButtons('#f4faef'), false, 'the old theme_color: dark buttons, which One UI overrides');
+  assert.equal(chromeUsesLightButtons('#237a3c'), true, 'the lettuce green would do too');
+  assert.equal(chromeUsesLightButtons('#ffcf33'), false, 'the mango tag would not');
+});
+
+test('the manifest theme colour is dark enough for light navigation-bar buttons, which Samsung phones need', () => {
+  assert.match(manifest.theme_color ?? '', /^#[0-9a-f]{6}$/i, 'a theme_color Chrome can paint the bar with');
+  assert.ok(chromeUsesLightButtons(manifest.theme_color), `${manifest.theme_color}: white on it is under 3:1`);
 });
 
 test('every manifest shortcut opens something the app knows, inside its scope', () => {
