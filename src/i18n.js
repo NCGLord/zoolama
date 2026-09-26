@@ -59,6 +59,7 @@ export const STRINGS = {
     magnifier: 'Lupa',
     zoom: 'Zoom',
     torch: 'Lanterna',
+    exposure: 'Exposição',
     freeze: 'Congelar',
     cameraDenied: 'Permita a câmera nas configurações do navegador para usar a lupa.',
     cameraUnavailable: 'Não foi possível abrir a câmera.',
@@ -221,6 +222,7 @@ export const STRINGS = {
     magnifier: 'Magnifier',
     zoom: 'Zoom',
     torch: 'Torch',
+    exposure: 'Exposure',
     freeze: 'Freeze',
     cameraDenied: 'Allow the camera in your browser settings to use the magnifier.',
     cameraUnavailable: "Couldn't open the camera.",
@@ -354,4 +356,11 @@ export function formatKg(grams, lang) {
 export function formatZoom(zoom, lang) {
   const x = new Intl.NumberFormat(LOCALES[lang], { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(zoom);
   return `${x}×`;
+}
+
+/** An exposure bias in EV, signed and with one decimal, the way camera apps show it: +0,7 or −1,0. */
+export function formatExposure(ev, lang) {
+  const rounded = Math.round(ev * 10) / 10;
+  const x = new Intl.NumberFormat(LOCALES[lang], { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.abs(rounded));
+  return `${rounded > 0 ? '+' : rounded < 0 ? '−' : ''}${x}`;
 }

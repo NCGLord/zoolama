@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DIGITAL_MAX, hasTorch, pinchZoom, snapToRange, zoomRange } from '../src/magnifier.js';
+import { DIGITAL_MAX, exposureRange, hasTorch, pinchZoom, snapToRange, zoomRange } from '../src/magnifier.js';
 
 const lens = { min: 1, max: 8, step: 0.1, hardware: true };
 
@@ -43,4 +43,21 @@ test("a torch counts in Chrome's form (true) and in the spec's list form ([false
   assert.equal(hasTorch({ torch: [false] }), false, 'the list form of "no torch"');
   assert.equal(hasTorch({}), false);
   assert.equal(hasTorch(undefined), false);
+});
+
+const thirds = { min: -2, max: 2, step: 1 / 3 }; // Android's exposure steps are often a third of an EV
+
+test("exposure uses the camera's own range, and there is none where the camera can't adjust it", () => {
+  assert.deepEqual(exposureRange({ exposureCompensation: { min: -2, max: 2, step: 1 / 3 } }), thirds);
+  assert.deepEqual(exposureRange({ exposureCompensation: { min: -2, max: 2, step: 0 } }), { min: -2, max: 2, step: 0.1 });
+  assert.equal(exposureRange({ exposureCompensation: { min: 0, max: 0, step: 0 } }), null);
+  assert.equal(exposureRange({}), null);
+  assert.equal(exposureRange(undefined), null);
+});
+
+test('exposure snaps to the camera steps', () => {
+  assert.equal(snapToRange(0, thirds), 0);
+  assert.equal(snapToRange(1, thirds), 1);
+  assert.equal(snapToRange(0.4, thirds), 0.333333);
+  assert.equal(snapToRange(-5, thirds), -2);
 });

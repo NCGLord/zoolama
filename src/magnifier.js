@@ -31,3 +31,12 @@ export function hasTorch(caps) {
   const torch = caps?.torch;
   return torch === true || (Array.isArray(torch) && torch.includes(true));
 }
+
+/**
+ * The camera's exposure compensation range in EV (Chrome on Android: its auto exposure, biased brighter or darker), or
+ * null where it can't be adjusted. Nothing on screen stands in for it: brightening pixels can't recover a glare.
+ */
+export function exposureRange(caps) {
+  const ev = caps?.exposureCompensation;
+  return ev && ev.max > ev.min ? { min: ev.min, max: ev.max, step: ev.step > 0 ? ev.step : DEFAULT_STEP } : null;
+}

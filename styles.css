@@ -365,8 +365,9 @@ button {
   font-weight: 600;
 }
 
-/* Flex, not grid: the torch is hidden on a camera without one, and the slider takes whatever room is left. */
-.magnifier-zoom {
+/* The exposure and zoom rows. Flex, not grid: the torch is hidden on a camera without one, and the slider takes
+   whatever room is left. */
+.magnifier-row {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -376,7 +377,19 @@ button {
   flex: none;
 }
 
-.magnifier-zoom input {
+/* The sun beside the exposure slider marks it; it sits in the torch's 44px column, so the sliders line up. */
+.magnifier-mark {
+  flex: none;
+  width: 44px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  color: var(--muted);
+}
+
+.magnifier-row input {
   flex: 1;
   min-width: 0;
   min-height: 44px;
@@ -384,7 +397,7 @@ button {
   accent-color: var(--primary);
 }
 
-.magnifier-zoom output {
+.magnifier-row output {
   flex: none;
   min-width: 4ch;
   font: 700 22px/1 var(--num);

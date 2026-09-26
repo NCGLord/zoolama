@@ -3,7 +3,7 @@ import { test as base, expect } from './fixtures.js';
 // Chromium's fake camera stands in for the phone's. What it reports it can do (zoom, torch) varies by version, so
 // getCapabilities is replaced with what each test says the camera offers; getUserMedia and applyConstraints are
 // wrapped to record every stream opened and every constraint applied.
-function fakeCamera({ zoom, torch, deny, none }) {
+function fakeCamera({ zoom, torch, exposure, deny, none }) {
   if (none) {
     Object.defineProperty(navigator, 'mediaDevices', { value: undefined });
     return;
@@ -19,8 +19,13 @@ function fakeCamera({ zoom, torch, deny, none }) {
   };
   const { getCapabilities, applyConstraints } = MediaStreamTrack.prototype;
   MediaStreamTrack.prototype.getCapabilities = function () {
-    const { zoom: _z, torch: _t, ...caps } = getCapabilities.call(this);
-    return { ...caps, ...(zoom ? { zoom: { min: 1, max: 8, step: 0.1 } } : {}), ...(torch ? { torch: true } : {}) };
+    const { zoom: _z, torch: _t, exposureCompensation: _e, ...caps } = getCapabilities.call(this);
+    return {
+      ...caps,
+      ...(zoom ? { zoom: { min: 1, max: 8, step: 0.1 } } : {}),
+      ...(torch ? { torch: true } : {}),
+      ...(exposure ? { exposureCompensation: { min: -2, max: 2, step: 1 / 3 } } : {}),
+    };
   };
   MediaStreamTrack.prototype.applyConstraints = function (constraints) {
     window.cameraLog.applied.push(constraints);
@@ -36,7 +41,7 @@ function fakeCamera({ zoom, torch, deny, none }) {
 }
 
 const test = base.extend({
-  camera: [{ zoom: true, torch: false, deny: false, none: false }, { option: true }],
+  camera: [{ zoom: true, torch: false, exposure: false, deny: false, none: false }, { option: true }],
   page: async ({ page, camera }, use) => {
     await page.addInitScript(fakeCamera, camera);
     await use(page);
@@ -88,11 +93,58 @@ test('spreading two fingers on the picture zooms in', async ({ app: page }) => {
   await expect.poll(async () => (await zoomsApplied(page)).at(-1)).toBe(2);
 });
 
-test('a camera without a torch shows no torch button', async ({ app: page }) => {
+test('a camera without a torch or exposure control shows neither', async ({ app: page }) => {
   await openMagnifier(page);
   await expect.poll(() => playing(page)).toBe(true);
   await expect(page.getByRole('slider', { name: 'Zoom' })).toBeEnabled();
   await expect(page.locator('#magnifier-torch')).toBeHidden();
+  await expect(page.locator('#magnifier-exposure')).toBeHidden();
+});
+
+test.describe('on a camera with exposure control', () => {
+  test.use({ camera: { zoom: true, exposure: true } });
+
+  const exposureSlider = (page) => page.getByRole('slider', { name: 'Exposição' });
+  const lastApplied = async (page) => (await log(page)).applied.at(-1).advanced[0];
+
+  test('exposure brightens or darkens the picture, above the zoom, and goes to the camera with it', async ({ app: page }) => {
+    await openMagnifier(page);
+    const slider = exposureSlider(page);
+    await expect(slider).toBeEnabled();
+    await expect(page.locator('#magnifier-exposure-level')).toHaveText('0,0');
+    const [ev, zoom] = [await slider.boundingBox(), await page.getByRole('slider', { name: 'Zoom' }).boundingBox()];
+    expect(ev.y).toBeLessThan(zoom.y);
+
+    await page.getByRole('slider', { name: 'Zoom' }).fill('2');
+    await slider.fill('1');
+    await expect(page.locator('#magnifier-exposure-level')).toHaveText('+1,0');
+    await expect(slider).toHaveAttribute('aria-valuetext', '+1,0');
+    await expect.poll(() => lastApplied(page)).toMatchObject({ exposureCompensation: 1, zoom: 2 });
+    await slider.fill('-2');
+    await expect(page.locator('#magnifier-exposure-level')).toHaveText('−2,0');
+    await expect.poll(() => lastApplied(page)).toMatchObject({ exposureCompensation: -2, zoom: 2 });
+  });
+
+  test('exposure starts at 0 on each opening, keeps its value on coming back, and waits while frozen', async ({ app: page }) => {
+    await openMagnifier(page);
+    const slider = exposureSlider(page);
+    await slider.fill('1');
+    await page.evaluate(() => window.setVisibility('hidden'));
+    await page.evaluate(() => window.setVisibility('visible'));
+    await expect.poll(() => liveTracks(page)).toBe(1);
+    await expect(page.locator('#magnifier-exposure-level')).toHaveText('+1,0');
+    await expect.poll(() => lastApplied(page)).toMatchObject({ exposureCompensation: 1 });
+
+    await page.getByRole('button', { name: 'Congelar' }).click();
+    await expect(slider).toBeDisabled();
+    await page.getByRole('button', { name: 'Congelar' }).click();
+    await expect(slider).toBeEnabled();
+
+    await page.getByRole('button', { name: 'Fechar' }).click();
+    await openMagnifier(page);
+    await expect(slider).toBeEnabled();
+    await expect(page.locator('#magnifier-exposure-level')).toHaveText('0,0');
+  });
 });
 
 test.describe('on a camera with a torch', () => {

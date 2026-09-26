@@ -1,9 +1,10 @@
 // The magnifier (lupa): the back camera, live and full screen, for reading small print such as a best-before date.
 // Nothing is recorded or kept. The camera runs only while the magnifier is open and the app is in front: closing it
-// (Fechar, Esc, the back gesture) or leaving the app turns it off, and coming back turns it on at the same zoom.
+// (Fechar, Esc, the back gesture) or leaving the app turns it off, and coming back turns it on at the same zoom and
+// exposure.
 
-import { formatZoom } from '../i18n.js';
-import { hasTorch, pinchZoom, snapToRange, zoomRange } from '../magnifier.js';
+import { formatExposure, formatZoom } from '../i18n.js';
+import { exposureRange, hasTorch, pinchZoom, snapToRange, zoomRange } from '../magnifier.js';
 import { state } from './app-state.js';
 import { $ } from './dom.js';
 import { tr } from './text.js';
@@ -11,6 +12,7 @@ import { tr } from './text.js';
 const dialog = $('magnifier');
 const video = $('magnifier-video');
 const slider = $('magnifier-zoom');
+const evSlider = $('magnifier-exposure');
 const torchBtn = $('magnifier-torch');
 const freezeBtn = $('magnifier-freeze');
 
@@ -26,6 +28,8 @@ let torchOn = false;
 let frozen = false;
 let range = zoomRange();
 let zoom = 1;
+let evRange = null; // the camera's exposure range, or null where it can't be adjusted
+let ev = 0;
 let session = 0; // bumped by every start and stop, so a camera that opens after the magnifier closed is shut at once
 
 $('magnifier-btn').hidden = !navigator.mediaDevices?.getUserMedia;
@@ -44,6 +48,15 @@ function renderZoom() {
   else video.style.setProperty('--zoom', zoom); // through the CSSOM: the CSP forbids style attributes
 }
 
+function renderExposure() {
+  $('magnifier-exposure-row').hidden = !evRange;
+  if (!evRange) return;
+  Object.assign(evSlider, { min: evRange.min, max: evRange.max, step: evRange.step, value: ev });
+  const label = formatExposure(ev, state.lang);
+  $('magnifier-exposure-level').textContent = label;
+  evSlider.setAttribute('aria-valuetext', label);
+}
+
 /* ---------- camera settings ---------- */
 
 // applyConstraints is async and a pinch asks for a new zoom every frame, so the camera gets one change at a time:
@@ -56,6 +69,7 @@ const settings = () => ({
   ...(focus ? { focusMode: 'continuous' } : {}),
   ...(range.hardware ? { zoom } : {}),
   ...(torch ? { torch: torchOn } : {}),
+  ...(evRange ? { exposureCompensation: ev } : {}),
 });
 
 async function applySettings() {
@@ -75,15 +89,21 @@ function setZoom(value) {
   if (range.hardware) applySettings();
 }
 
+function setExposure(value) {
+  ev = snapToRange(value, evRange);
+  renderExposure();
+  applySettings();
+}
+
 /* ---------- camera on and off ---------- */
 
-// Freezing holds the last frame still, to read it without the shake that high zoom magnifies. Zoom waits meanwhile:
-// on a camera that zooms, it would change nothing on screen until the picture moves again.
+// Freezing holds the last frame still, to read it without the shake that high zoom magnifies. Zoom and exposure wait
+// meanwhile: on the camera, they would change nothing on screen until the picture moves again.
 function setFrozen(on) {
   frozen = on;
   freezeBtn.setAttribute('aria-pressed', String(on));
   freezeBtn.disabled = !stream;
-  slider.disabled = on || !stream;
+  slider.disabled = evSlider.disabled = on || !stream;
   if (on) video.pause();
   else if (stream) video.play().catch(() => {});
 }
@@ -110,9 +130,12 @@ async function start() {
   focus = Boolean(caps.focusMode?.includes('continuous'));
   torch = hasTorch(caps);
   torchBtn.hidden = !torch;
+  evRange = exposureRange(caps);
+  ev = evRange ? snapToRange(ev, evRange) : 0;
   setFrozen(false);
   zoom = snapToRange(zoom, range);
   renderZoom();
+  renderExposure();
   applySettings();
 }
 
@@ -131,6 +154,9 @@ function openMagnifier() {
   torchOn = false; // each opening starts with the torch off; leaving the app and coming back keeps it as it was
   torchBtn.setAttribute('aria-pressed', 'false');
   torchBtn.hidden = true; // until the camera says it has one
+  ev = 0; // likewise exposure, which starts at the camera's own judgement
+  evRange = null;
+  renderExposure();
   dialog.showModal();
   start();
 }
@@ -155,6 +181,7 @@ torchBtn.addEventListener('click', () => {
 /* ---------- zooming ---------- */
 
 slider.addEventListener('input', () => setZoom(Number(slider.value)));
+evSlider.addEventListener('input', () => setExposure(Number(evSlider.value)));
 
 // Two fingers on the picture zoom it by how far they spread, like any camera app.
 const view = $('magnifier-view');

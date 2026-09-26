@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { STRINGS, LOCALES, t, detectLang, formatPct, formatKg, formatZoom } from '../src/i18n.js';
+import { STRINGS, LOCALES, t, detectLang, formatPct, formatExposure, formatKg, formatZoom } from '../src/i18n.js';
 
 const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
@@ -63,6 +63,15 @@ test('formatZoom shows a magnification with one decimal in the language format',
   assert.equal(formatZoom(2.5, 'en'), '2.5×');
   assert.equal(formatZoom(1, 'pt'), '1,0×');
   assert.equal(formatZoom(3.26, 'pt'), '3,3×');
+});
+
+test('formatExposure shows EV signed, with one decimal, the way camera apps do', () => {
+  assert.equal(formatExposure(2 / 3, 'pt'), '+0,7');
+  assert.equal(formatExposure(-1, 'pt'), '−1,0');
+  assert.equal(formatExposure(0, 'pt'), '0,0');
+  assert.equal(formatExposure(0.02, 'pt'), '0,0', 'no sign on what rounds to zero');
+  assert.equal(formatExposure(-0.02, 'pt'), '0,0', 'nor on a tiny negative, which rounds to -0');
+  assert.equal(formatExposure(2 / 3, 'en'), '+0.7');
 });
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');

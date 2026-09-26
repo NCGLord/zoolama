@@ -28,7 +28,8 @@ Offline supermarket helper for your phone:
   camera. Hold the phone back where it can focus and zoom in with the slider or two fingers: the camera's own zoom where
   the phone offers it (Chrome on Android), otherwise the picture is enlarged on screen, up to 4×. *Congelar* holds the
   picture still, so a shaky hand doesn't get in the way, and where the phone has a torch, the torch button beside the
-  zoom lights up the print. Nothing is recorded, and the camera turns off when you close the magnifier or leave the app.
+  zoom lights up the print. Where the camera allows it, the ☀ slider above the zoom brightens a dim shelf or tames the
+  torch's glare on a shiny pack. Nothing is recorded, and the camera turns off when you close the magnifier or leave the app.
 - **Checkout (Conferir no caixa)**: at the till, tick each item as it's scanned. If the till charges a different
   amount for a line, tap ≠ and type it: the app shows the difference, the total overcharge (and the lower-price
   rule), and anything charged in your favour. Or type the receipt's total under the list (*Total do cupom*): the app
