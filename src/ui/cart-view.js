@@ -262,11 +262,13 @@ $('lines').addEventListener('click', (e) => {
   }
 });
 
-// Renaming saves without re-rendering, so the list never swaps inputs under the user's finger.
+// Renaming saves without re-rendering, so the list never swaps inputs under the user's finger. The shopping list
+// above it goes by name, so that one is redrawn.
 $('lines').addEventListener('change', (e) => {
   if (e.target.dataset.action !== 'rename') return;
   const id = Number(e.target.closest('[data-id]').dataset.id);
   setCart(cartReducer(state.cart, { type: 'rename', id, name: e.target.value }));
+  renderPlan();
 });
 
 $('lines').addEventListener('keydown', (e) => {

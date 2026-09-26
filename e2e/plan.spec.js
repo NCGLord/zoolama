@@ -51,6 +51,21 @@ test('Comprar de novo lists a past trip\'s items, and a tap on one starts enteri
   await expect(page.locator('#toast-text')).toHaveText('Esses itens já estão na lista');
 });
 
+test('renaming a cart line strikes a listed item off, or puts it back', async ({ page }) => {
+  await addItem(page, { price: '4,29', name: 'Leit' });
+  await expect(page.locator('#plan-progress')).toHaveText('0 de 3');
+
+  const name = line(page, 'Leit').locator('.line-name');
+  await name.fill('Leite');
+  await name.press('Enter');
+  await expect(page.locator('#plan-progress')).toHaveText('1 de 3');
+  await expect(page.locator('#plan-items .bought')).toHaveText('Leite');
+
+  await name.fill('Pão');
+  await name.press('Enter');
+  await expect(page.locator('#plan-progress')).toHaveText('0 de 3');
+});
+
 test('finishing a trip takes off what it bought and keeps the rest; Undo brings it all back', async ({ page }) => {
   await addItem(page, { price: '4,29', name: 'leite' });
   await page.getByRole('button', { name: 'Finalizar compra' }).click();
