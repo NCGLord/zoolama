@@ -57,7 +57,7 @@ Offline supermarket helper for your phone:
 - **About (Sobre)**: the fourth tab says what zoolama is, that what you enter stays on this phone (and how much space
   it takes there), the version this phone runs (*Procurar atualização* checks for a newer one right away), its MIT
   licence, and links to the source code, to report a problem and to e-mail the author. *Compartilhar o Zoolama* sends
-  the app's link through the share sheet.
+  the app's link through the share sheet. Tapping the logo opens the same page full screen.
 - PT/EN and light/dark toggles in the header.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and
@@ -67,9 +67,9 @@ app's own files run.
 **Look:** the *Feira* theme (a hortifruti stall: lettuce-green actions, a mango total tag, tomato for warnings), in
 light and dark, plus small moments of joy. The total counts up, finishing a trip within budget throws little
 price tags, checkout ticks snap (with a haptic tick on Android), the cheapest option in Compare flips like a
-shelf tag, past trips look like torn receipts, and tapping the logo lifts it off the header into the middle of the
-screen, to see the llama and its price tag up close. All motion switches off when the phone asks for reduced motion,
-and `test/contrast.test.js` keeps every text colour readable in both themes.
+shelf tag, past trips look like torn receipts, and tapping the logo lifts it off the header into the About page, full
+screen, with the llama and its price tag large. All motion switches off when the phone asks for reduced motion, and
+`test/contrast.test.js` keeps every text colour readable in both themes.
 
 **App:** <https://ncglord.github.io/zoolama/>
 
@@ -135,7 +135,7 @@ font's real letter outlines and needs `pip install fonttools brotli`. Run `npm r
 | `src/money.js`, `units.js`, `compare.js`, `cart.js`, `budget.js`, `history.js`, `share.js`, `store.js`, `i18n.js`, `theme.js`, `install.js`, `update.js`, `delight.js`, `magnifier.js` | Pure logic, unit-tested |
 | `src/photos.js` | Shelf-tag photos: shrinks them on a canvas and keeps them in IndexedDB; its pure helpers are unit-tested |
 | `src/app.js` | Entry point: wires the views together and boots them |
-| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `photo-cache`, `cart-store` (every cart change), `share-sheet`, `photos-ui`, `entry`, `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker), `magnifier-ui`, `logo-view`, `about-view` |
+| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `photo-cache`, `cart-store` (every cart change), `share-sheet`, `photos-ui`, `entry`, `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker), `magnifier-ui`, `about-view`, `about-screen` (About full screen, from the logo) |
 | `sw.js` | Service worker: atomic precache, cache-first |
 | `test/` | Unit tests (`node --test`) |
 | `e2e/`, `playwright.config.js` | Browser tests (`npm run e2e`) |

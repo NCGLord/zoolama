@@ -153,9 +153,10 @@ button {
   background: none;
 }
 
-/* The logo, large: centred on the page's own colour, grown out of the header (src/ui/logo-view.js). Its transform
-   origin is the top-left corner, which the FLIP from the header's box is worked out from. */
-.logo-view {
+/* The About page full screen, opened from the header logo: the page's own colour, scrolling as one, with the logo
+   large at the top. Its content is the Sobre tab's #about-content, borrowed while open (src/ui/about-screen.js). The
+   logo's transform origin is its top-left corner, which the FLIP from the header's box is worked out from. */
+.about-view {
   width: 100%;
   max-width: none;
   height: 100%;
@@ -163,23 +164,37 @@ button {
   margin: 0;
   padding: 0;
   border: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--paper);
   color: var(--ink);
 }
 
-.logo-view[open] {
-  display: grid;
-  place-items: center;
-}
-
-.logo-view::backdrop {
+.about-view::backdrop {
   background: transparent;
 }
 
-.logo-view .wordmark {
+.about-view .about {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+.about-view .about-logo {
+  padding-top: calc(env(safe-area-inset-top) + 64px); /* clear of the ✕ */
+}
+
+.about-view .about-logo .wordmark {
   width: min(88vw, 560px);
   height: auto;
   transform-origin: 0 0;
+}
+
+/* The ✕ stays put while the page scrolls under it, on its own patch of the page colour. */
+.about-close {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 10px);
+  right: 16px;
+  z-index: 1;
+  background: var(--paper);
 }
 
 .bar-tools {
@@ -190,7 +205,8 @@ button {
 
 .theme-btn,
 .magnifier-btn,
-.magnifier-torch {
+.magnifier-torch,
+.about-close {
   display: grid;
   place-items: center;
   width: 44px;
@@ -202,7 +218,8 @@ button {
 
 .theme-btn svg,
 .magnifier-btn svg,
-.magnifier-torch svg {
+.magnifier-torch svg,
+.about-close svg {
   width: 20px;
   height: 20px;
   fill: none;

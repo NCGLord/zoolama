@@ -35,7 +35,7 @@
   <body>
     <header class="bar">
       <h1 class="brand">
-        <!-- Tapped, the logo lifts off and grows into #logo-view, to see the llama up close (src/ui/logo-view.js). -->
+        <!-- Tapped, the logo lifts off into the About page, full screen, with the llama large (src/ui/about-screen.js). -->
         <button type="button" id="brand-btn" class="brand-btn" aria-haspopup="dialog">
         <!-- wordmark:start -->
         <svg class="wordmark" viewBox="0 -20 307 122" role="img" aria-label="Zoolama">
@@ -207,38 +207,42 @@
         </div>
       </section>
 
-      <section id="panel-about" class="panel about" role="tabpanel" aria-labelledby="tab-about" hidden>
-        <!-- A copy of the header logo goes here (src/ui/about-view.js), so tools/wordmark.py stays its one source. -->
-        <div id="about-logo" class="about-logo"></div>
-        <p class="about-lede" data-i18n="aboutLede"></p>
-        <h2 data-i18n="aboutDataTitle">Seus dados</h2>
-        <p data-i18n="aboutPrivacy"></p>
-        <p id="about-storage" class="about-storage" hidden></p>
-        <h2 data-i18n="aboutVersionTitle">Versão</h2>
-        <p id="about-version" class="about-version" hidden></p>
-        <div class="about-update">
-          <button type="button" id="about-update" class="secondary" data-i18n="aboutCheckUpdate">Procurar atualização</button>
-          <p id="about-update-result" class="about-update-result" aria-live="polite"></p>
+      <section id="panel-about" class="panel" role="tabpanel" aria-labelledby="tab-about" hidden>
+        <!-- The one About content. The full-screen view from the header logo borrows it while open and gives it back
+             (src/ui/about-screen.js), so the two never drift apart. -->
+        <div id="about-content" class="about">
+          <!-- A copy of the header logo goes here (src/ui/about-view.js), so tools/wordmark.py stays its one source. -->
+          <div id="about-logo" class="about-logo"></div>
+          <p class="about-lede" data-i18n="aboutLede"></p>
+          <h2 data-i18n="aboutDataTitle">Seus dados</h2>
+          <p data-i18n="aboutPrivacy"></p>
+          <p id="about-storage" class="about-storage" hidden></p>
+          <h2 data-i18n="aboutVersionTitle">Versão</h2>
+          <p id="about-version" class="about-version" hidden></p>
+          <div class="about-update">
+            <button type="button" id="about-update" class="secondary" data-i18n="aboutCheckUpdate">Procurar atualização</button>
+            <p id="about-update-result" class="about-update-result" aria-live="polite"></p>
+          </div>
+          <h2 data-i18n="aboutLicenceTitle">Licença</h2>
+          <p data-i18n="aboutLicence"></p>
+          <ul class="about-links">
+            <li><a href="https://github.com/NCGLord/zoolama/blob/main/LICENSE" target="_blank" rel="noopener" data-i18n="aboutLicenceText">Texto da licença MIT</a></li>
+            <li>
+              <span data-i18n="aboutFont">Fonte dos preços:</span>
+              <a href="https://github.com/NCGLord/zoolama/blob/main/fonts/OFL.txt" target="_blank" rel="noopener">Barlow Condensed, SIL OFL 1.1</a>
+            </li>
+          </ul>
+          <h2 data-i18n="aboutLinksTitle">Links</h2>
+          <ul class="about-links">
+            <li><a href="https://github.com/NCGLord/zoolama" target="_blank" rel="noopener" data-i18n="aboutSource">Código-fonte no GitHub</a></li>
+            <li><a href="https://github.com/NCGLord/zoolama/issues/new" target="_blank" rel="noopener" data-i18n="aboutIssue">Relatar um problema</a></li>
+            <li><a href="mailto:nulaya@gmail.com"><span data-i18n="aboutContact">Contato</span>: nulaya@gmail.com</a></li>
+          </ul>
+          <button type="button" id="about-share" class="secondary share-btn about-share">
+            <svg class="share-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M7 11H5.5v9.5h13V11H17" /></svg>
+            <span data-i18n="aboutShare">Compartilhar o Zoolama</span>
+          </button>
         </div>
-        <h2 data-i18n="aboutLicenceTitle">Licença</h2>
-        <p data-i18n="aboutLicence"></p>
-        <ul class="about-links">
-          <li><a href="https://github.com/NCGLord/zoolama/blob/main/LICENSE" target="_blank" rel="noopener" data-i18n="aboutLicenceText">Texto da licença MIT</a></li>
-          <li>
-            <span data-i18n="aboutFont">Fonte dos preços:</span>
-            <a href="https://github.com/NCGLord/zoolama/blob/main/fonts/OFL.txt" target="_blank" rel="noopener">Barlow Condensed, SIL OFL 1.1</a>
-          </li>
-        </ul>
-        <h2 data-i18n="aboutLinksTitle">Links</h2>
-        <ul class="about-links">
-          <li><a href="https://github.com/NCGLord/zoolama" target="_blank" rel="noopener" data-i18n="aboutSource">Código-fonte no GitHub</a></li>
-          <li><a href="https://github.com/NCGLord/zoolama/issues/new" target="_blank" rel="noopener" data-i18n="aboutIssue">Relatar um problema</a></li>
-          <li><a href="mailto:nulaya@gmail.com"><span data-i18n="aboutContact">Contato</span>: nulaya@gmail.com</a></li>
-        </ul>
-        <button type="button" id="about-share" class="secondary share-btn about-share">
-          <svg class="share-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M7 11H5.5v9.5h13V11H17" /></svg>
-          <span data-i18n="aboutShare">Compartilhar o Zoolama</span>
-        </button>
       </section>
     </main>
 
@@ -296,8 +300,13 @@
       </div>
     </dialog>
 
-    <!-- Filled with a copy of the header logo when it opens, so tools/wordmark.py stays its one source. -->
-    <dialog id="logo-view" class="logo-view" aria-label="Zoolama"></dialog>
+    <!-- The About page full screen, opened from the header logo. It has no content of its own: it borrows the Sobre
+         tab's #about-content while open (src/ui/about-screen.js). -->
+    <dialog id="about-view" class="about-view" data-i18n-aria-label="tabAbout">
+      <button type="button" id="about-close" class="about-close" data-i18n-aria-label="close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
+    </dialog>
 
     <dialog id="finish-sheet" class="sheet" aria-labelledby="finish-title">
       <form id="finish-form" method="dialog" novalidate>
