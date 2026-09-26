@@ -27,8 +27,8 @@ Offline supermarket helper for your phone:
 - **Magnifier (Lupa)**: tap 🔍 in the header to read small print, such as a best-before date, through the back
   camera. Hold the phone back where it can focus and zoom in with the slider or two fingers: the camera's own zoom where
   the phone offers it (Chrome on Android), otherwise the picture is enlarged on screen, up to 4×. *Congelar* holds the
-  picture still, so a shaky hand doesn't get in the way, and where the phone has a torch, *Lanterna* lights up the
-  print. Nothing is recorded, and the camera turns off when you close the magnifier or leave the app.
+  picture still, so a shaky hand doesn't get in the way, and where the phone has a torch, the torch button beside the
+  zoom lights up the print. Nothing is recorded, and the camera turns off when you close the magnifier or leave the app.
 - **Checkout (Conferir no caixa)**: at the till, tick each item as it's scanned. If the till charges a different
   amount for a line, tap ≠ and type it: the app shows the difference, the total overcharge (and the lower-price
   rule), and anything charged in your favour. Or type the receipt's total under the list (*Total do cupom*): the app

@@ -101,6 +101,20 @@ test.describe('on a camera with a torch', () => {
   const torchesApplied = async (page) =>
     (await log(page)).applied.map((c) => c.advanced?.[0]?.torch).filter((t) => t !== undefined);
 
+  test('on a narrow phone the torch sits on the zoom row, and Congelar and Fechar share one line', async ({ app: page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await openMagnifier(page);
+    await expect(page.getByRole('slider', { name: 'Zoom' })).toBeEnabled();
+    const middle = async (locator) => {
+      const box = await locator.boundingBox();
+      return box.y + box.height / 2;
+    };
+    const torch = await middle(page.getByRole('button', { name: 'Lanterna' }));
+    expect(Math.abs(torch - (await middle(page.getByRole('slider', { name: 'Zoom' }))))).toBeLessThan(4);
+    const freeze = await middle(page.getByRole('button', { name: 'Congelar' }));
+    expect(Math.abs(freeze - (await middle(page.getByRole('button', { name: 'Fechar' }))))).toBeLessThan(4);
+  });
+
   test('the torch lights the print and goes off with the magnifier', async ({ app: page }) => {
     await openMagnifier(page);
     const torch = page.getByRole('button', { name: 'Lanterna' });
