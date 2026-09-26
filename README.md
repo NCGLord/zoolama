@@ -57,7 +57,8 @@ Offline supermarket helper for your phone:
 - **About (Sobre)**: the fourth tab says what zoolama is, that what you enter stays on this phone (and how much space
   it takes there), the version this phone runs (*Procurar atualização* checks for a newer one right away), its MIT
   licence, and links to the source code, to report a problem and to e-mail the author. *Compartilhar o Zoolama* sends
-  the app's link through the share sheet. Tapping the logo opens the same page full screen.
+  the app's link through the share sheet. Tapping the logo opens the same page full screen, with the
+  🇧🇷/🇬🇧 flags still at hand.
 - PT/EN and light/dark toggles in the header.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and

@@ -188,13 +188,22 @@ button {
   transform-origin: 0 0;
 }
 
-/* The ✕ stays put while the page scrolls under it, on its own patch of the page colour. */
-.about-close {
+/* The ✕ (top left, as Android's full-screen dialogs have it) and the header's language flags, borrowed while open
+   and pinned where they sit in the header, stay put while the page scrolls under them, on the page colour. */
+.about-close,
+.about-view .lang {
   position: fixed;
   top: calc(env(safe-area-inset-top) + 10px);
-  right: 16px;
   z-index: 1;
   background: var(--paper);
+}
+
+.about-close {
+  left: 16px;
+}
+
+.about-view .lang {
+  right: 16px;
 }
 
 .bar-tools {

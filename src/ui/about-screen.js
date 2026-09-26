@@ -1,7 +1,8 @@
 // The About page full screen, opened by tapping the header logo: the logo lifts off the header and lands, large, at
 // the top of About while the rest fades in; ✕, Esc or the back gesture send it back. There is one About content,
 // #about-content: this borrows it from the Sobre tab while open and gives it back on closing, so the two can never
-// drift apart. With reduced motion it just appears and goes.
+// drift apart. The header's language flags are borrowed the same way, pinned where they already sit, so the page can
+// switch language in full screen with the one switch the app has. With reduced motion it just appears and goes.
 
 import { flipFrom } from '../delight.js';
 import { renderAbout } from './about-view.js';
@@ -11,9 +12,11 @@ const dialog = $('about-view');
 const content = $('about-content');
 const home = content.parentElement;
 const small = document.querySelector('.brand .wordmark');
+const flags = document.querySelector('.bar-tools .lang');
 const MOVE = { duration: 400, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' };
 
 let closing = false;
+let flagsSpot = null; // holds the flags' width in the header while they're away, so the header doesn't shift
 
 const big = () => content.querySelector('.about-logo .wordmark');
 
@@ -27,11 +30,14 @@ const overHeader = () => {
 const fading = () => [$('about-close'), ...[...content.children].filter((el) => !el.contains(big()))];
 
 $('brand-btn').addEventListener('click', () => {
-  dialog.append(content);
+  flagsSpot = document.createElement('span');
+  flagsSpot.style.flex = `0 0 ${flags.offsetWidth}px`; // through the CSSOM, since the CSP forbids style attributes
+  flags.replaceWith(flagsSpot);
+  dialog.append(flags, content);
   dialog.showModal();
   dialog.scrollTop = 0;
   renderAbout();
-  small.style.visibility = 'hidden'; // it has lifted off; through the CSSOM, since the CSP forbids style attributes
+  small.style.visibility = 'hidden'; // it has lifted off
   if (reducedMotion.matches) return;
   big().animate({ transform: [overHeader(), 'none'] }, MOVE);
   for (const el of fading()) el.animate({ opacity: [0, 1] }, MOVE);
@@ -66,6 +72,7 @@ dialog.addEventListener('close', () => {
   // tab with its logo shrunk and the rest faded out.
   for (const a of dialog.getAnimations({ subtree: true })) a.cancel();
   home.append(content);
+  flagsSpot.replaceWith(flags);
   small.style.removeProperty('visibility');
   closing = false;
 });

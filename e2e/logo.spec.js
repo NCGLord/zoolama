@@ -42,6 +42,33 @@ test('tapping the logo opens About full screen, the same content as the tab, wit
   expect((await page.locator('#panel-about .about-logo .wordmark').boundingBox()).height).toBeLessThan(80);
 });
 
+test('in full screen the language flags stay put and switch About; closing gives them back to the header', async ({
+  app: page,
+}) => {
+  const flags = page.locator('.lang');
+  const theme = page.locator('#theme');
+  const [header, themeBefore] = [await flags.boundingBox(), await theme.boundingBox()];
+  await page.getByRole('button', { name: 'Zoolama' }).click();
+  await expect(screen(page).locator('.lang')).toBeVisible(); // the header's own switch, borrowed
+  await expect(page.locator('[data-lang]')).toHaveCount(2);
+  const inside = await flags.boundingBox();
+  for (const k of ['x', 'y', 'width', 'height']) expect(Math.abs(inside[k] - header[k]), k).toBeLessThan(1);
+  expect(await theme.boundingBox()).toEqual(themeBefore); // the header behind doesn't shift
+  expect((await page.getByRole('button', { name: 'Fechar' }).boundingBox()).x).toBeLessThan(40); // ✕ top left
+
+  await screen(page).getByRole('button', { name: 'English' }).click();
+  await expect(page.getByRole('dialog', { name: 'About' })).toBeVisible();
+  await expect(page.locator('#about-view').getByRole('link', { name: 'Source code on GitHub' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
+
+  await expect(page.locator('#about-view')).toBeHidden();
+  await expect(page.locator('.bar-tools .lang')).toHaveCount(1);
+  await expect(page.locator('[data-lang]')).toHaveCount(2);
+  expect(await flags.boundingBox()).toEqual(header);
+  await expect(page.getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('tab', { name: 'About' })).toBeVisible(); // the whole app switched
+});
+
 test('a tap inside the full-screen About does not close it', async ({ app: page }) => {
   await page.getByRole('button', { name: 'Zoolama' }).click();
   await screen(page).getByText('Seus dados').click();
