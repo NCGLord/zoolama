@@ -6,7 +6,7 @@
 import { formatBytes } from '../i18n.js';
 import { state } from './app-state.js';
 import { $ } from './dom.js';
-import { appVersion, checkForUpdate, onUpdateWaiting } from './pwa.js';
+import { appVersion, checkForUpdate, onUpdateState } from './pwa.js';
 import { shareList } from './share-sheet.js';
 import { tr } from './text.js';
 
@@ -27,48 +27,40 @@ navigator.serviceWorker?.addEventListener('controllerchange', () => {
   if ($('about-version').hidden) renderVersion();
 });
 
-const RESULT = {
-  found: 'updateFound',
+// The update line says where updates stand, as the app's one update state has it (see pwa.js): whoever looked, the
+// latest look, and a new version waiting to go on screen above all, with its number.
+const LINE = {
+  checking: 'updateChecking',
   latest: 'updateLatest',
   offline: 'updateOffline',
   unavailable: 'updateUnavailable',
+  found: 'updateFound',
+  failed: 'updateFailed',
 };
-
-// What the update line says: the last check's outcome, or that a new version is waiting ({key: 'updatePending',
-// version}), which outranks any outcome.
-let update = null;
-
-function waiting() {
-  return update?.key === 'updatePending';
-}
+let updateState = null;
+let waitingVersion = ''; // the number of the version waiting, asked of it as it takes over
 
 /** The update line and its button: Procurar atualização, or Atualizar while a new version waits to go on screen. */
 function renderUpdate() {
-  $('about-update-result').textContent = update ? tr(update.key, update) : '';
-  $('about-update').dataset.i18n = waiting() ? 'update' : 'aboutCheckUpdate';
+  const waiting = updateState === 'waiting';
+  let line = '';
+  if (waiting) line = waitingVersion ? tr('updatePending', { version: waitingVersion }) : tr('updateReady');
+  else if (updateState) line = tr(LINE[updateState]);
+  $('about-update-result').textContent = line;
+  $('about-update').dataset.i18n = waiting ? 'update' : 'aboutCheckUpdate';
   $('about-update').textContent = tr($('about-update').dataset.i18n);
+  $('about-update').disabled = updateState === 'checking';
 }
 
-function showUpdate(next) {
-  update = next;
+onUpdateState(async (next) => {
+  updateState = next;
+  if (next === 'waiting') waitingVersion = (await appVersion()) ?? ''; // the worker answering now is the new one
   renderUpdate();
-}
+});
 
-// A new version that took over without going on screen (the app was in use): About says so at once, with its number,
-// in place of whatever an earlier check said. The worker answering now is the new one.
-async function showWaiting() {
-  showUpdate({ key: 'updatePending', version: (await appVersion()) ?? '' });
-}
-onUpdateWaiting(showWaiting);
-
-$('about-update').addEventListener('click', async () => {
-  if (waiting()) return location.reload(); // Atualizar: the waiting version goes on screen
-  $('about-update').disabled = true;
-  showUpdate({ key: 'updateChecking' });
-  const result = await checkForUpdate();
-  $('about-update').disabled = false;
-  if (result === 'ready') await showWaiting();
-  else if (!waiting()) showUpdate({ key: RESULT[result] }); // a version that landed meanwhile outranks the outcome
+$('about-update').addEventListener('click', () => {
+  if (updateState === 'waiting') location.reload(); // Atualizar: the waiting version goes on screen
+  else checkForUpdate();
 });
 
 /* ---------- what else changes ---------- */

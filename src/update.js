@@ -18,3 +18,12 @@ export function dueForUpdateCheck(now, lastCheck, interval = UPDATE_CHECK_MS) {
 export function reloadsForUpdate({ asked = false, touched, visible, busy }) {
   return !busy && (asked || !touched || !visible);
 }
+
+/**
+ * The app's update state after a new fact: the latest look's outcome ('checking', 'latest', 'offline', 'unavailable',
+ * 'found' while it downloads, 'failed' when the download didn't finish), whoever looked; except that 'waiting', a new
+ * version that has taken over and goes on screen with a reload, outranks anything found after it.
+ */
+export function nextUpdateState(current, next) {
+  return current === 'waiting' ? 'waiting' : next;
+}

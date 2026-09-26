@@ -1,7 +1,7 @@
 // Living on the home screen: the Install button, and the service worker that keeps the app offline and up to date.
 
 import { installMode, isIOS } from '../install.js';
-import { UPDATE_POLL_MS, dueForUpdateCheck, reloadsForUpdate } from '../update.js';
+import { UPDATE_POLL_MS, dueForUpdateCheck, nextUpdateState, reloadsForUpdate } from '../update.js';
 import { $, isTextField } from './dom.js';
 import { offerUpdate, showToast } from './toast.js';
 
@@ -39,6 +39,7 @@ $('install').addEventListener('click', () => {
 });
 
 let registration = null;
+let controlled = false; // a version of the app runs here: before that, a download is its first install, not an update
 let lastCheck = 0;
 let takenOver = false; // a newer version took over after this page loaded; the page runs it once reloaded
 let asked = false; // Procurar atualização found a version: it goes on screen as soon as it lands
@@ -63,12 +64,29 @@ function busy() {
   );
 }
 
-// Told when a new version has taken over but waits to go on screen: About says so. About imports this module, so it
-// hands its listener over instead.
-let waitingListener = () => {};
+/* ---------- where updates stand ---------- */
 
-function onUpdateWaiting(listener) {
-  waitingListener = listener;
+// The one update state (see nextUpdateState), which every look and every download report into, and which About shows.
+// About imports this module, so it hands its listener over.
+let updateState = null; // no look yet
+let stateListener = () => {};
+
+function onUpdateState(listener) {
+  stateListener = listener;
+}
+
+function setUpdateState(next) {
+  updateState = nextUpdateState(updateState, next);
+  stateListener(updateState); // a second version waiting is news too: About asks its number again
+}
+
+/** Follows a download: one that doesn't finish (the signal dropped, say) is 'failed', and no longer asked for. */
+function watch(worker) {
+  worker?.addEventListener('statechange', () => {
+    if (worker.state !== 'redundant' || takenOver) return; // a worker that took over goes redundant when replaced
+    asked = false;
+    setUpdateState('failed');
+  });
 }
 
 /** Puts a version that has taken over on screen, by reloading, when nothing can be lost. Returns whether it did. */
@@ -79,23 +97,37 @@ function applyUpdate() {
   return true;
 }
 
-/**
- * Looks for a new version now: 'ready' (one has already taken over, and Atualizar runs it), 'found' (it downloads,
- * then Atualizar is offered), 'latest', 'offline' or 'unavailable'.
- */
-async function checkForUpdate() {
-  if (takenOver) return 'ready'; // opening the app often fetches it before anyone asks
-  if (!registration) return 'unavailable'; // no service worker (e.g. private mode), or not registered yet
-  asked = true; // set before looking: a small update can land before the look even returns
+/** One look for a new version, the app's own or the shopper's (`asking`); its outcome goes into the update state. */
+async function look({ asking = false } = {}) {
+  if (!registration || !controlled) {
+    if (asking) setUpdateState('unavailable'); // no service worker (e.g. private mode), or not running one yet
+    return;
+  }
+  if (asking) {
+    asked = true; // set before looking: a small update can land before the look even returns
+    setUpdateState('checking');
+  }
+  lastCheck = Date.now();
   try {
     await registration.update();
   } catch {
     asked = false;
-    return 'offline';
+    setUpdateState('offline');
+    return;
   }
-  lastCheck = Date.now();
-  asked = Boolean(registration.installing || registration.waiting); // nothing coming: a later update isn't "asked for"
-  return asked ? 'found' : 'latest';
+  const incoming = registration.installing ?? registration.waiting;
+  if (!incoming) {
+    asked = false; // nothing coming: a later update isn't "asked for"
+    setUpdateState('latest');
+    return;
+  }
+  setUpdateState('found');
+  watch(incoming);
+}
+
+/** Procurar atualização: the shopper's look. */
+function checkForUpdate() {
+  return look({ asking: true });
 }
 
 /** The version the running service worker was built as (sw.js VERSION), or null where none answers. */
@@ -114,22 +146,24 @@ function appVersion() {
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   const sw = navigator.serviceWorker;
-  let controlled = Boolean(sw.controller);
+  controlled = Boolean(sw.controller);
   const firstInstall = !controlled;
 
   sw.register('./sw.js')
     .then((registered) => {
       registration = registered;
       lastCheck = Date.now(); // registering has just checked
+      // Any download, whoever started it (opening the app makes the browser look too), is followed from its start.
+      registration.addEventListener('updatefound', () => {
+        if (!controlled) return; // the first install, not an update
+        setUpdateState('found');
+        watch(registration.installing);
+      });
       // Coming to the front, it always looks (it may have been away for days); while in front, it looks each minute
       // whether UPDATE_CHECK_MS have passed since the last look; in the background, never.
-      const check = () => {
-        if (document.visibilityState !== 'visible') return;
-        lastCheck = Date.now();
-        registration.update().catch(() => {}); // offline: the next check tries again
-      };
-      document.addEventListener('visibilitychange', check);
-      setInterval(() => dueForUpdateCheck(Date.now(), lastCheck) && check(), UPDATE_POLL_MS);
+      const lookInFront = () => document.visibilityState === 'visible' && look();
+      document.addEventListener('visibilitychange', lookInFront);
+      setInterval(() => dueForUpdateCheck(Date.now(), lastCheck) && lookInFront(), UPDATE_POLL_MS);
       return sw.ready;
     })
     .then(() => firstInstall && showToast('offlineReady'))
@@ -143,7 +177,7 @@ function registerServiceWorker() {
       takenOver = true;
       if (!applyUpdate()) {
         offerUpdate();
-        waitingListener();
+        setUpdateState('waiting');
       }
     }
     controlled = true; // the first claim after a fresh install is not an update
@@ -156,4 +190,4 @@ function registerServiceWorker() {
   });
 }
 
-export { renderInstall, registerServiceWorker, checkForUpdate, appVersion, onUpdateWaiting };
+export { renderInstall, registerServiceWorker, checkForUpdate, appVersion, onUpdateState };

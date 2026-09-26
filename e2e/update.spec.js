@@ -101,7 +101,7 @@ test('never while an item is half-entered: the new version waits for Atualizar, 
 
 test('asked for, a new version goes on screen as soon as it lands', async ({ app: page }) => {
   await page.evaluate(() =>
-    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', { get: () => ({ state: 'installing' }) }),
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', { get: () => Object.assign(new EventTarget(), { state: 'installing' }) }),
   );
   await page.getByRole('tab', { name: 'Sobre' }).click();
   await page.getByRole('button', { name: 'Procurar atualização' }).click();

@@ -96,11 +96,63 @@ test("a new version waiting to go on screen shows in About at once, and About's 
 // real new version can't be published mid-test; so these make the registration answer the way the browser would.
 test('when the check finds a new version, About says it is on its way', async ({ app: page }) => {
   await page.evaluate(() =>
-    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', { get: () => ({ state: 'installing' }) }),
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', { get: () => Object.assign(new EventTarget(), { state: 'installing' }) }),
   );
   await page.getByRole('tab', { name: 'Sobre' }).click();
   await page.getByRole('button', { name: 'Procurar atualização' }).click();
   await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
+});
+
+// A download that doesn't finish (the signal dropped, say) must not leave "Baixando…" on screen for good; and, no
+// longer asked for, a later version waits for Atualizar like any other.
+test('a download that fails says so, and the next version is not put on screen unasked', async ({ app: page }) => {
+  await page.evaluate(() => {
+    const worker = Object.assign(new EventTarget(), { state: 'installing' });
+    window.failDownload = () => {
+      worker.state = 'redundant';
+      worker.dispatchEvent(new Event('statechange'));
+    };
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', {
+      get: () => (worker.state === 'installing' ? worker : null),
+    });
+  });
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
+  await page.evaluate(() => window.failDownload());
+  await expect(page.locator('#about-update-result')).toHaveText('Não foi possível baixar a nova versão. Tente de novo com sinal.');
+  await expect(page.locator('#about-update')).toHaveText('Procurar atualização');
+
+  await page.evaluate(() => {
+    const worker = { postMessage: (_, [port]) => port.postMessage('new000000000') };
+    Object.defineProperty(navigator.serviceWorker, 'controller', { get: () => worker });
+    navigator.serviceWorker.dispatchEvent(new Event('controllerchange'));
+  });
+  await expect(page.locator('#about-update-result')).toHaveText('Nova versão pronta: new000000000'); // waiting, not reloaded
+});
+
+// About says where updates stand as of the latest look, the app's own looks included: once the signal is back and the
+// app has looked by itself, "no signal" gives way.
+test("the app's own looks keep About current: with the signal back, the no-signal message goes", async ({ app: page }) => {
+  await page.evaluate(() => {
+    const { update } = ServiceWorkerRegistration.prototype;
+    window.signal = false;
+    ServiceWorkerRegistration.prototype.update = function () {
+      return window.signal ? update.call(this) : Promise.reject(new TypeError('Failed to fetch'));
+    };
+  });
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(page.locator('#about-update-result')).toHaveText('Sem conexão. Tente de novo com sinal.');
+  await page.evaluate(() => {
+    window.signal = true;
+    for (const state of ['hidden', 'visible']) {
+      // the app goes to the background and comes back, and looks by itself
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }
+  });
+  await expect(page.locator('#about-update-result')).toHaveText('Você já tem a versão mais recente.');
 });
 
 test('with no signal, the check says so', async ({ app: page }) => {

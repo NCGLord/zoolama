@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { UPDATE_CHECK_MS, UPDATE_POLL_MS, dueForUpdateCheck, reloadsForUpdate } from '../src/update.js';
+import {
+  UPDATE_CHECK_MS,
+  UPDATE_POLL_MS,
+  dueForUpdateCheck,
+  nextUpdateState,
+  reloadsForUpdate,
+} from '../src/update.js';
 
 test('the app checks for a new version every 7 minutes', () => {
   assert.equal(UPDATE_CHECK_MS, 7 * 60 * 1000);
@@ -39,4 +45,15 @@ test('never while something is half-entered or a sheet is open, which a reload w
 test('asked for (Procurar atualização found one): a new version goes on screen as soon as it lands, unless busy', () => {
   assert.equal(reloadsForUpdate({ asked: true, touched: true, visible: true, busy: false }), true);
   assert.equal(reloadsForUpdate({ asked: true, touched: true, visible: true, busy: true }), false);
+});
+
+// About shows the app's update state as of its latest look, whoever looked; a version that has taken over and waits to
+// go on screen outranks any look after it, since the page will run it.
+test('the update state is the latest look, except that a waiting version outranks every later look', () => {
+  assert.equal(nextUpdateState(null, 'found'), 'found');
+  assert.equal(nextUpdateState('offline', 'latest'), 'latest');
+  assert.equal(nextUpdateState('found', 'failed'), 'failed');
+  for (const next of ['checking', 'latest', 'offline', 'found', 'failed']) {
+    assert.equal(nextUpdateState('waiting', next), 'waiting');
+  }
 });
