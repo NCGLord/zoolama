@@ -244,16 +244,16 @@
           <output id="magnifier-exposure-level" for="magnifier-exposure"></output>
         </div>
         <div class="magnifier-row">
-          <!-- The torch sits with the zoom: the two are what you adjust while reading. -->
-          <button type="button" id="magnifier-torch" class="magnifier-torch" aria-pressed="false" data-i18n-aria-label="torch" hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v3l-2.5 4h-5L7 6ZM7 6h10M9.5 10h5v9.5a1.5 1.5 0 0 1-1.5 1.5h-2a1.5 1.5 0 0 1-1.5-1.5ZM12 13.5v2" /></svg>
-          </button>
+          <svg class="magnifier-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l5 5M8 10.5h5M10.5 8v5" /></svg>
           <label for="magnifier-zoom" class="visually-hidden" data-i18n="zoom">Zoom</label>
           <input type="range" id="magnifier-zoom" min="1" max="4" step="0.1" value="1" disabled />
           <output id="magnifier-level" for="magnifier-zoom"></output>
         </div>
         <div class="viewer-actions">
           <button type="button" id="magnifier-freeze" aria-pressed="false" data-i18n="freeze" disabled>Congelar</button>
+          <button type="button" id="magnifier-torch" class="magnifier-torch" aria-pressed="false" data-i18n-aria-label="torch" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v3l-2.5 4h-5L7 6ZM7 6h10M9.5 10h5v9.5a1.5 1.5 0 0 1-1.5 1.5h-2a1.5 1.5 0 0 1-1.5-1.5ZM12 13.5v2" /></svg>
+          </button>
           <form method="dialog"><button class="primary" data-i18n="close">Fechar</button></form>
         </div>
       </div>

@@ -324,8 +324,7 @@ button {
   margin-left: auto;
 }
 
-.viewer-actions [aria-pressed='true'],
-.magnifier-torch[aria-pressed='true'] {
+.viewer-actions [aria-pressed='true'] {
   border-color: var(--tag);
   color: var(--tag);
 }
@@ -365,19 +364,19 @@ button {
   font-weight: 600;
 }
 
-/* The exposure and zoom rows. Flex, not grid: the torch is hidden on a camera without one, and the slider takes
-   whatever room is left. */
+/* The exposure and zoom rows: an icon, the slider taking whatever room is left, and the value. */
 .magnifier-row {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.magnifier-torch {
-  flex: none;
+/* The torch is an icon button among the text ones, so it keeps the header buttons' square shape. */
+.viewer-actions .magnifier-torch {
+  padding: 0;
 }
 
-/* The sun beside the exposure slider marks it; it sits in the torch's 44px column, so the sliders line up. */
+/* The ☀ and ⊕ that mark the exposure and zoom sliders share a 44px column, so the two sliders line up. */
 .magnifier-mark {
   flex: none;
   width: 44px;
