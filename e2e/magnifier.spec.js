@@ -121,6 +121,37 @@ test.describe('on a camera with a torch', () => {
   });
 });
 
+test('freezing holds the picture still to read it, and every opening starts live', async ({ app: page }) => {
+  await openMagnifier(page);
+  await expect.poll(() => playing(page)).toBe(true);
+  const freeze = page.getByRole('button', { name: 'Congelar' });
+  const slider = page.getByRole('slider', { name: 'Zoom' });
+  const paused = () => page.locator('#magnifier-video').evaluate((v) => v.paused);
+
+  await freeze.click();
+  await expect(freeze).toHaveAttribute('aria-pressed', 'true');
+  expect(await paused()).toBe(true);
+  await expect(slider).toBeDisabled(); // zooming a held picture would do nothing on a camera that zooms
+
+  await freeze.click();
+  await expect(freeze).toHaveAttribute('aria-pressed', 'false');
+  await expect.poll(paused).toBe(false);
+  await expect(slider).toBeEnabled();
+
+  await freeze.click();
+  await page.evaluate(() => window.setVisibility('hidden'));
+  await page.evaluate(() => window.setVisibility('visible'));
+  await expect.poll(() => liveTracks(page)).toBe(1);
+  await expect(freeze).toHaveAttribute('aria-pressed', 'false'); // a new picture after leaving the app
+  await expect.poll(paused).toBe(false);
+
+  await freeze.click();
+  await page.getByRole('button', { name: 'Fechar' }).click();
+  await openMagnifier(page);
+  await expect(freeze).toHaveAttribute('aria-pressed', 'false');
+  await expect(slider).toBeEnabled();
+});
+
 test.describe('on a camera that cannot zoom', () => {
   test.use({ camera: { zoom: false } });
 

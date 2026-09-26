@@ -12,6 +12,7 @@ const dialog = $('magnifier');
 const video = $('magnifier-video');
 const slider = $('magnifier-zoom');
 const torchBtn = $('magnifier-torch');
+const freezeBtn = $('magnifier-freeze');
 
 // A high-resolution picture keeps small print sharp when it has to be enlarged on screen. zoom: true asks for leave
 // to zoom along with the camera itself; browsers that don't know it ignore it.
@@ -22,6 +23,7 @@ let track = null;
 let focus = false; // whether the camera offers continuous autofocus
 let torch = false; // whether it has a torch
 let torchOn = false;
+let frozen = false;
 let range = zoomRange();
 let zoom = 1;
 let session = 0; // bumped by every start and stop, so a camera that opens after the magnifier closed is shut at once
@@ -75,6 +77,17 @@ function setZoom(value) {
 
 /* ---------- camera on and off ---------- */
 
+// Freezing holds the last frame still, to read it without the shake that high zoom magnifies. Zoom waits meanwhile:
+// on a camera that zooms, it would change nothing on screen until the picture moves again.
+function setFrozen(on) {
+  frozen = on;
+  freezeBtn.setAttribute('aria-pressed', String(on));
+  freezeBtn.disabled = !stream;
+  slider.disabled = on || !stream;
+  if (on) video.pause();
+  else if (stream) video.play().catch(() => {});
+}
+
 async function start() {
   const mine = ++session;
   showMessage(null);
@@ -97,7 +110,7 @@ async function start() {
   focus = Boolean(caps.focusMode?.includes('continuous'));
   torch = caps.torch === true;
   torchBtn.hidden = !torch;
-  slider.disabled = false;
+  setFrozen(false);
   zoom = clampZoom(zoom, range);
   renderZoom();
   applySettings();
@@ -108,7 +121,7 @@ function stop() {
   for (const t of stream?.getTracks() ?? []) t.stop();
   stream = track = null;
   video.srcObject = null;
-  slider.disabled = true;
+  setFrozen(false); // a new picture after leaving the app, or on the next opening
 }
 
 function openMagnifier() {
@@ -130,6 +143,8 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') stop();
   else start();
 });
+
+freezeBtn.addEventListener('click', () => setFrozen(!frozen));
 
 torchBtn.addEventListener('click', () => {
   torchOn = !torchOn;
