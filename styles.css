@@ -322,6 +322,11 @@ button {
   margin-left: auto;
 }
 
+.viewer-actions [aria-pressed='true'] {
+  border-color: var(--tag);
+  color: var(--tag);
+}
+
 .viewer-actions .primary {
   border-color: var(--primary);
   background: var(--primary);

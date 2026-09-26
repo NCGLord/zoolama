@@ -88,6 +88,39 @@ test('spreading two fingers on the picture zooms in', async ({ app: page }) => {
   await expect.poll(async () => (await zoomsApplied(page)).at(-1)).toBe(2);
 });
 
+test('a camera without a torch shows no torch button', async ({ app: page }) => {
+  await openMagnifier(page);
+  await expect.poll(() => playing(page)).toBe(true);
+  await expect(page.getByRole('slider', { name: 'Zoom' })).toBeEnabled();
+  await expect(page.locator('#magnifier-torch')).toBeHidden();
+});
+
+test.describe('on a camera with a torch', () => {
+  test.use({ camera: { zoom: true, torch: true } });
+
+  const torchesApplied = async (page) =>
+    (await log(page)).applied.map((c) => c.advanced?.[0]?.torch).filter((t) => t !== undefined);
+
+  test('the torch lights the print and goes off with the magnifier', async ({ app: page }) => {
+    await openMagnifier(page);
+    const torch = page.getByRole('button', { name: 'Lanterna' });
+    await expect(torch).toHaveAttribute('aria-pressed', 'false');
+    await torch.click();
+    await expect(torch).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(async () => (await torchesApplied(page)).at(-1)).toBe(true);
+    await page.getByRole('slider', { name: 'Zoom' }).fill('2');
+    await expect.poll(async () => (await log(page)).applied.at(-1).advanced[0]).toMatchObject({ zoom: 2, torch: true });
+    await torch.click();
+    await expect(torch).toHaveAttribute('aria-pressed', 'false');
+    await expect.poll(async () => (await torchesApplied(page)).at(-1)).toBe(false);
+
+    await torch.click();
+    await page.getByRole('button', { name: 'Fechar' }).click();
+    await openMagnifier(page);
+    await expect(torch).toHaveAttribute('aria-pressed', 'false'); // each opening starts in the dark
+  });
+});
+
 test.describe('on a camera that cannot zoom', () => {
   test.use({ camera: { zoom: false } });
 

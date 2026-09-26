@@ -11,6 +11,7 @@ import { tr } from './text.js';
 const dialog = $('magnifier');
 const video = $('magnifier-video');
 const slider = $('magnifier-zoom');
+const torchBtn = $('magnifier-torch');
 
 // A high-resolution picture keeps small print sharp when it has to be enlarged on screen. zoom: true asks for leave
 // to zoom along with the camera itself; browsers that don't know it ignore it.
@@ -19,6 +20,8 @@ const CAMERA = { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, h
 let stream = null;
 let track = null;
 let focus = false; // whether the camera offers continuous autofocus
+let torch = false; // whether it has a torch
+let torchOn = false;
 let range = zoomRange();
 let zoom = 1;
 let session = 0; // bumped by every start and stop, so a camera that opens after the magnifier closed is shut at once
@@ -47,7 +50,11 @@ function renderZoom() {
 let changed = false;
 let applying = false;
 
-const settings = () => ({ ...(focus ? { focusMode: 'continuous' } : {}), ...(range.hardware ? { zoom } : {}) });
+const settings = () => ({
+  ...(focus ? { focusMode: 'continuous' } : {}),
+  ...(range.hardware ? { zoom } : {}),
+  ...(torch ? { torch: torchOn } : {}),
+});
 
 async function applySettings() {
   changed = true;
@@ -88,6 +95,8 @@ async function start() {
   const caps = track.getCapabilities?.() ?? {};
   range = zoomRange(caps);
   focus = Boolean(caps.focusMode?.includes('continuous'));
+  torch = caps.torch === true;
+  torchBtn.hidden = !torch;
   slider.disabled = false;
   zoom = clampZoom(zoom, range);
   renderZoom();
@@ -106,6 +115,9 @@ function openMagnifier() {
   if (dialog.open) return;
   zoom = 1;
   renderZoom();
+  torchOn = false; // each opening starts with the torch off; leaving the app and coming back keeps it as it was
+  torchBtn.setAttribute('aria-pressed', 'false');
+  torchBtn.hidden = true; // until the camera says it has one
   dialog.showModal();
   start();
 }
@@ -117,6 +129,12 @@ document.addEventListener('visibilitychange', () => {
   if (!dialog.open) return;
   if (document.visibilityState === 'hidden') stop();
   else start();
+});
+
+torchBtn.addEventListener('click', () => {
+  torchOn = !torchOn;
+  torchBtn.setAttribute('aria-pressed', String(torchOn));
+  applySettings();
 });
 
 /* ---------- zooming ---------- */
