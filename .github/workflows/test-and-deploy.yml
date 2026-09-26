@@ -1,6 +1,7 @@
 # Every push runs the unit tests and the browser tests; only `main` with both green is published to GitHub Pages.
 # The Pages source is set to "GitHub Actions", so this workflow is the only way anything reaches the site.
-# Every action is pinned to a commit SHA, with its release beside it; test/workflows.test.js keeps it that way.
+# Every action is pinned to a commit SHA, with its release beside it; test/workflows.test.js keeps it that way, and
+# Dependabot (.github/dependabot.yml) opens a pull request when there are new releases.
 name: Test and deploy
 
 on:

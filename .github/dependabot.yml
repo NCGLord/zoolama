@@ -1,0 +1,14 @@
+# Keeps the actions in .github/workflows/, pinned to commit SHAs, up to date. Once a week Dependabot looks for new
+# releases and opens one pull request with all of them, rewriting each SHA with the release comment beside it. CI runs
+# on that branch like on any push; nothing is deployed until the pull request is merged into main.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci
