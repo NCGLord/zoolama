@@ -63,8 +63,9 @@ app's own files run.
 **Look:** the *Feira* theme (a hortifruti stall: lettuce-green actions, a mango total tag, tomato for warnings), in
 light and dark, plus small moments of joy. The total counts up, finishing a trip within budget throws little
 price tags, checkout ticks snap (with a haptic tick on Android), the cheapest option in Compare flips like a
-shelf tag, and past trips look like torn receipts. All motion switches off when the phone asks for reduced
-motion, and `test/contrast.test.js` keeps every text colour readable in both themes.
+shelf tag, past trips look like torn receipts, and tapping the logo lifts it off the header into the middle of the
+screen, to see the llama and its price tag up close. All motion switches off when the phone asks for reduced motion,
+and `test/contrast.test.js` keeps every text colour readable in both themes.
 
 **App:** <https://ncglord.github.io/zoolama/>
 

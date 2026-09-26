@@ -145,6 +145,43 @@ button {
   height: 36px;
 }
 
+.brand-btn {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+}
+
+/* The logo, large: centred on the page's own colour, grown out of the header (src/ui/logo-view.js). Its transform
+   origin is the top-left corner, which the FLIP from the header's box is worked out from. */
+.logo-view {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.logo-view[open] {
+  display: grid;
+  place-items: center;
+}
+
+.logo-view::backdrop {
+  background: transparent;
+}
+
+.logo-view .wordmark {
+  width: min(88vw, 560px);
+  height: auto;
+  transform-origin: 0 0;
+}
+
 .bar-tools {
   display: flex;
   align-items: center;
