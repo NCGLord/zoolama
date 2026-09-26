@@ -139,3 +139,7 @@ font's real letter outlines and needs `pip install fonttools brotli`. Run `npm r
 | `docs/superpowers/specs/` | The MVP design record; this README describes the app as it is now |
 
 The price font is Barlow Condensed Bold (SIL OFL 1.1, see `fonts/OFL.txt`).
+
+## Licence
+
+Zoolama is [MIT](LICENSE)-licensed, © 2026 Geraldo Viana. The font keeps its own licence, the SIL OFL 1.1 above.
