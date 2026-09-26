@@ -5,7 +5,7 @@ import { keyboardOpen, tallestHeight } from '../keyboard.js';
 import { rovingIndex } from '../tabs.js';
 import { effectiveTheme, toggledTheme } from '../theme.js';
 import { persist, state } from './app-state.js';
-import { $ } from './dom.js';
+import { $, isTextField } from './dom.js';
 import { tr } from './text.js';
 
 function renderTab() {
@@ -60,8 +60,6 @@ for (const sheet of document.querySelectorAll('dialog.sheet')) {
 // While the keyboard is up, <html data-keyboard="open"> lets the total tag shrink to one row (see styles.css), so the
 // list keeps the room the keyboard leaves. Width is the layout's, so pinch-zooming doesn't count as turning.
 const view = window.visualViewport ?? window;
-const TEXT_FIELD = 'input:not([type="radio"], [type="checkbox"], [type="file"]), textarea';
-const isTextField = (el) => el?.matches?.(TEXT_FIELD) ?? false;
 let seen = null;
 
 function renderKeyboard() {

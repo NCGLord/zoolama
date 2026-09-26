@@ -1,8 +1,12 @@
-// DOM helpers every view shares: element lookup and building, focus kept across re-renders, animation replay.
+// DOM helpers every view shares: element lookup and building, focus kept across re-renders, animation replay, and
+// whether something is a field being typed in.
 
 const $ = (id) => document.getElementById(id);
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)'); // JS animations check it too; CSS can't reach them
+
+const TEXT_FIELD = 'input:not([type="radio"], [type="checkbox"], [type="file"]), textarea';
+const isTextField = (el) => el?.matches?.(TEXT_FIELD) ?? false;
 
 function h(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);
@@ -40,4 +44,4 @@ function reconcile(parent, nodes) {
   });
 }
 
-export { $, reducedMotion, h, keepingFocus, icon, replay, reconcile };
+export { $, reducedMotion, isTextField, h, keepingFocus, icon, replay, reconcile };
