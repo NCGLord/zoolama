@@ -93,9 +93,10 @@ opens the magnifier.
 **Updates:** the app checks for a new version when you open it, whenever you bring it back to the front, and every 7
 minutes while it's open. A new version downloads in the background and goes on screen by itself when nothing can be
 lost: if it arrives before you've touched the app (just opened, or just brought back), when you asked for it with
-*Procurar atualização*, or as you leave the app. It never interrupts an item half-entered, a field being typed in or
-an open sheet: then *Nova versão disponível · Atualizar* (and About) offer it, and it goes on screen when you tap, or
-when you next leave the app.
+*Procurar atualização* (in the About tab or full screen), or as you leave the app. It never interrupts a field being
+typed in or an open sheet: then *Nova versão disponível · Atualizar* (and About) offer it, and it goes on screen when
+you tap, or when you next leave the app. An item half-entered in the form, photo and offer included, comes across the
+reload, and the app says *App atualizado*.
 
 ## Develop
 
