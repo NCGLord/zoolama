@@ -17,3 +17,10 @@ test('English switches every view and number format, and survives a reload', asy
   await page.reload();
   await english();
 });
+
+test('an error already on screen switches language too', async ({ app: page }) => {
+  await page.locator('#entry button[type="submit"]').click();
+  await expect(page.locator('#price-error')).toHaveText('Preço inválido');
+  await page.getByRole('button', { name: 'English' }).click();
+  await expect(page.locator('#price-error')).toHaveText('Invalid price');
+});

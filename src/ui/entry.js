@@ -20,6 +20,9 @@ function readQty() {
 
 /** Shows an entry error under the price and marks the field it's about. */
 function setEntryError(key, field = 'price') {
+  // Kept as a data-i18n key, so a language switch translates an error already on screen.
+  if (key) $('price-error').dataset.i18n = key;
+  else delete $('price-error').dataset.i18n;
   $('price-error').textContent = key ? tr(key) : '';
   $('price').setAttribute('aria-invalid', Boolean(key) && field === 'price');
   $('weight').setAttribute('aria-invalid', Boolean(key) && field === 'weight');
