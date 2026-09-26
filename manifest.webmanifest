@@ -46,6 +46,12 @@
       "short_name": "Conferir",
       "description": "Marcar cada item quando passar no caixa",
       "url": "./?check=1"
+    },
+    {
+      "name": "Lupa",
+      "short_name": "Lupa",
+      "description": "Ler a validade e outras letras pequenas",
+      "url": "./?magnifier=1"
     }
   ],
   "icons": [

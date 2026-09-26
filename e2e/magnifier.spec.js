@@ -203,3 +203,13 @@ test.describe('where the browser has no camera access', () => {
     await expect(page.locator('#magnifier-btn')).toBeHidden();
   });
 });
+
+test('the Lupa shortcut opens the magnifier, and the query is gone so a reload does not', async ({ app: page }) => {
+  await page.goto('./?magnifier=1');
+  await expect(page.getByRole('dialog', { name: 'Lupa' })).toBeVisible();
+  await expect.poll(() => playing(page)).toBe(true);
+  expect(new URL(page.url()).search).toBe('');
+  await page.reload();
+  await expect(page.locator('#theme')).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Lupa' })).toBeHidden();
+});

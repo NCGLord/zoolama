@@ -2,7 +2,7 @@
 // together (the language switch re-renders all of them, and two calls that would point up the module stack are
 // registered here) and boots them.
 
-import { launchState } from './launch.js';
+import { launchState, opensMagnifier } from './launch.js';
 import { state, persist } from './ui/app-state.js';
 import { applyLang } from './ui/text.js';
 import { defineToastActions } from './ui/toast.js';
@@ -15,7 +15,7 @@ import { renderHistory, undoFinish, undoDeleteTrip, undoImport } from './ui/hist
 import { renderOptions } from './ui/compare-view.js';
 import { renderTab, renderTheme } from './ui/shell.js';
 import { renderInstall, registerServiceWorker } from './ui/pwa.js';
-import './ui/magnifier-ui.js';
+import { openMagnifier } from './ui/magnifier-ui.js';
 
 /* ---------- language ---------- */
 
@@ -45,9 +45,11 @@ defineToastActions({
   undoPlan: { label: 'undo', run: () => undoPlan(), planUndo: true },
 });
 
-// A home-screen shortcut opens a tab or checkout mode; then the query goes, so a reload doesn't apply it again.
+// A home-screen shortcut opens a tab, checkout mode or the magnifier; then the query goes, so a reload doesn't apply it
+// again.
 const launched = launchState(state, location.search);
 if (launched !== state) persist(launched);
+const magnify = opensMagnifier(location.search);
 if (location.search) window.history.replaceState(null, '', location.pathname);
 
 applyLang();
@@ -61,3 +63,4 @@ renderInstall();
 collectPhotos();
 navigator.storage?.persist?.().catch(() => {});
 registerServiceWorker();
+if (magnify) openMagnifier();

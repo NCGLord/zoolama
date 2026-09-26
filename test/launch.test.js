@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { launchState } from '../src/launch.js';
+import { launchState, opensMagnifier } from '../src/launch.js';
 
 const state = (items = []) => ({ cart: { items, nextId: 1, undo: null }, tab: 'history', checking: false });
 const item = { id: 1, name: '', priceCents: 450, qty: 1 };
@@ -20,4 +20,9 @@ test('any other start leaves the state as it was', () => {
   for (const search of ['', '?', '?tab=settings', '?check=0', '?utm_source=homescreen']) {
     assert.equal(launchState(s, search), s, search);
   }
+});
+
+test('?magnifier=1 opens the magnifier, and nothing else does', () => {
+  assert.equal(opensMagnifier('?magnifier=1'), true);
+  for (const search of ['', '?magnifier=0', '?tab=compare', '?check=1']) assert.equal(opensMagnifier(search), false, search);
 });

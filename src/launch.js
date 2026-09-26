@@ -1,5 +1,6 @@
 // Where the app opens when launched from a home-screen shortcut (see "shortcuts" in manifest.webmanifest):
-// ./?tab=compare opens Compare, ./?check=1 opens the cart in checkout mode. Any other start opens the app as it was.
+// ./?tab=compare opens Compare, ./?check=1 opens the cart in checkout mode, ./?magnifier=1 opens the magnifier. Any
+// other start opens the app as it was.
 
 const TABS = ['cart', 'compare', 'history'];
 
@@ -12,4 +13,9 @@ export function launchState(state, search) {
   }
   const tab = query.get('tab');
   return TABS.includes(tab) ? { ...state, tab } : state;
+}
+
+/** Whether the start URL's query asks for the magnifier, which is opened over the app rather than kept in its state. */
+export function opensMagnifier(search) {
+  return new URLSearchParams(search).get('magnifier') === '1';
 }

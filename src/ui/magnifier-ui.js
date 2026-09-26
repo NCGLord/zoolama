@@ -185,3 +185,5 @@ for (const type of ['pointerup', 'pointercancel']) {
     pinch = null;
   });
 }
+
+export { openMagnifier };
