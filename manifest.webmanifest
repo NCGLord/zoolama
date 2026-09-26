@@ -32,6 +32,13 @@
       "type": "image/webp",
       "form_factor": "narrow",
       "label": "Conferir no caixa, com o valor cobrado a mais"
+    },
+    {
+      "src": "./screenshots/lupa.webp",
+      "sizes": "780x1688",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Lupa ampliando a data de validade de uma embalagem"
     }
   ],
   "shortcuts": [
