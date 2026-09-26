@@ -86,6 +86,8 @@ test('isTrip rejects a trip History could not show', () => {
     null,
     { ...good, id: '' },
     { ...good, at: 'yesterday' },
+    { ...good, at: 1e300 }, // a number, but no date: showing it throws RangeError, which would stop the app at boot
+    { ...good, at: 8.64e15 + 1 }, // one millisecond past the last date a Date can hold
     { ...good, store: undefined },
     { ...good, items: 'Leite' },
     { ...good, items: [{ name: 'Leite', priceCents: 4.5, qty: 1 }] },

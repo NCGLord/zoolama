@@ -52,6 +52,12 @@ test('malformed trips in an export are left out and the rest imported', () => {
   assert.deepEqual(readBackup(text), { trips: [trips[0]] });
 });
 
+// A trip whose date can't be shown would break History at every start, with no way left to delete it.
+test('a trip dated beyond what a Date can hold is left out of an import', () => {
+  const text = JSON.stringify({ app: 'zoolama', kind: 'history', version: 1, trips: [trips[0], trip('far', 1e300)] });
+  assert.deepEqual(readBackup(text), { trips: [trips[0]] });
+});
+
 test('merging adds only trips the history lacks, newest first', () => {
   const current = [trip('c', 5000), trip('a', 1000)];
   const { trips: merged, added } = mergeTrips(current, [trip('a', 1000), trip('b', 3000), trip('b', 3000)]);

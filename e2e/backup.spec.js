@@ -59,6 +59,18 @@ test('a file that is not a Zoolama history is refused and changes nothing', asyn
   await expect(page.locator('.trip')).toHaveCount(2);
 });
 
+// What an import used to let in: formatting its date threw at every start, before the app got to its service worker.
+test('a stored trip dated beyond what a Date can hold is set aside, and the app still starts', async ({ page }) => {
+  await page.evaluate(() => {
+    const trips = JSON.parse(localStorage.getItem('zoolama:v1:history'));
+    localStorage.setItem('zoolama:v1:history', JSON.stringify([...trips, { ...trips[0], id: 'far', at: 1e300 }]));
+  });
+  await page.reload();
+  await page.getByRole('tab', { name: 'Histórico' }).click();
+  await expect(page.locator('.trip-store')).toHaveText(['Extra', 'Assaí']);
+  expect(await page.evaluate(() => localStorage.getItem('zoolama:v1:history:corrupt'))).toContain('1e+300');
+});
+
 test('with no history there is nothing to export, but a file can still be imported', async ({ page }) => {
   await page.evaluate(() => localStorage.removeItem('zoolama:v1:history'));
   await page.reload();

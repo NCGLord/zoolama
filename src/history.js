@@ -25,6 +25,8 @@ export function tripFromCart(cart, { id, at, store = '' }) {
 
 const isPositive = (n) => Number.isSafeInteger(n) && n > 0;
 const isCount = (n) => Number.isSafeInteger(n) && n >= 0;
+// A moment a Date can hold: 100 million days either side of 1970. Past that a Date is NaN, and formatting it throws.
+const isMoment = (n) => typeof n === 'number' && !Number.isNaN(new Date(n).getTime());
 
 function isTripItem(item) {
   if (typeof item?.name !== 'string' || !isPositive(item.priceCents) || !isPositive(item.qty)) return false;
@@ -38,7 +40,7 @@ export function isTrip(trip) {
   return (
     typeof trip?.id === 'string' &&
     trip.id !== '' &&
-    Number.isFinite(trip.at) &&
+    isMoment(trip.at) &&
     typeof trip.store === 'string' &&
     Array.isArray(trip.items) &&
     trip.items.every(isTripItem) &&
