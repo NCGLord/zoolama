@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { STRINGS, LOCALES, t, detectLang, formatPct, formatBytes, formatExposure, formatKg, formatZoom } from '../src/i18n.js';
+import { MAX_QTY } from '../src/cart.js';
 
 const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
@@ -115,4 +116,13 @@ test('language buttons are flags named in their own language for screen readers'
 test('formatKg shows grams as kg with three decimals in the language format', () => {
   assert.equal(formatKg(1250, 'pt'), '1,250 kg');
   assert.equal(formatKg(350, 'en'), '0.350 kg');
+});
+
+// The cap is written into these words rather than passed in: an error on screen is retranslated from its key alone.
+test('the offer errors name the most units an offer can ask for', () => {
+  for (const lang of Object.keys(STRINGS)) {
+    for (const key of ['invalidDeal', 'invalidMultibuy']) {
+      assert.match(STRINGS[lang][key], new RegExp(`\\b${MAX_QTY}\\b`), `${lang}.${key}`);
+    }
+  }
 });

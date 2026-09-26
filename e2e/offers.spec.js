@@ -62,10 +62,10 @@ test('an offer that is not a lower price from at least 2 units is refused', asyn
   await page.locator('#entry button[type="submit"]').click();
   await page.locator('#lines .line').getByRole('button', { name: /^Corrigir preço/ }).click();
   await fillOffer(page, '6', '6,50');
-  await expect(page.locator('#line-error')).toHaveText('Promoção inválida: o preço de atacado precisa ser menor, a partir de 2 un');
+  await expect(page.locator('#line-error')).toHaveText('Promoção inválida: o preço de atacado precisa ser menor, de 2 a 999 un');
   await expect(offerSheet(page)).toBeVisible();
   await fillOffer(page, '1', '4,99');
-  await expect(page.locator('#line-error')).toHaveText('Promoção inválida: o preço de atacado precisa ser menor, a partir de 2 un');
+  await expect(page.locator('#line-error')).toHaveText('Promoção inválida: o preço de atacado precisa ser menor, de 2 a 999 un');
 });
 
 test('"leve 3 pague 2" on a line: one more is free, the discount shows, and the till is warned', async ({
@@ -101,7 +101,7 @@ test('a "leve e pague" noted while adding applies to the new line, and one that 
   await page.getByLabel('Leve', { exact: true }).fill('3');
   await page.getByLabel('Pague', { exact: true }).fill('3');
   await offerSheet(page).getByRole('button', { name: 'Salvar' }).click();
-  await expect(page.locator('#line-error')).toHaveText('Promoção inválida: pague menos unidades do que leva');
+  await expect(page.locator('#line-error')).toHaveText('Promoção inválida: pague menos unidades do que leva, até 999');
   await page.getByLabel('Pague', { exact: true }).fill('2');
   await offerSheet(page).getByRole('button', { name: 'Salvar' }).click();
   await expect(page.locator('#entry-deal-text')).toHaveText('Leve 3, pague 2');
