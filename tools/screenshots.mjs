@@ -1,6 +1,6 @@
 // Regenerates the install-sheet screenshots in screenshots/ (listed under "screenshots" in manifest.webmanifest):
 // `node tools/screenshots.mjs`. Needs the dev install (`npm ci`, `npx playwright install --only-shell chromium`) and
-// ImageMagick with WebP. Each scene is a saved state loaded into the app at phone size, in pt-BR and the light theme.
+// ImageMagick with WebP. Each scene is a saved state loaded into the app at phone size, in pt-BR and the dark theme.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -50,7 +50,7 @@ const context = await browser.newContext({
   isMobile: true,
   hasTouch: true,
   locale: 'pt-BR',
-  colorScheme: 'light',
+  colorScheme: 'dark', // the app follows the system theme until the toggle is used
   reducedMotion: 'reduce', // totals drawn at their final value
   serviceWorkers: 'block', // nothing to cache here, and no "ready offline" toast over the picture
 });
