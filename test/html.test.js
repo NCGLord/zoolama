@@ -18,3 +18,33 @@ test('each tab panel and dialog starts its headings at h2 and never skips a leve
     }
   }
 });
+
+const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
+
+/** The elements directly inside <body>, as [tag name, attributes]. */
+function bodyChildren() {
+  const body = html.slice(html.indexOf('<body>') + '<body>'.length, html.indexOf('</body>'));
+  const children = [];
+  let depth = 0;
+  for (const [, close, name, attrs, selfClosing] of body.matchAll(/<(\/?)([a-zA-Z][\w-]*)([^>]*?)(\/?)>/g)) {
+    if (close) depth--;
+    else {
+      if (depth === 0) children.push([name.toLowerCase(), attrs]);
+      if (!selfClosing && !VOID.has(name.toLowerCase())) depth++;
+    }
+  }
+  return children;
+}
+
+// Screen readers move between landmarks, and anything outside one is easy to miss (axe: region). So what the page
+// shows sits in the header, main or footer (the bottom dock); besides those, <body> holds only dialogs, which are
+// their own world while open, templates and hidden inputs.
+test('everything on screen sits in a landmark: body holds only header, main, footer, dialogs and templates', () => {
+  const children = bodyChildren();
+  assert.ok(children.length > 0);
+  for (const [name, attrs] of children) {
+    const hiddenInput = name === 'input' && /\shidden\b/.test(attrs);
+    const allowed = ['header', 'main', 'footer', 'dialog', 'template'].includes(name) || hiddenInput;
+    assert.ok(allowed, `<body> holds a <${name}${attrs}> outside any landmark`);
+  }
+});

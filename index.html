@@ -440,7 +440,7 @@
       <form method="dialog"><button class="primary" data-i18n="gotIt">Entendi</button></form>
     </dialog>
 
-    <div class="dock">
+    <footer class="dock">
       <div id="toast" class="toast" role="status" hidden>
         <span id="toast-text"></span>
         <button type="button" id="toast-action" hidden></button>
@@ -450,7 +450,7 @@
         <p id="check-law" class="law" data-i18n="lowerPriceRule">Vale o menor preço (Lei 10.962/2004, art. 5º)</p>
         <p id="check-favor" class="favor"></p>
       </div>
-      <footer id="tally" class="tally">
+      <div id="tally" class="tally">
         <div class="tally-tag">
           <span class="tally-label" data-i18n="total">Total</span>
           <output id="total" class="tag-price" aria-live="polite"></output>
@@ -460,7 +460,7 @@
           <span id="count"></span>
           <button type="button" id="clear" class="on-tag" data-i18n="clear">Limpar carrinho</button>
         </div>
-      </footer>
+      </div>
       <nav class="tabs" role="tablist">
         <button type="button" role="tab" id="tab-cart" aria-controls="panel-cart" data-tab="cart">
           <span class="tab-icon" aria-hidden="true">
@@ -498,6 +498,6 @@
           <span data-i18n="tabAbout">Sobre</span>
         </button>
       </nav>
-    </div>
+    </footer>
   </body>
 </html>
