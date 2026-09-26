@@ -30,6 +30,11 @@ function showTrips(next) {
   renderHistory();
 }
 
+/** Takes up the history another copy of the app has saved (see app.js). */
+function reloadTrips() {
+  showTrips(loadHistory(storage));
+}
+
 function setTrips(next) {
   const saved = saveHistory(storage, next);
   showTrips(next);
@@ -356,4 +361,4 @@ function undoImport() {
   beforeImport = null;
 }
 
-export { renderHistory, undoFinish, undoDeleteTrip, undoImport };
+export { renderHistory, undoFinish, undoDeleteTrip, undoImport, reloadTrips };

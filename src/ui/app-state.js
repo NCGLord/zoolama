@@ -31,4 +31,9 @@ function persist(next) {
   if (!save(storage, state)) saveFailed();
 }
 
-export { storage, state, persist, onSaveFailed };
+/** Takes up the state another copy of the app has saved (see app.js), keeping this copy's own tab. Saves nothing. */
+function reloadState() {
+  state = { ...restoreState(load(storage), { lang: state.lang }), tab: state.tab };
+}
+
+export { storage, state, persist, onSaveFailed, reloadState };

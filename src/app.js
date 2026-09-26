@@ -3,15 +3,16 @@
 // registered here) and boots them.
 
 import { launchState, opensMagnifier } from './launch.js';
-import { state, persist, onSaveFailed } from './ui/app-state.js';
+import { HISTORY_KEY, KEY } from './store.js';
+import { state, persist, onSaveFailed, reloadState } from './ui/app-state.js';
 import { applyLang } from './ui/text.js';
-import { acknowledgeNotSaved, defineToastActions, warnNotSaved } from './ui/toast.js';
+import { acknowledgeNotSaved, defineToastActions, dropStaleUndo, warnNotSaved } from './ui/toast.js';
 import { collectPhotos } from './ui/photo-cache.js';
 import { dispatchCart, setCartRenderer } from './ui/cart-store.js';
 import { undoPlan } from './ui/plan-view.js';
 import { renderEntryMode } from './ui/entry.js';
 import { renderCart } from './ui/cart-view.js';
-import { renderHistory, undoFinish, undoDeleteTrip, undoImport } from './ui/history-view.js';
+import { renderHistory, reloadTrips, undoFinish, undoDeleteTrip, undoImport } from './ui/history-view.js';
 import { renderOptions } from './ui/compare-view.js';
 import { renderTab, renderTheme } from './ui/shell.js';
 import { renderInstall, registerServiceWorker } from './ui/pwa.js';
@@ -20,20 +21,39 @@ import './ui/about-screen.js';
 import { renderAbout } from './ui/about-view.js';
 import { onPricesChanged } from './ui/price-memory.js';
 
+/** Draws every view from the state again: after a language switch, or once another copy of the app has saved. */
+function renderAll() {
+  applyLang();
+  renderTheme();
+  renderEntryMode();
+  renderCart();
+  renderOptions();
+  renderHistory();
+  renderAbout();
+}
+
 /* ---------- language ---------- */
 
 for (const b of document.querySelectorAll('[data-lang]')) {
   b.addEventListener('click', () => {
     persist({ ...state, lang: b.dataset.lang });
-    applyLang();
-    renderTheme();
-    renderEntryMode();
-    renderCart();
-    renderOptions();
-    renderHistory();
-    renderAbout();
+    renderAll();
   });
 }
+
+/* ---------- the app open twice ---------- */
+
+// The installed app and a browser tab, say, share one storage, and the browser tells each copy when the other saves.
+// This copy then takes up what was saved (its own tab stays), so it never shows, nor later saves over, what's out of
+// date.
+addEventListener('storage', (e) => {
+  if (e.key === KEY || e.key === null) {
+    reloadState();
+    dropStaleUndo(); // an Undo offered here can't undo the other copy's change
+    renderAll();
+  }
+  if (e.key === HISTORY_KEY || e.key === null) reloadTrips();
+});
 
 /* ---------- boot ---------- */
 
