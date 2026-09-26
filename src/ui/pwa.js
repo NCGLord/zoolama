@@ -1,8 +1,8 @@
 // Living on the home screen: the Install button, and the service worker that keeps the app offline and up to date.
 
 import { installMode, isIOS } from '../install.js';
-import { UPDATE_POLL_MS, dueForUpdateCheck } from '../update.js';
-import { $ } from './dom.js';
+import { UPDATE_POLL_MS, dueForUpdateCheck, reloadsForUpdate } from '../update.js';
+import { $, isTextField } from './dom.js';
 import { offerUpdate, showToast } from './toast.js';
 
 let installPrompt = null;
@@ -40,7 +40,36 @@ $('install').addEventListener('click', () => {
 
 let registration = null;
 let lastCheck = 0;
-let takenOver = false; // a newer version took over after this page loaded; the page runs it once reloaded (Atualizar)
+let takenOver = false; // a newer version took over after this page loaded; the page runs it once reloaded
+let asked = false; // Procurar atualização found a version: it goes on screen as soon as it lands
+let touched = false; // touched since the app last came to the front
+
+function touch() {
+  touched = true;
+}
+addEventListener('pointerdown', touch, true);
+addEventListener('keydown', touch, true);
+
+/**
+ * What a reload would lose: an open sheet, the photo viewer or the magnifier, a field being typed in, or an item
+ * half-entered in the form (its price, name, weight or photo). Everything else is saved as it changes.
+ */
+function busy() {
+  return (
+    Boolean(document.querySelector('dialog[open]')) ||
+    isTextField(document.activeElement) ||
+    ['price', 'name', 'weight'].some((id) => $(id).value.trim() !== '') ||
+    !$('entry-photo-img').hidden
+  );
+}
+
+/** Puts a version that has taken over on screen, by reloading, when nothing can be lost. Returns whether it did. */
+function applyUpdate() {
+  const visible = document.visibilityState === 'visible';
+  if (!takenOver || !reloadsForUpdate({ asked, touched, visible, busy: busy() })) return false;
+  location.reload();
+  return true;
+}
 
 /**
  * Looks for a new version now: 'ready' (one has already taken over, and Atualizar runs it), 'found' (it downloads,
@@ -49,13 +78,16 @@ let takenOver = false; // a newer version took over after this page loaded; the 
 async function checkForUpdate() {
   if (takenOver) return 'ready'; // opening the app often fetches it before anyone asks
   if (!registration) return 'unavailable'; // no service worker (e.g. private mode), or not registered yet
+  asked = true; // set before looking: a small update can land before the look even returns
   try {
     await registration.update();
   } catch {
+    asked = false;
     return 'offline';
   }
   lastCheck = Date.now();
-  return registration.installing || registration.waiting ? 'found' : 'latest';
+  asked = Boolean(registration.installing || registration.waiting); // nothing coming: a later update isn't "asked for"
+  return asked ? 'found' : 'latest';
 }
 
 /** The version the running service worker was built as (sw.js VERSION), or null where none answers. */
@@ -81,28 +113,35 @@ function registerServiceWorker() {
     .then((registered) => {
       registration = registered;
       lastCheck = Date.now(); // registering has just checked
-      // On coming to the front, and every minute while there, it asks whether a check is due (UPDATE_CHECK_MS since
-      // the last) and checks only then; in the background it never looks.
+      // Coming to the front, it always looks (it may have been away for days); while in front, it looks each minute
+      // whether UPDATE_CHECK_MS have passed since the last look; in the background, never.
       const check = () => {
-        if (document.visibilityState !== 'visible' || !dueForUpdateCheck(Date.now(), lastCheck)) return;
+        if (document.visibilityState !== 'visible') return;
         lastCheck = Date.now();
         registration.update().catch(() => {}); // offline: the next check tries again
       };
       document.addEventListener('visibilitychange', check);
-      setInterval(check, UPDATE_POLL_MS);
+      setInterval(() => dueForUpdateCheck(Date.now(), lastCheck) && check(), UPDATE_POLL_MS);
       return sw.ready;
     })
     .then(() => firstInstall && showToast('offlineReady'))
     .catch(() => {}); // no SW (e.g. private mode): the app still works while the page is open
 
-  // sw.js skips waiting and claims the page, so a new version takes over as soon as it has installed.
-  // The screen still shows the old one; offer a reload rather than forcing it mid-typing.
+  // sw.js skips waiting and claims the page, so a new version takes over as soon as it has installed, while the screen
+  // still runs the old one. It goes on screen by itself when nothing can be lost (see reloadsForUpdate); otherwise
+  // Atualizar offers it, rather than a reload in the middle of typing.
   sw.addEventListener('controllerchange', () => {
     if (controlled) {
       takenOver = true;
-      offerUpdate();
+      if (!applyUpdate()) offerUpdate();
     }
     controlled = true; // the first claim after a fresh install is not an update
+  });
+
+  // Coming back to the front starts afresh, as opening the app does; going out of sight is the other safe moment.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') touched = false;
+    applyUpdate();
   });
 }
 
