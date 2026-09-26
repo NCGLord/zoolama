@@ -3,7 +3,7 @@
 // (Fechar, Esc, the back gesture) or leaving the app turns it off, and coming back turns it on at the same zoom.
 
 import { formatZoom } from '../i18n.js';
-import { clampZoom, pinchZoom, zoomRange } from '../magnifier.js';
+import { clampZoom, hasTorch, pinchZoom, zoomRange } from '../magnifier.js';
 import { state } from './app-state.js';
 import { $ } from './dom.js';
 import { tr } from './text.js';
@@ -108,7 +108,7 @@ async function start() {
   const caps = track.getCapabilities?.() ?? {};
   range = zoomRange(caps);
   focus = Boolean(caps.focusMode?.includes('continuous'));
-  torch = caps.torch === true;
+  torch = hasTorch(caps);
   torchBtn.hidden = !torch;
   setFrozen(false);
   zoom = clampZoom(zoom, range);

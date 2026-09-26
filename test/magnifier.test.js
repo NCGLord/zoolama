@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DIGITAL_MAX, clampZoom, pinchZoom, zoomRange } from '../src/magnifier.js';
+import { DIGITAL_MAX, clampZoom, hasTorch, pinchZoom, zoomRange } from '../src/magnifier.js';
 
 const lens = { min: 1, max: 8, step: 0.1, hardware: true };
 
@@ -34,4 +34,13 @@ test('pinching scales the zoom by how far the fingers spread', () => {
   assert.equal(pinchZoom(2, 100, 50, lens), 1);
   assert.equal(pinchZoom(4, 100, 400, lens), 8, 'clamped to the range');
   assert.equal(pinchZoom(2, 0, 50, lens), 2, 'fingers that started together change nothing');
+});
+
+test("a torch counts in Chrome's form (true) and in the spec's list form ([false, true])", () => {
+  assert.equal(hasTorch({ torch: true }), true);
+  assert.equal(hasTorch({ torch: [false, true] }), true);
+  assert.equal(hasTorch({ torch: false }), false);
+  assert.equal(hasTorch({ torch: [false] }), false, 'the list form of "no torch"');
+  assert.equal(hasTorch({}), false);
+  assert.equal(hasTorch(undefined), false);
 });

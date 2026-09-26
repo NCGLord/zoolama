@@ -25,3 +25,9 @@ export function clampZoom(value, { min, max, step }) {
 export function pinchZoom(startZoom, startGap, gap, range) {
   return startGap > 0 ? clampZoom((startZoom * gap) / startGap, range) : startZoom;
 }
+
+/** Whether the camera has a torch: Chrome reports `torch: true`; the spec now reports a list, `[false, true]`. */
+export function hasTorch(caps) {
+  const torch = caps?.torch;
+  return torch === true || (Array.isArray(torch) && torch.includes(true));
+}
