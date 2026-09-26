@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { easeOutCubic, tweenCents, celebrates, newWinners } from '../src/delight.js';
+import { easeOutCubic, tweenCents, celebrates, newWinners, flipFrom } from '../src/delight.js';
 
 test('the count-up eases out: fast at first, settling at the end', () => {
   assert.equal(easeOutCubic(0), 0);
@@ -26,4 +26,11 @@ test('newWinners lists options that became cheapest since the last look', () => 
   assert.deepEqual(newWinners(new Set([1]), new Set([1])), []);
   assert.deepEqual(newWinners(new Set([0]), new Set([0, 2])), [2]);
   assert.deepEqual(newWinners(new Set(), new Set()), []);
+});
+
+test('flipFrom puts a box back where another one was: a shift and a scale from its top-left corner', () => {
+  const header = { left: 16, top: 10, width: 90, height: 36 };
+  const modal = { left: 20, top: 300, width: 350, height: 140 };
+  assert.deepEqual(flipFrom(header, modal), { x: -4, y: -290, scale: 90 / 350 });
+  assert.deepEqual(flipFrom(modal, modal), { x: 0, y: 0, scale: 1 }, 'already there');
 });

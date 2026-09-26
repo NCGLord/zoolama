@@ -1,4 +1,4 @@
-// Small pure helpers behind the app's moments of joy (count-up, celebration, winner flip).
+// Small pure helpers behind the app's moments of joy (count-up, celebration, winner flip, the logo lifting off).
 // The DOM side lives in src/ui/ (cart-view, history-view, compare-view) and is skipped entirely when the phone asks
 // for reduced motion.
 
@@ -18,4 +18,12 @@ export function celebrates(totalCents, budgetCents) {
 /** Option indexes that are cheapest now but weren't before: those are the tags to flip. */
 export function newWinners(before, after) {
   return [...after].filter((i) => !before.has(i));
+}
+
+/**
+ * The shift and scale, from the top-left corner, that put a box where `from` was: the first frame of a FLIP, which
+ * then animates to none. Both boxes hold the same picture, so the widths alone give the scale.
+ */
+export function flipFrom(from, to) {
+  return { x: from.left - to.left, y: from.top - to.top, scale: from.width / to.width };
 }
