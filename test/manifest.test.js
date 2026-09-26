@@ -28,6 +28,15 @@ test('index.html links the manifest and the iOS home-screen icon, and they exist
   }
 });
 
+// Chrome paints an installed app's Android navigation bar in the manifest theme_color, fixed at install, and reads no
+// dark-mode alternative. A light one gave a near-white bar that One UI, in dark mode, drew light buttons on: all but
+// invisible. The dark theme's page colour gives a dark bar with light buttons, legible in both themes; the status bar
+// still follows the app's theme through the page's theme-color metas.
+test('the manifest theme colour is the dark theme\'s, so the Android navigation bar is dark with light buttons', () => {
+  const dark = html.match(/<meta name="theme-color" content="(#[0-9a-f]{6})" media="\(prefers-color-scheme: dark\)"/)[1];
+  assert.equal(manifest.theme_color, dark);
+});
+
 test('every manifest shortcut opens something the app knows, inside its scope', () => {
   assert.ok(manifest.shortcuts?.length, 'the manifest has shortcuts');
   assert.ok(manifest.shortcuts.length <= 3, 'Chrome for Android shows at most 3');

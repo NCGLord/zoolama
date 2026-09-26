@@ -9,7 +9,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f4faef",
-  "theme_color": "#f4faef",
+  "theme_color": "#0e1a11",
   "categories": ["shopping", "finance"],
   "screenshots": [
     {
