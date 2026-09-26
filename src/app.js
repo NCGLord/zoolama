@@ -15,6 +15,7 @@ import { renderHistory, undoFinish, undoDeleteTrip, undoImport } from './ui/hist
 import { renderOptions } from './ui/compare-view.js';
 import { renderTab, renderTheme } from './ui/shell.js';
 import { renderInstall, registerServiceWorker } from './ui/pwa.js';
+import './ui/magnifier-ui.js';
 
 /* ---------- language ---------- */
 

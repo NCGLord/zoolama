@@ -59,3 +59,13 @@ test('while the keyboard is up the total shrinks to one slim row, and comes back
   await expect(page.locator('#clear')).toBeVisible();
   expect((await tally.boundingBox()).height).toBe(full);
 });
+
+test('the header fits common phone widths with every tool showing, Install included', async ({ app: page }) => {
+  await expect(page.locator('#magnifier-btn')).toBeVisible();
+  await page.evaluate(() => (document.getElementById('install').hidden = false)); // as when the browser offers it
+  for (const width of [360, 390, 412, 430]) {
+    await page.setViewportSize({ width, height: 844 });
+    const bar = await page.locator('.bar').evaluate((b) => ({ content: b.scrollWidth, box: b.clientWidth }));
+    expect(bar.content, `${width}px`).toBeLessThanOrEqual(bar.box);
+  }
+});

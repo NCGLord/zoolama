@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { STRINGS, LOCALES, t, detectLang, formatPct, formatKg } from '../src/i18n.js';
+import { STRINGS, LOCALES, t, detectLang, formatPct, formatKg, formatZoom } from '../src/i18n.js';
 
 const placeholders = (s) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
@@ -56,6 +56,13 @@ test('formatPct rounds to one decimal in the language format', () => {
   assert.equal(formatPct(50.3345, 'pt'), '50,3');
   assert.equal(formatPct(50.3345, 'en'), '50.3');
   assert.equal(formatPct(20, 'pt'), '20');
+});
+
+test('formatZoom shows a magnification with one decimal in the language format', () => {
+  assert.equal(formatZoom(2.5, 'pt'), '2,5×');
+  assert.equal(formatZoom(2.5, 'en'), '2.5×');
+  assert.equal(formatZoom(1, 'pt'), '1,0×');
+  assert.equal(formatZoom(3.26, 'pt'), '3,3×');
 });
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');

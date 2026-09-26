@@ -56,6 +56,10 @@ export const STRINGS = {
     photoRemoved: 'Foto removida',
     photoError: 'Não foi possível usar essa foto',
     close: 'Fechar',
+    magnifier: 'Lupa',
+    zoom: 'Zoom',
+    cameraDenied: 'Permita a câmera nas configurações do navegador para usar a lupa.',
+    cameraUnavailable: 'Não foi possível abrir a câmera.',
     startCheck: 'Conferir no caixa',
     exitCheck: 'Sair',
     checkedProgress: '{n} de {total} conferidos',
@@ -212,6 +216,10 @@ export const STRINGS = {
     photoRemoved: 'Photo removed',
     photoError: "Couldn't use that photo",
     close: 'Close',
+    magnifier: 'Magnifier',
+    zoom: 'Zoom',
+    cameraDenied: 'Allow the camera in your browser settings to use the magnifier.',
+    cameraUnavailable: "Couldn't open the camera.",
     startCheck: 'Check at the till',
     exitCheck: 'Done',
     checkedProgress: '{n} of {total} checked',
@@ -336,4 +344,10 @@ export function formatPct(pct, lang) {
 export function formatKg(grams, lang) {
   const kg = new Intl.NumberFormat(LOCALES[lang], { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(grams / 1000);
   return `${kg} kg`;
+}
+
+/** A magnification with one decimal, the way camera apps show it: 2,5×. */
+export function formatZoom(zoom, lang) {
+  const x = new Intl.NumberFormat(LOCALES[lang], { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(zoom);
+  return `${x}×`;
 }

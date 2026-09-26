@@ -151,7 +151,8 @@ button {
   gap: 8px;
 }
 
-.theme-btn {
+.theme-btn,
+.magnifier-btn {
   display: grid;
   place-items: center;
   width: 44px;
@@ -161,7 +162,8 @@ button {
   background: transparent;
 }
 
-.theme-btn svg {
+.theme-btn svg,
+.magnifier-btn svg {
   width: 20px;
   height: 20px;
   fill: none;
@@ -203,8 +205,9 @@ button {
   stroke-linejoin: round;
 }
 
-/* Narrow phones: icon only, the label stays for screen readers. */
-@media (max-width: 379px) {
+/* Most phones: icon only, the label stays for screen readers. With the magnifier, theme and language tools beside it,
+   the labelled button needs about 420px of header. */
+@media (max-width: 429px) {
   .install-btn {
     width: 44px;
     padding: 0;
@@ -221,8 +224,8 @@ button {
   }
 }
 
-/* Photo viewer: always dark, like any photo view, whatever the app theme. It borrows the Feira dark tokens, but
-   keeps a neutral black behind the photo so the price tag's colours read true. */
+/* Photo viewer, and the magnifier's frame: always dark, like any photo view, whatever the app theme. It borrows the
+   Feira dark tokens, but keeps a neutral black behind the photo so the price tag's colours read true. */
 .viewer {
   --ink: #e8f4e2;
   --muted: #9db59d;
@@ -323,6 +326,55 @@ button {
   border-color: var(--primary);
   background: var(--primary);
   color: var(--primary-ink);
+}
+
+/* Magnifier (lupa): the live camera picture fills the view. Where the camera can't zoom, src/ui/magnifier-ui.js sets
+   --zoom and the picture is enlarged on screen instead. */
+.magnifier-view {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none; /* two fingers zoom the picture, not the page */
+}
+
+.magnifier-view video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(var(--zoom, 1));
+}
+
+.magnifier-msg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.magnifier-zoom {
+  display: grid;
+  grid-template-columns: auto 1fr 4ch;
+  align-items: center;
+  gap: 12px;
+}
+
+.magnifier-zoom input {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.magnifier-zoom output {
+  font: 700 22px/1 var(--num);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
 }
 
 .sheet {

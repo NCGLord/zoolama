@@ -49,6 +49,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M7.5 10 12 14.5l4.5-4.5M4.5 16.5v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2" /></svg>
           <span data-i18n="install">Instalar</span>
         </button>
+        <!-- Shown only where the browser gives camera access (see src/ui/magnifier-ui.js). -->
+        <button type="button" id="magnifier-btn" class="magnifier-btn" data-i18n-aria-label="magnifier" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l5 5" /></svg>
+        </button>
         <button type="button" id="theme" class="theme-btn">
           <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" /></svg>
           <svg class="sun" viewBox="0 0 24 24" aria-hidden="true">
@@ -217,6 +221,24 @@
         <div class="viewer-actions">
           <button type="button" id="viewer-retake" data-i18n="retakePhoto">Tirar outra foto</button>
           <button type="button" id="viewer-remove" data-i18n="removePhoto">Remover foto</button>
+          <form method="dialog"><button class="primary" data-i18n="close">Fechar</button></form>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="magnifier" class="viewer magnifier" aria-labelledby="magnifier-title">
+      <h2 id="magnifier-title" class="visually-hidden" data-i18n="magnifier">Lupa</h2>
+      <div id="magnifier-view" class="magnifier-view">
+        <video id="magnifier-video" playsinline muted autoplay></video>
+        <p id="magnifier-msg" class="magnifier-msg" role="alert" hidden></p>
+      </div>
+      <div class="viewer-bar">
+        <div class="magnifier-zoom">
+          <label for="magnifier-zoom" data-i18n="zoom">Zoom</label>
+          <input type="range" id="magnifier-zoom" min="1" max="4" step="0.1" value="1" disabled />
+          <output id="magnifier-level" for="magnifier-zoom"></output>
+        </div>
+        <div class="viewer-actions">
           <form method="dialog"><button class="primary" data-i18n="close">Fechar</button></form>
         </div>
       </div>
