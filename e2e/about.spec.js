@@ -71,19 +71,25 @@ test('when an update takes over, About keeps naming the version still running un
   await expect(page.locator('#toast-text')).toHaveText('Nova versão disponível');
 });
 
-// Opening the app fetches a new version by itself, and it takes over at once. Until Atualizar reloads the app, the
-// check must say so: "you have the latest", beside the old version's number, reads as if there were no update.
-test('when a new version has taken over but not yet reloaded the app, the check says to tap Atualizar', async ({ app: page }) => {
+// A new version that lands while the app is in use waits to go on screen (see update.spec.js). About says so at once,
+// with its number, whatever an earlier check said, and its button becomes the Atualizar that puts it there.
+test("a new version waiting to go on screen shows in About at once, and About's Atualizar puts it there", async ({ app: page }) => {
   await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(page.locator('#about-update-result')).toHaveText('Você já tem a versão mais recente.');
   await page.evaluate(() => {
     const worker = { postMessage: (_, [port]) => port.postMessage('new000000000') };
     Object.defineProperty(navigator.serviceWorker, 'controller', { get: () => worker });
     navigator.serviceWorker.dispatchEvent(new Event('controllerchange'));
   });
-  await expect(page.locator('#toast-text')).toHaveText('Nova versão disponível');
-  await page.getByRole('button', { name: 'Procurar atualização' }).click();
-  await expect(page.locator('#about-update-result')).toHaveText('Nova versão pronta: toque em Atualizar.');
-  await expect(page.locator('#about-version')).toHaveText(VERSION);
+  await expect(page.locator('#about-update-result')).toHaveText('Nova versão pronta: new000000000');
+  await expect(page.locator('#about-version')).toHaveText(VERSION); // still what runs
+  await expect(page.locator('#about-update')).toHaveText('Atualizar');
+
+  await page.getByRole('button', { name: 'English' }).click();
+  await expect(page.locator('#about-update-result')).toHaveText('New version ready: new000000000');
+  await expect(page.locator('#about-update')).toHaveText('Update');
+  await Promise.all([page.waitForEvent('load'), page.locator('#about-update').click()]);
 });
 
 // The browser fetches sw.js for an update check itself, out of reach of Playwright's offline mode and routing, and a

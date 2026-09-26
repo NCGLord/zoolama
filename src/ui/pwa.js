@@ -63,6 +63,14 @@ function busy() {
   );
 }
 
+// Told when a new version has taken over but waits to go on screen: About says so. About imports this module, so it
+// hands its listener over instead.
+let waitingListener = () => {};
+
+function onUpdateWaiting(listener) {
+  waitingListener = listener;
+}
+
 /** Puts a version that has taken over on screen, by reloading, when nothing can be lost. Returns whether it did. */
 function applyUpdate() {
   const visible = document.visibilityState === 'visible';
@@ -133,7 +141,10 @@ function registerServiceWorker() {
   sw.addEventListener('controllerchange', () => {
     if (controlled) {
       takenOver = true;
-      if (!applyUpdate()) offerUpdate();
+      if (!applyUpdate()) {
+        offerUpdate();
+        waitingListener();
+      }
     }
     controlled = true; // the first claim after a fresh install is not an update
   });
@@ -145,4 +156,4 @@ function registerServiceWorker() {
   });
 }
 
-export { renderInstall, registerServiceWorker, checkForUpdate, appVersion };
+export { renderInstall, registerServiceWorker, checkForUpdate, appVersion, onUpdateWaiting };
