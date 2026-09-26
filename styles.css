@@ -1130,9 +1130,15 @@ main {
 }
 
 /* Ticked lines fade but stay put, so the list doesn't jump while the cashier scans. A mismatch stays at full
-   strength: it's the one thing on a ticked line you still need to see. */
+   strength: it's the one thing on a ticked line you still need to see. The fade stops where the text still reads at
+   4.5:1 (a ticked line is still tapped, to untick it or note a charge), and grey text, which can hardly fade at all,
+   turns ink; test/contrast.test.js checks both themes. */
 .line.checked > :not(.tick, .line-charged) {
-  opacity: 0.5;
+  opacity: 0.65;
+}
+
+.line.checked > :is(.line-each, .line-note) {
+  color: var(--ink);
 }
 
 .tick {

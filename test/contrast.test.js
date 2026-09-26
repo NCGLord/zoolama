@@ -5,11 +5,14 @@ import { readFileSync } from 'node:fs';
 // Reads the colour tokens straight from styles.css, so a theme change can't quietly make text hard to read.
 const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
 
-function tokens(selector) {
+function block(selector) {
   const start = css.indexOf(`${selector} {`);
   assert.ok(start >= 0, `no ${selector} block in styles.css`);
-  const block = css.slice(start, css.indexOf('}', start));
-  return Object.fromEntries([...block.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})/gi)].map((m) => [m[1], m[2]]));
+  return css.slice(start, css.indexOf('}', start));
+}
+
+function tokens(selector) {
+  return Object.fromEntries([...block(selector).matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})/gi)].map((m) => [m[1], m[2]]));
 }
 
 const light = tokens(':root');
@@ -21,6 +24,13 @@ function luminance(hex) {
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   });
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** `fg` drawn at `opacity` over `bg`, as the eye sees it. */
+function blend(fg, bg, opacity) {
+  const channel = (hex, i) => parseInt(hex.slice(i, i + 2), 16);
+  const mixed = [1, 3, 5].map((i) => Math.round(opacity * channel(fg, i) + (1 - opacity) * channel(bg, i)));
+  return `#${mixed.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 }
 
 function contrast(a, b) {
@@ -74,4 +84,18 @@ test('the system-dark block and the forced-dark block define the same dark palet
   const media = css.slice(start, css.indexOf("}\n}", start));
   const system = Object.fromEntries([...media.matchAll(/--([\w-]+):\s*(#[0-9a-f]{6})/gi)].map((m) => [m[1], m[2]]));
   assert.deepEqual(system, tokens(":root[data-theme='dark']"));
+});
+
+// A ticked checkout line fades all but its tick and a mismatch, and opacity blends text into the page, which the
+// pairs above can't see. The fade must stop where the text still reads: ticked lines are still tapped (to untick, or
+// to note what the till charged), so WCAG's exemption for disabled controls doesn't apply. Grey text can hardly fade at
+// all, so on a ticked line it turns ink.
+test('text on a ticked checkout line stays readable through its fade', () => {
+  const opacity = Number(block('.line.checked > :not(.tick, .line-charged)').match(/opacity:\s*([\d.]+)/)?.[1]);
+  assert.ok(opacity > 0 && opacity < 1, 'ticked lines fade');
+  assert.match(block('.line.checked > :is(.line-each, .line-note)'), /color:\s*var\(--ink\)/, 'grey text turns ink');
+  for (const [name, theme] of [['light', light], ['dark', dark]]) {
+    const ratio = contrast(blend(theme.ink, theme.paper, opacity), theme.paper);
+    assert.ok(ratio >= 4.5, `${name}: --ink at opacity ${opacity} on --paper is ${ratio.toFixed(2)}:1, needs 4.5:1`);
+  }
 });
