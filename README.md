@@ -55,10 +55,11 @@ Offline supermarket helper for your phone:
   tap **×** and the size (*12×350* ml): the card shows what it adds up to (*= 4,2 L*). Tap **Add to cart** on the
   winner; a pack goes in named the way it prints (*12 × 350 ml*).
 - **About (Sobre)**: the fourth tab says what zoolama is, that what you enter stays on this phone (and how much space
-  it takes there), the version this phone runs (*Procurar atualização* checks for a newer one right away), its MIT
-  licence, and links to the source code, to report a problem and to e-mail the author. *Compartilhar o Zoolama* sends
-  the app's link through the share sheet. Tapping the logo opens the same page full screen, with the
-  🇧🇷/🇬🇧 flags still at hand.
+  it takes there), the version this phone runs (*Procurar atualização* checks for a newer one right away, and a new
+  version waiting to go on screen shows there at once, *Nova versão pronta* with its number, the button turning into
+  *Atualizar*), its MIT licence, and links to the source code, to report a problem and to e-mail the author.
+  *Compartilhar o Zoolama* sends the app's link through the share sheet. Tapping the logo opens the same page full
+  screen, with the 🇧🇷/🇬🇧 flags still at hand.
 - PT/EN and light/dark toggles in the header.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and
@@ -89,9 +90,12 @@ Launch it from the home-screen icon. It works in airplane mode from then on. On 
 shortcuts: *Comparar preços* opens Compare, *Conferir no caixa* opens the cart ready to check at the till, and *Lupa*
 opens the magnifier.
 
-**Updates:** the app checks for a new version when you open it, every 7 minutes while it's open, and when you bring it
-back to the front after 7 minutes or more. A new version downloads in the background; when it's ready you see
-*Nova versão disponível · Atualizar*. Tap it to switch now, or keep shopping and get it on the next launch.
+**Updates:** the app checks for a new version when you open it, whenever you bring it back to the front, and every 7
+minutes while it's open. A new version downloads in the background and goes on screen by itself when nothing can be
+lost: if it arrives before you've touched the app (just opened, or just brought back), when you asked for it with
+*Procurar atualização*, or as you leave the app. It never interrupts an item half-entered, a field being typed in or
+an open sheet: then *Nova versão disponível · Atualizar* (and About) offer it, and it goes on screen when you tap, or
+when you next leave the app.
 
 ## Develop
 
