@@ -50,3 +50,19 @@ test('a cart line that costs more than last time says so, and only while shoppin
   await page.locator('#start-check').click();
   await expect(page.locator('.line-rise')).toHaveCount(0);
 });
+
+// The notes come from past trips, so they follow the trips: there as soon as the app opens, and gone with a trip.
+test('a price-rise note is there as soon as the app opens, and goes when its trip is deleted', async ({ page }) => {
+  await addItem(page, { price: '4,59', name: 'Leite' });
+  await page.reload(); // the app opened again, touching nothing
+  await expect(line(page, 'Leite').locator('.line-rise')).toHaveText('+7% desde a última vez');
+
+  await page.locator('#name').fill('Leite');
+  await expect(page.locator('#name-hint')).toHaveText('Última vez: R$ 4,29 · Assaí, 12/01');
+  await page.getByRole('tab', { name: 'Histórico' }).click();
+  await page.locator('.trip summary').click();
+  await page.getByRole('button', { name: 'Excluir compra' }).click();
+  await page.getByRole('tab', { name: /^Carrinho/ }).click();
+  await expect(line(page, 'Leite').locator('.line-rise')).toHaveCount(0);
+  await expect(page.locator('#name-hint')).toHaveText('');
+});

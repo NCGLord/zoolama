@@ -19,13 +19,20 @@ import { eachText, tagPrice, tr } from './text.js';
 import { showToast } from './toast.js';
 
 let trips = loadHistory(storage);
+rememberPrices(trips); // before anything is drawn: the cart's notes and the entry's hint read it
 let lastFinishedId = null; // trip saved by the latest Finalizar, for its Undo
 let lastDeleted = null; // { trip, index } for the latest delete's Undo
 
-function setTrips(next) {
+/** Shows `next` as the history: what things cost last time, and the History tab. Every change of trips comes here. */
+function showTrips(next) {
   trips = next;
-  const saved = saveHistory(storage, trips);
+  rememberPrices(trips);
   renderHistory();
+}
+
+function setTrips(next) {
+  const saved = saveHistory(storage, next);
+  showTrips(next);
   return saved;
 }
 
@@ -43,8 +50,7 @@ $('finish-form').addEventListener('submit', () => {
   const party = celebrates(total(state.cart), state.budgetCents);
   const trip = tripFromCart(state.cart, { id: crypto.randomUUID(), at: Date.now(), store: $('finish-store').value });
   if (!setTrips([trip, ...trips])) {
-    trips = trips.filter((t) => t.id !== trip.id); // not stored: keep the cart, don't pretend
-    renderHistory();
+    showTrips(trips.filter((t) => t.id !== trip.id)); // not stored: keep the cart, don't pretend
     showToast('tripNotSaved');
     return;
   }
@@ -203,7 +209,6 @@ $('history').addEventListener(
 );
 
 function renderHistory() {
-  rememberPrices(trips); // every change to the history comes through here
   renderInsights();
   $('history-empty').hidden = trips.length > 0;
   $('export-history').hidden = trips.length === 0;
@@ -338,8 +343,7 @@ $('import-input').addEventListener('change', async (e) => {
   if (!added) return showToast('importNothing');
   const previous = trips;
   if (!setTrips(merged)) {
-    trips = previous; // not stored: don't pretend
-    renderHistory();
+    showTrips(previous); // not stored: don't pretend
     return showToast('importNotSaved');
   }
   beforeImport = previous;

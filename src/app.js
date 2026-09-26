@@ -18,6 +18,7 @@ import { renderInstall, registerServiceWorker } from './ui/pwa.js';
 import { openMagnifier } from './ui/magnifier-ui.js';
 import './ui/about-screen.js';
 import { renderAbout } from './ui/about-view.js';
+import { onPricesChanged } from './ui/price-memory.js';
 
 /* ---------- language ---------- */
 
@@ -37,6 +38,11 @@ for (const b of document.querySelectorAll('[data-lang]')) {
 /* ---------- boot ---------- */
 
 setCartRenderer(renderCart);
+// What things cost last time changes with the history: the cart's notes and the entry's hint follow it.
+onPricesChanged(() => {
+  renderCart();
+  renderEntryMode();
+});
 
 // cartUndo / planUndo: it needs the cart's or the list's one-level undo snapshot, which any later change drops.
 defineToastActions({
