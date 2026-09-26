@@ -44,6 +44,7 @@ let registration = null;
 let controlled = false; // a version of the app runs here: before that, a download is its first install, not an update
 let lastCheck = 0;
 let takenOver = false; // a newer version took over after this page loaded; the page runs it once reloaded
+let pageVersion = null; // the version on screen: that of the worker that served this page, asked at start
 let asked = false; // Procurar atualização found a version: it goes on screen as soon as it lands
 let touched = false; // touched since the app last came to the front
 
@@ -151,12 +152,32 @@ async function look({ asking = false } = {}) {
   }
   const incoming = registration.installing ?? registration.waiting;
   if (!incoming) {
+    if (await pageBehind()) return noticeTakeover(); // installed already: this page just hasn't caught up
     asked = false; // nothing coming: a later update isn't "asked for"
     setUpdateState('latest');
     return;
   }
   setUpdateState('found');
   watch(incoming);
+}
+
+/**
+ * A newer version runs the service worker while this page still shows the old one: on screen now if nothing can be
+ * lost, otherwise offered. Reached by the takeover event, or by a look that finds the page behind, since a paused page
+ * (Android) can miss the event and must not stay behind for want of it.
+ */
+function noticeTakeover() {
+  takenOver = true;
+  if (!applyUpdate()) {
+    offerUpdate();
+    setUpdateState('waiting');
+  }
+}
+
+/** Whether the installed version is a different one from the page's: the truth, whatever events arrived. */
+async function pageBehind() {
+  const installed = await versionOf(registration.active);
+  return Boolean(pageVersion && installed && installed !== pageVersion);
 }
 
 /** Procurar atualização: the shopper's look. */
@@ -166,7 +187,11 @@ function checkForUpdate() {
 
 /** The version the running service worker was built as (sw.js VERSION), or null where none answers. */
 function appVersion() {
-  const worker = navigator.serviceWorker?.controller;
+  return versionOf(navigator.serviceWorker?.controller);
+}
+
+/** The version a service worker was built as, or null where none answers. */
+function versionOf(worker) {
   if (!worker) return Promise.resolve(null);
   return new Promise((resolve) => {
     const { port1, port2 } = new MessageChannel();
@@ -182,6 +207,7 @@ function registerServiceWorker() {
   const sw = navigator.serviceWorker;
   controlled = Boolean(sw.controller);
   const firstInstall = !controlled;
+  if (controlled) appVersion().then((version) => (pageVersion = version));
 
   sw.register('./sw.js')
     .then((registered) => {
@@ -207,13 +233,7 @@ function registerServiceWorker() {
   // still runs the old one. It goes on screen by itself when nothing can be lost (see reloadsForUpdate); otherwise
   // Atualizar offers it, rather than a reload in the middle of typing.
   sw.addEventListener('controllerchange', () => {
-    if (controlled) {
-      takenOver = true;
-      if (!applyUpdate()) {
-        offerUpdate();
-        setUpdateState('waiting');
-      }
-    }
+    if (controlled) noticeTakeover();
     controlled = true; // the first claim after a fresh install is not an update
   });
 

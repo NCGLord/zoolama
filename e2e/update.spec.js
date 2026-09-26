@@ -184,3 +184,17 @@ test('asked for in the full-screen About, a new version goes on screen at once, 
   await expect(page.locator('#panel-about')).toBeVisible();
   await expect(page.locator('#toast-text')).toHaveText('App atualizado');
 });
+
+// The phone's case: a newer version installed and active, but the page never heard it take over (no controllerchange).
+// A look must still see that the version on screen is behind the installed one, and put the new one there.
+test('a look notices a newer version installed without word of it, and puts it on screen', async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.evaluate(() => {
+    window.oldPage = true;
+    const newer = { postMessage: (_, [port]) => port.postMessage('new000000000') };
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'active', { get: () => newer });
+  });
+  await Promise.all([page.waitForEvent('load'), page.getByRole('button', { name: 'Procurar atualização' }).click()]);
+  await expect(page.locator('#panel-about')).toBeVisible();
+  await expect(page.locator('#toast-text')).toHaveText('App atualizado');
+});
