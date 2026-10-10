@@ -18,7 +18,7 @@ import { renderTab, renderTheme } from './ui/shell.js';
 import { reloadIntoUpdate, renderInstall, registerServiceWorker, resumeAfterUpdate } from './ui/pwa.js';
 import { openMagnifier } from './ui/magnifier-ui.js';
 import './ui/about-screen.js';
-import './ui/money-field.js';
+import './ui/till-field.js';
 import { renderAbout } from './ui/about-view.js';
 import { onPricesChanged } from './ui/price-memory.js';
 
