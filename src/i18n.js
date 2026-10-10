@@ -437,10 +437,13 @@ export function formatExposure(ev, lang) {
   return `${rounded > 0 ? '+' : rounded < 0 ? '−' : ''}${x}`;
 }
 
-/** A size the way Android's storage screen shows it, in thousands: 340 kB, 1,2 MB, 1,5 GB. */
+/**
+ * A size the way Android's storage screen shows it, in thousands: 340 kB, 1,2 MB, 1,5 GB; a no-break space between, so
+ * a line never ends on the number with the unit on the next.
+ */
 export function formatBytes(bytes, lang) {
   const kB = Math.round(bytes / 1e3);
   // The unit is chosen after rounding, so 999,6 kB reads 1 MB rather than 1.000 kB.
   const [value, unit] = kB < 1000 ? [kB, 'kilobyte'] : bytes < 999.95e6 ? [bytes / 1e6, 'megabyte'] : [bytes / 1e9, 'gigabyte'];
-  return new Intl.NumberFormat(LOCALES[lang], { style: 'unit', unit, maximumFractionDigits: 1 }).format(value);
+  return new Intl.NumberFormat(LOCALES[lang], { style: 'unit', unit, maximumFractionDigits: 1 }).format(value).replace(' ', '\u00a0');
 }

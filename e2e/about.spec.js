@@ -199,10 +199,10 @@ test('About says your data stays on this phone, and how much space zoolama takes
   await page.getByRole('tab', { name: 'Sobre' }).click();
   const about = page.locator('#panel-about');
   await expect(about).toContainText('Sem conta e sem rastreamento');
-  await expect(page.locator('#about-storage')).toHaveText(/^Usando \d+(,\d)? (kB|MB|GB) neste aparelho\.$/);
+  await expect(page.locator('#about-storage')).toHaveText(/^Usando \d+(,\d)?\u00a0(kB|MB|GB) neste aparelho\.$/);
 
   await page.getByRole('button', { name: 'English' }).click();
-  await expect(page.locator('#about-storage')).toHaveText(/^Using \d+(\.\d)? (kB|MB|GB) on this phone\.$/);
+  await expect(page.locator('#about-storage')).toHaveText(/^Using \d+(\.\d)?\u00a0(kB|MB|GB) on this phone\.$/);
 });
 
 test('About splits that space into the app, the photos and the lists, and says what is left and the memory in use', async ({
@@ -213,7 +213,7 @@ test('About splits that space into the app, the photos and the lists, and says w
   const sizes = async (size) => {
     for (const part of await parts.locator('dd').all()) await expect(part).toHaveText(new RegExp(`^${size}$`));
   };
-  let size = '\\d+(,\\d)? (kB|MB|GB)';
+  let size = '\\d+(,\\d)?\\u00a0(kB|MB|GB)';
   await expect(parts.locator('dt')).toHaveText(['App, para usar offline', 'Fotos das etiquetas', 'Listas e histórico']);
   await sizes(size);
   await expect(page.locator('#about-storage-free')).toHaveText(new RegExp(`^Ainda cabem ${size}\\.$`));
@@ -222,7 +222,7 @@ test('About splits that space into the app, the photos and the lists, and says w
   await expect(page.locator('#about-memory')).toHaveText(new RegExp(`^Memória do JavaScript agora: cerca de ${size}\\.$`));
 
   await page.getByRole('button', { name: 'English' }).click();
-  size = '\\d+(\\.\\d)? (kB|MB|GB)';
+  size = '\\d+(\\.\\d)?\\u00a0(kB|MB|GB)';
   await expect(parts.locator('dt')).toHaveText(['The app, for offline use', 'Shelf-tag photos', 'Lists and history']);
   await sizes(size);
   await expect(page.locator('#about-storage-free')).toHaveText(new RegExp(`^Room for ${size} more\\.$`));
@@ -243,7 +243,7 @@ test("About leaves out what the browser doesn't say, as on an iPhone", async ({ 
     Object.defineProperty(performance, 'memory', { value: undefined });
   });
   await page.getByRole('tab', { name: 'Sobre' }).click();
-  await expect(page.locator('#about-storage')).toHaveText(/^Usando \d+(,\d)? (kB|MB|GB) neste aparelho\.$/);
+  await expect(page.locator('#about-storage')).toHaveText(/^Usando \d+(,\d)?\u00a0(kB|MB|GB) neste aparelho\.$/);
   for (const id of ['about-storage-parts', 'about-storage-free', 'about-storage-kept', 'about-memory']) {
     await expect(page.locator(`#${id}`)).toHaveJSProperty('hidden', true);
   }

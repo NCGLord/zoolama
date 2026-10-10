@@ -76,13 +76,13 @@ test('formatExposure shows EV signed, with one decimal, the way camera apps do',
 });
 
 test("formatBytes counts in thousands, as Android's storage screen does: kB whole, MB and GB to one decimal", () => {
-  assert.equal(formatBytes(340_000, 'pt'), '340 kB');
-  assert.equal(formatBytes(1_234_567, 'pt'), '1,2 MB');
-  assert.equal(formatBytes(1_234_567, 'en'), '1.2 MB');
-  assert.equal(formatBytes(12_000_000, 'pt'), '12 MB');
-  assert.equal(formatBytes(1_500_000_000, 'pt'), '1,5 GB');
-  assert.equal(formatBytes(999_499, 'pt'), '999 kB');
-  assert.equal(formatBytes(0, 'pt'), '0 kB');
+  assert.equal(formatBytes(340_000, 'pt'), '340\u00a0kB');
+  assert.equal(formatBytes(1_234_567, 'pt'), '1,2\u00a0MB');
+  assert.equal(formatBytes(1_234_567, 'en'), '1.2\u00a0MB');
+  assert.equal(formatBytes(12_000_000, 'pt'), '12\u00a0MB');
+  assert.equal(formatBytes(1_500_000_000, 'pt'), '1,5\u00a0GB');
+  assert.equal(formatBytes(999_499, 'pt'), '999\u00a0kB');
+  assert.equal(formatBytes(0, 'pt'), '0\u00a0kB');
 });
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
