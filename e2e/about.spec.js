@@ -103,6 +103,17 @@ test('when the check finds a new version, About says it is on its way', async ({
   await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
 });
 
+// A page that opens (or reloads into an update) while the next version is already downloading must say so: the
+// download started before this page could hear of it, so no updatefound will come.
+test('a page opened while a download is under way says the new version is on its way', async ({ app: page }) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', { get: () => Object.assign(new EventTarget(), { state: 'installing' }) }),
+  );
+  await page.reload();
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
+});
+
 // A download that doesn't finish (the signal dropped, say) must not leave "Baixando…" on screen for good; and, no
 // longer asked for, a later version waits for Atualizar like any other.
 test('a download that fails says so, and the next version is not put on screen unasked', async ({ app: page }) => {

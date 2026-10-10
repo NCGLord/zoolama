@@ -269,6 +269,17 @@ function registerServiceWorker() {
     });
   } else note('start, first install');
 
+  // A download that started before this page could hear of it (one an update's reload left running, say) has had its
+  // updatefound already: follow it from here. Not from register(), which resolves only once that download is done.
+  if (controlled) {
+    sw.getRegistration().then((current) => {
+      if (!current?.installing) return;
+      note('download under way');
+      setUpdateState('found');
+      watch(current.installing);
+    });
+  }
+
   sw.register('./sw.js')
     .then((registered) => {
       registration = registered;
