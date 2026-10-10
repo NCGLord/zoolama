@@ -146,7 +146,10 @@ test('a takeover while the page was loading is noticed at start, and the new ver
 // A CDN midway through a deploy can hand out the new sw.js beside a file of the last version. Installed, that mix would
 // be the app until the next update, offline too; so the install is refused, and the next try, once the CDN has caught
 // up, goes through.
-for (const [stale, what] of [['index.html', 'the page']]) {
+for (const [stale, what] of [
+  ['index.html', 'the page'],
+  ['src/money.js', 'a module'],
+]) {
   test(`a deploy served with ${what} of the last version is refused, and the next one goes through`, async ({
     page,
     site,

@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { webcrypto } from 'node:crypto';
+import vm from 'node:vm';
 import { sep } from 'node:path';
 import { PAGE_VERSION_RE, ROOT, readSw, assetsHash } from '../tools/sw-assets.mjs';
 
@@ -37,10 +39,36 @@ test("index.html carries the same version as sw.js, so a page knows which versio
   assert.equal(read('index.html').match(PAGE_VERSION_RE)?.[1], version);
 });
 
-test("sw.js refuses to install unless the page it cached carries its version, in the tag stamp writes", () => {
-  const source = read('sw.js');
-  const checked = source.match(/page\.includes\(`([^`]+)`\)/)?.[1];
-  assert.ok(checked, 'the install checks the cached page');
-  assert.match(checked.replace('${VERSION}', version), PAGE_VERSION_RE);
-  assert.equal(checked.replace('${VERSION}', version).match(PAGE_VERSION_RE)[1], version);
+// sw.js's install, run as a browser would once it has fetched ASSETS: here they're the repo's files, each but those in
+// `served` (name → bytes), as a CDN midway through a deploy can serve. Settles as the install does.
+async function install(served = {}) {
+  const handlers = {};
+  const cached = new Map();
+  const cache = {
+    addAll: async (requests) => requests.forEach(({ url }) => cached.set(url, served[url] ?? readFileSync(new URL(url, ROOT)))),
+    match: async (url) => new Response(cached.get(url)),
+  };
+  const self = { addEventListener: (type, handler) => (handlers[type] = handler), skipWaiting: async () => {} };
+  const context = { self, caches: { open: async () => cache }, Request: class { constructor(url) { this.url = url; } }, Response, Blob, TextEncoder, TextDecoder, crypto: webcrypto };
+  vm.runInNewContext(read('sw.js'), context);
+  let done;
+  handlers.install({ waitUntil: (promise) => (done = promise) });
+  return done;
+}
+
+test('sw.js installs the files VERSION was stamped from: its hash is the same as `npm run stamp`\'s', async () => {
+  await install();
+});
+
+test('sw.js refuses to install a version with any one file not the one VERSION was stamped from', async () => {
+  for (const a of assets) {
+    const bytes = Buffer.from(readFileSync(new URL(a, ROOT)));
+    bytes[bytes.length - 1] ^= 1; // the last byte, past the page's version tag
+    await assert.rejects(install({ [a]: bytes }), /the files cached are/, a);
+  }
+});
+
+test('sw.js refuses to install a version whose page carries another version, though the rest of it is the same', async () => {
+  const page = read('index.html').replace(PAGE_VERSION_RE, '<meta name="version" content="0123456789ab" />');
+  await assert.rejects(install({ './index.html': Buffer.from(page) }), /index\.html isn't/);
 });
