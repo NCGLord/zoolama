@@ -207,6 +207,7 @@ function noticeTakeover(how) {
   note(`taken over (${how})`);
   takenOver = true;
   if (!applyUpdate()) {
+    asked = false; // it waits, offered like any other: a later look mustn't reload mid-shop on that old ask
     offerUpdate();
     setUpdateState('waiting');
   }

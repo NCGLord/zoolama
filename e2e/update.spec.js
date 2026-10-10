@@ -174,6 +174,36 @@ test('asked for, a new version goes on screen as soon as it lands', async ({ app
   await Promise.all([page.waitForEvent('load'), takeOver(page)]);
 });
 
+// Asked for, but it landed while a field was being typed in: it waits, offered like any other. Minutes later, a look
+// mustn't act on that old ask and reload mid-shop (it once did, opening in About).
+test('asked for but landing mid-typing, a new version waits; a later look leaves it waiting', async ({ app: page }) => {
+  await page.evaluate(() =>
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', {
+      configurable: true,
+      get: () => Object.assign(new EventTarget(), { state: 'installing' }),
+    }),
+  );
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
+  await page.getByRole('tab', { name: 'Carrinho' }).click();
+  await page.locator('#price').fill('4,29'); // focus stays in the field: typing
+  await takeOver(page);
+  await expect(page.locator('#toast-text')).toHaveText('Nova versão disponível');
+
+  await page.getByRole('tab', { name: 'Comparar' }).click();
+  await page.evaluate(() => {
+    // The download is done, and the installed version is newer than the page: what a later look sees.
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'installing', { get: () => null });
+    const newer = { postMessage: (_, [port]) => port.postMessage('new000000000') };
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'active', { get: () => newer });
+  });
+  await page.clock.runFor('08:00');
+  await expect.poll(() => checks(page)).toBeGreaterThan(1); // the app's own look ran
+  expect(await stillOld(page)).toBe(true);
+  await expect(page.locator('#panel-compare')).toBeVisible();
+});
+
 // The full-screen About (from the logo) is where updates are asked for: it holds nothing a reload could lose, so it
 // mustn't hold an update back; and the shopper lands back in About, told it's done.
 test('asked for in the full-screen About, a new version goes on screen at once, back in About', async ({ app: page }) => {
