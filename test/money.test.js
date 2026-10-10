@@ -73,7 +73,7 @@ test('formatMoney uses pt-BR format for pt', () => {
   assert.equal(formatMoney(129990, 'pt').replace(/\s/g, ' '), 'R$ 1.299,90');
 });
 
-test('formatMoney uses en-US format for en, still in BRL', () => {
+test('formatMoney uses en-GB format for en, still in BRL', () => {
   assert.equal(formatMoney(129990, 'en').replace(/\s/g, ' '), 'R$1,299.90');
 });
 
