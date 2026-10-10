@@ -4,6 +4,7 @@ import {
   UPDATE_CHECK_MS,
   UPDATE_POLL_MS,
   dueForUpdateCheck,
+  mergeLogs,
   nextUpdateState,
   reloadsForUpdate,
 } from '../src/update.js';
@@ -56,4 +57,20 @@ test('the update state is the latest look, except that a waiting version outrank
   for (const next of ['checking', 'latest', 'offline', 'found', 'failed']) {
     assert.equal(nextUpdateState('waiting', next), 'waiting');
   }
+});
+
+test("the update log merges each copy's steps in time order, keeping the latest", () => {
+  const app = [[1, 'start A'], [4, 'look own'], [6, 'latest']];
+  const tab = [[2, 'start B'], [5, 'look asked']];
+  assert.deepEqual(mergeLogs([app, tab]), [[1, 'start A'], [2, 'start B'], [4, 'look own'], [5, 'look asked'], [6, 'latest']]);
+  assert.deepEqual(mergeLogs([app, tab], 2), [[5, 'look asked'], [6, 'latest']]);
+  assert.deepEqual(mergeLogs([]), []);
+});
+
+test('steps logged in the same millisecond keep the order they were logged in', () => {
+  assert.deepEqual(mergeLogs([[[3, 'controller changed'], [3, 'taken over (event)'], [3, 'waiting']]]), [
+    [3, 'controller changed'],
+    [3, 'taken over (event)'],
+    [3, 'waiting'],
+  ]);
 });

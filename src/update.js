@@ -28,3 +28,17 @@ export function reloadsForUpdate({ asked = false, touched, visible, busy }) {
 export function nextUpdateState(current, next) {
   return current === 'waiting' ? 'waiting' : next;
 }
+
+export const LOG_KEEP = 40; // update steps the log keeps: enough to see where one update stopped
+
+/**
+ * The update log About shows, from each open copy's own log (the app and a browser tab each keep one, as both writing
+ * one log would lose steps): every [time, step] in time order, the latest `keep` of them. Steps logged in the same
+ * millisecond keep the order they were logged in.
+ */
+export function mergeLogs(logs, keep = LOG_KEEP) {
+  return logs
+    .flat()
+    .sort((a, b) => a[0] - b[0])
+    .slice(-keep);
+}
