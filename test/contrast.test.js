@@ -53,7 +53,11 @@ const PAIRS = [
   ['good', 'paper', 4.5],
   ['focus', 'paper', 3],
   ['primary', 'surface', 3], // the History bars (a graphic, so 3:1)
+  ['muted', 'stripe', 4.5], // the update log's every other step
 ];
+
+// A tint, not text: the least that still tells one step of the update log from the next on a phone in daylight.
+const STRIPE_MIN = 1.12;
 
 for (const [name, theme] of [['light', light], ['dark', dark]]) {
   test(`${name} theme: every text and icon colour is readable on its background`, () => {
@@ -62,6 +66,11 @@ for (const [name, theme] of [['light', light], ['dark', dark]]) {
       const ratio = contrast(theme[fg], theme[bg]);
       assert.ok(ratio >= min, `${name}: --${fg} ${theme[fg]} on --${bg} ${theme[bg]} is ${ratio.toFixed(2)}:1, needs ${min}:1`);
     }
+  });
+
+  test(`${name} theme: the update log's stripes stand out from its box`, () => {
+    const ratio = contrast(theme.stripe, theme.surface);
+    assert.ok(ratio >= STRIPE_MIN, `${name}: --stripe ${theme.stripe} on --surface is ${ratio.toFixed(3)}:1, needs ${STRIPE_MIN}:1`);
   });
 
   test(`${name} theme: white text on the over-budget tag is readable`, () => {

@@ -15,6 +15,7 @@
   --ink: #1d2b1f;
   --muted: #5c6b5e;
   --rule: #d5e5cf;
+  --stripe: #e8f2e3; /* every other step of the update log, a tint of the page */
   --tag: #ffcf33;
   --tag-ink: #1d2b1f;
   --dear: #c43d1a;
@@ -40,6 +41,7 @@
     --ink: #e8f4e2;
     --muted: #9db59d;
     --rule: #25392a;
+    --stripe: #0e1a11;
     --tag-ink: #14210f;
     --dear: #ff7a59;
     --good: #5fd07f;
@@ -59,6 +61,7 @@
   --ink: #e8f4e2;
   --muted: #9db59d;
   --rule: #25392a;
+  --stripe: #0e1a11;
   --tag-ink: #14210f;
   --dear: #ff7a59;
   --good: #5fd07f;
@@ -2366,5 +2369,5 @@ button.line-each {
 }
 
 .about-log-steps li:nth-child(even) {
-  background: var(--paper);
+  background: var(--stripe);
 }
