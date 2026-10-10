@@ -69,3 +69,17 @@ export function parseGrams(input) {
   const grams = kg === null ? 0 : Math.round(kg * 1000);
   return grams >= 1 ? grams : null;
 }
+
+const TILL_DIGITS = 5; // 99,999 kg: past anything weighed in a shop
+
+/**
+ * A weight field's text read the way a till reads its keys, the same rule as tillCents in money.js but with the last
+ * three digits being the grams, as scale labels print kg ("1250" → 1,250 kg). Returns whole grams, 0 for no digits.
+ */
+export function tillGrams(input) {
+  const digits = String(input ?? '')
+    .replace(/\D/g, '')
+    .replace(/^0+/, '')
+    .slice(0, TILL_DIGITS);
+  return Number(digits);
+}

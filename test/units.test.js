@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { UNITS, BASE_UNIT, parseQuantity, toBase, parseGrams, parsePack, packLabel } from '../src/units.js';
+import { UNITS, BASE_UNIT, parseQuantity, toBase, parseGrams, tillGrams, parsePack, packLabel } from '../src/units.js';
 
 test('parseQuantity reads comma and dot decimals of any length', () => {
   assert.equal(parseQuantity('0,350'), 0.35);
@@ -73,6 +73,26 @@ test('parseGrams reads a weight typed in kg, as scale labels print it', () => {
 
 test('parseGrams rejects empty, non-numeric and sub-gram weights', () => {
   for (const bad of ['', 'abc', '0', '0,0004', null]) assert.equal(parseGrams(bad), null, `input ${JSON.stringify(bad)}`);
+});
+
+test('tillGrams reads the digits as a scale label prints kg: the last three are the grams', () => {
+  assert.equal(tillGrams('1'), 1);
+  assert.equal(tillGrams('125'), 125);
+  assert.equal(tillGrams('1250'), 1250);
+});
+
+test('tillGrams reads a field it formatted itself back unchanged, in either language', () => {
+  assert.equal(tillGrams('1,250'), 1250);
+  assert.equal(tillGrams('0.500'), 500);
+});
+
+test('tillGrams skips leading zeros and ignores a digit past five (99,999 kg)', () => {
+  assert.equal(tillGrams('0,0125'), 125);
+  assert.equal(tillGrams('99,9999'), 99999);
+});
+
+test('tillGrams is zero when there are no digits, or only zeros', () => {
+  for (const none of ['', 'abc', '0,000', null, undefined]) assert.equal(tillGrams(none), 0, `input ${JSON.stringify(none)}`);
 });
 
 test('parsePack reads a multipack as count × size, however the × is typed', () => {
