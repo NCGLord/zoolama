@@ -101,7 +101,7 @@ you tap, or when you next leave the app. An item half-entered in the form, photo
 reload, and the app says *App atualizado*. About then reads *Atualizado agora para* and the new version, so even a
 quiet reload onto the same screen shows that it happened. Under its button, *Registro de atualizações* (closed until
 tapped) keeps the last 40 update steps on the phone (each check, the download, the takeover, the reload), so a
-screenshot of it shows where an update stopped. They scroll in a box nine rows tall, which opens on the newest.
+screenshot of it shows where an update stopped. They scroll in a striped box nine rows tall, as wide as the page, newest first.
 
 ## Develop
 

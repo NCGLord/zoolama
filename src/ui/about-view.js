@@ -66,18 +66,28 @@ $('about-update').addEventListener('click', () => {
   else checkForUpdate();
 });
 
-// The update log, drawn when opened and redrawn with each step while it stays open: time, then what happened. Its box
-// scrolls (styles.css): it opens on the newest step, at the bottom, and follows each new one, unless scrolled up to read
-// an older one.
+// The update log, drawn when opened and redrawn with each step while it stays open: time, then what happened, newest
+// first. Its box scrolls (styles.css): it opens at the top, where each new step shows; scrolled down to read an older
+// step, the view stays on that one as steps come in above it.
 const clock = (t) => new Date(t).toLocaleTimeString('en-GB');
 function renderLog({ opened = false } = {}) {
   if (!$('about-log').open) return;
-  const box = $('about-log').querySelector('pre');
-  const atNewest = opened || box.scrollHeight - box.scrollTop - box.clientHeight < 1;
-  box.textContent = updateLog()
-    .map(([t, e]) => `${clock(t)} ${e}`)
-    .join('\n');
-  if (atNewest) box.scrollTop = box.scrollHeight;
+  const box = $('about-log-steps');
+  const reading = opened || box.scrollTop === 0 ? null : stepInView(box);
+  box.replaceChildren(
+    ...updateLog()
+      .toReversed()
+      .map(([t, e]) => Object.assign(document.createElement('li'), { textContent: `${clock(t)} ${e}` })),
+  );
+  const same = reading && [...box.children].find((li) => li.textContent === reading.text);
+  box.scrollTop = same ? box.scrollTop + same.getBoundingClientRect().top - reading.top : 0;
+}
+
+/** The step at the top of the log's view, and where on screen it is. */
+function stepInView(box) {
+  const top = box.getBoundingClientRect().top + box.clientTop;
+  const step = [...box.children].find((li) => li.getBoundingClientRect().bottom > top);
+  return step && { text: step.textContent, top: step.getBoundingClientRect().top };
 }
 $('about-log').addEventListener('toggle', () => renderLog({ opened: true }));
 onUpdateLog(() => renderLog());

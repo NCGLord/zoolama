@@ -284,19 +284,19 @@ test('About keeps a log of update steps, across restarts', async ({ app: page })
   await expect(page.locator('#about-update-result')).toHaveText('Você já tem a versão mais recente.');
   await page.reload();
   await page.locator('#about-log summary').click();
-  await expect(page.locator('#about-log pre')).toContainText('look asked');
-  await expect(page.locator('#about-log pre')).toContainText('latest');
-  await expect(page.locator('#about-log pre')).toContainText(`start ${VERSION}`);
+  await expect(page.locator('#about-log-steps')).toContainText('look asked');
+  await expect(page.locator('#about-log-steps')).toContainText('latest');
+  await expect(page.locator('#about-log-steps')).toContainText(`start ${VERSION}`);
 });
 
 // Open, the log keeps up: a step taken while it's on screen shows at once, not on the next opening.
 test('the update log, while open, shows each new step as it happens', async ({ app: page }) => {
   await page.getByRole('tab', { name: 'Sobre' }).click();
   await page.locator('#about-log summary').click();
-  await expect(page.locator('#about-log pre')).not.toContainText('look asked');
+  await expect(page.locator('#about-log-steps')).not.toContainText('look asked');
   await page.getByRole('button', { name: 'Procurar atualização' }).click();
-  await expect(page.locator('#about-log pre')).toContainText('look asked');
-  await expect(page.locator('#about-log pre')).toContainText('latest');
+  await expect(page.locator('#about-log-steps')).toContainText('look asked');
+  await expect(page.locator('#about-log-steps')).toContainText('latest');
 });
 
 /** A full log: the 40 steps About keeps, taken an hour ago by another copy of the app. */
@@ -307,47 +307,79 @@ const fillLog = (page) =>
     localStorage.setItem('zoolama:update-log:other', JSON.stringify(steps));
   });
 
-/** The open log's box: the rows it shows, whether it scrolls, and where it's scrolled to. */
+const openLog = async (page) => {
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.locator('#about-log summary').click();
+};
+
+const logSteps = (page) => page.locator('#about-log-steps li');
+
+/** The open log's box: the rows it shows, whether it scrolls, and how far down it's scrolled. */
 const logBox = (page) =>
-  page.locator('#about-log pre').evaluate((pre) => {
-    const style = getComputedStyle(pre);
-    const inner = pre.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-    return {
-      rows: inner / parseFloat(style.lineHeight),
-      scrolls: pre.scrollHeight > pre.clientHeight,
-      atNewest: pre.scrollHeight - pre.scrollTop - pre.clientHeight < 1,
-      top: pre.scrollTop,
-    };
+  page.locator('#about-log-steps').evaluate((box) => {
+    const style = getComputedStyle(box);
+    const inner = box.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    return { rows: inner / parseFloat(style.lineHeight), scrolls: box.scrollHeight > box.clientHeight, top: box.scrollTop };
   });
 
-// The log keeps 40 steps, near a whole screen of them: a box nine rows tall holds it, opening on the latest.
-test('a long update log opens in a box nine rows tall, at its newest step, and scrolls', async ({ app: page }) => {
+/** The step at the top of the log's view (or the one saying `text`), and how far into the view it sits. */
+const inView = (page, text) =>
+  page.locator('#about-log-steps').evaluate((box, text) => {
+    const top = box.getBoundingClientRect().top + box.clientTop;
+    const step = [...box.children].find((li) => (text ? li.textContent === text : li.getBoundingClientRect().bottom > top));
+    return { text: step.textContent, offset: Math.round(step.getBoundingClientRect().top - top) };
+  }, text);
+
+// The log keeps 40 steps, near a whole screen of them: a box nine rows tall holds them, the newest first, on top.
+test('a long update log opens in a box nine rows tall, newest step first, at the top, and scrolls', async ({
+  app: page,
+}) => {
   await fillLog(page);
-  await page.getByRole('tab', { name: 'Sobre' }).click();
-  await page.locator('#about-log summary').click();
-  await expect(page.locator('#about-log pre')).toContainText('look own 39');
+  await openLog(page);
+  const shown = await logSteps(page).allTextContents();
+  expect(shown).toHaveLength(40);
+  expect(shown[0]).toMatch(/ start [0-9a-f]{12}$/); // this copy's start, the latest step of all
+  expect(shown.findIndex((s) => s.endsWith('look own 39'))).toBeLessThan(shown.findIndex((s) => s.endsWith('look own 38')));
   const box = await logBox(page);
   expect(box.rows).toBeCloseTo(9);
-  expect(box).toMatchObject({ scrolls: true, atNewest: true });
+  expect(box).toMatchObject({ scrolls: true, top: 0 });
 });
 
-test('a new step keeps the log at its newest, unless it was scrolled up to read an older one', async ({ app: page }) => {
-  await fillLog(page);
-  await page.getByRole('tab', { name: 'Sobre' }).click();
-  await page.locator('#about-log summary').click();
-  const log = page.locator('#about-log pre');
-  await page.getByRole('button', { name: 'Procurar atualização' }).click();
-  await expect(log).toContainText('latest');
-  expect(await logBox(page)).toMatchObject({ scrolls: true, atNewest: true });
+// Its steps short or long, the box takes the whole width of the page, as the button and its line above do.
+test('the update log box spans the width of About, however short its steps', async ({ app: page }) => {
+  await openLog(page);
+  const [box, row] = await Promise.all([page.locator('#about-log-steps').boundingBox(), page.locator('.about-update').boundingBox()]);
+  expect(box.width).toBeCloseTo(row.width, 0);
+});
 
-  await log.evaluate((pre) => (pre.scrollTop = 0));
+// Stripes tell one step from the next; a step that wraps onto a second row keeps its one stripe.
+test('the update log stripes every other step', async ({ app: page }) => {
+  await fillLog(page);
+  await openLog(page);
+  const stripes = await logSteps(page).evaluateAll((steps) => steps.slice(0, 4).map((li) => getComputedStyle(li).backgroundColor));
+  expect(stripes[0]).not.toBe(stripes[1]);
+  expect([stripes[2], stripes[3]]).toEqual([stripes[0], stripes[1]]);
+});
+
+test('a new step shows on top while the log is at its top; scrolled down to read, the view stays put', async ({
+  app: page,
+}) => {
+  await fillLog(page);
+  await openLog(page);
+  const box = page.locator('#about-log-steps');
   await page.getByRole('button', { name: 'Procurar atualização' }).click();
-  await expect(log).toHaveText(/look asked[\s\S]*look asked/);
+  await expect(logSteps(page).first()).toContainText('latest');
   expect((await logBox(page)).top).toBe(0);
+
+  await box.evaluate((log) => (log.scrollTop = 400));
+  const reading = await inView(page);
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(box).toHaveText(/latest[\s\S]*latest/);
+  expect(await inView(page, reading.text)).toEqual(reading); // the same step, in the same place
 });
 
 // The installed app and a browser tab, open at once, each keep their own update log: one log written by both lost
-// about half the steps. About shows them merged, in time order.
+// about half the steps. About shows them merged, newest first.
 test('with two copies open, each keeps its own update log, and About shows both', async ({ app: page, context }) => {
   const tab = await context.newPage();
   await tab.goto('./');
@@ -359,5 +391,5 @@ test('with two copies open, each keeps its own update log, and About shows both'
   const ownLogs = await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('zoolama:update-log:')));
   expect(ownLogs).toHaveLength(2);
   await page.locator('#about-log summary').click();
-  await expect(page.locator('#about-log pre')).toHaveText(/look asked[\s\S]*look asked/);
+  await expect(page.locator('#about-log-steps')).toHaveText(/look asked[\s\S]*look asked/);
 });
