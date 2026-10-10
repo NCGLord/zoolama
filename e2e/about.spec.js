@@ -248,3 +248,19 @@ test('the update log, while open, shows each new step as it happens', async ({ a
   await expect(page.locator('#about-log pre')).toContainText('look asked');
   await expect(page.locator('#about-log pre')).toContainText('latest');
 });
+
+// The installed app and a browser tab, open at once, each keep their own update log: one log written by both lost
+// about half the steps. About shows them merged, in time order.
+test('with two copies open, each keeps its own update log, and About shows both', async ({ app: page, context }) => {
+  const tab = await context.newPage();
+  await tab.goto('./');
+  for (const copy of [page, tab]) {
+    await copy.getByRole('tab', { name: 'Sobre' }).click();
+    await copy.getByRole('button', { name: 'Procurar atualização' }).click();
+    await expect(copy.locator('#about-update-result')).toHaveText('Você já tem a versão mais recente.');
+  }
+  const ownLogs = await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('zoolama:update-log:')));
+  expect(ownLogs).toHaveLength(2);
+  await page.locator('#about-log summary').click();
+  await expect(page.locator('#about-log pre')).toHaveText(/look asked[\s\S]*look asked/);
+});

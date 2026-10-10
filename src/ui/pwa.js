@@ -1,7 +1,15 @@
 // Living on the home screen: the Install button, and the service worker that keeps the app offline and up to date.
 
 import { installMode, isIOS } from '../install.js';
-import { UPDATE_GIVE_UP_MS, UPDATE_POLL_MS, dueForUpdateCheck, nextUpdateState, reloadsForUpdate } from '../update.js';
+import {
+  LOG_KEEP,
+  UPDATE_GIVE_UP_MS,
+  UPDATE_POLL_MS,
+  dueForUpdateCheck,
+  mergeLogs,
+  nextUpdateState,
+  reloadsForUpdate,
+} from '../update.js';
 import { persist, state } from './app-state.js';
 import { $, isTextField } from './dom.js';
 import { keepDraft } from './entry.js';
@@ -47,8 +55,33 @@ let takenOver = false; // a newer version took over after this page loaded; the 
 let pageVersion = null; // the version on screen: that of the worker that served this page, asked at start
 
 // A short record of what the update machinery did, kept across restarts (About shows it), to see on the phone where an
-// update stopped. Never breaks anything: without storage it just isn't kept.
-const LOG = 'zoolama:update-log';
+// update stopped. Each open copy (the installed app, a browser tab) keeps its own, as two copies writing one log lose
+// each other's steps; About shows them merged. Never breaks anything: without storage it just isn't kept.
+const LOG = 'zoolama:update-log'; // each copy's is LOG:<copy>; LOG alone is the one log of earlier versions
+const COPY = 'zoolama:copy';
+const isLogKey = (key) => key === LOG || key.startsWith(`${LOG}:`);
+
+/** This copy's log: sessionStorage is per copy and outlives its reloads, so an update's reload keeps writing the same. */
+const ownLog = (() => {
+  const fresh = () => Math.random().toString(36).slice(2, 8);
+  try {
+    const copy = sessionStorage.getItem(COPY) ?? fresh();
+    sessionStorage.setItem(COPY, copy);
+    return `${LOG}:${copy}`;
+  } catch {
+    return `${LOG}:${fresh()}`;
+  }
+})();
+
+function readLog(key) {
+  try {
+    const log = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(log) ? log : [];
+  } catch {
+    return [];
+  }
+}
+
 let logListener = () => {}; // About, which redraws the log while it's open
 
 function onUpdateLog(listener) {
@@ -57,20 +90,33 @@ function onUpdateLog(listener) {
 
 function note(event) {
   try {
-    const log = JSON.parse(localStorage.getItem(LOG)) ?? [];
+    const log = readLog(ownLog);
     log.push([Date.now(), event]);
-    localStorage.setItem(LOG, JSON.stringify(log.slice(-40)));
+    localStorage.setItem(ownLog, JSON.stringify(log.slice(-LOG_KEEP)));
   } catch {
     // not kept
   }
   logListener();
 }
 
-function updateLog() {
+const logKeys = () => {
   try {
-    return JSON.parse(localStorage.getItem(LOG)) ?? [];
+    return Object.keys(localStorage).filter(isLogKey);
   } catch {
     return [];
+  }
+};
+
+/** Every copy's steps, merged in time order: the log About shows. */
+function updateLog() {
+  return mergeLogs(logKeys().map(readLog));
+}
+
+/** Drops the logs of copies long closed: those with no step among the ones About shows. */
+function pruneLogs() {
+  const oldestShown = updateLog()[0]?.[0] ?? Infinity;
+  for (const key of logKeys()) {
+    if (key !== ownLog && !(readLog(key).at(-1)?.[0] >= oldestShown)) localStorage.removeItem(key);
   }
 }
 let asked = false; // Procurar atualização found a version: it goes on screen as soon as it lands
@@ -262,6 +308,7 @@ function registerServiceWorker() {
   const sw = navigator.serviceWorker;
   controlled = Boolean(sw.controller);
   const firstInstall = !controlled;
+  pruneLogs();
   if (controlled) {
     appVersion().then((version) => {
       pageVersion = version;

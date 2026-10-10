@@ -67,6 +67,16 @@ async function takeOver(page) {
 }
 const stillOld = (page) => page.evaluate(() => window.oldPage === true);
 
+// The update log as About shows it: every copy's steps, in time order.
+const loggedSteps = (page) =>
+  page.evaluate(() =>
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith('zoolama:update-log'))
+      .flatMap((key) => JSON.parse(localStorage.getItem(key)))
+      .sort((a, b) => a[0] - b[0])
+      .map(([, step]) => step),
+  );
+
 test('a new version that arrives before the first touch goes on screen at once, and says so', async ({ app: page }) => {
   await Promise.all([page.waitForEvent('load'), takeOver(page)]);
   await expect(page.locator('#toast-text')).toHaveText('App atualizado');
@@ -242,7 +252,7 @@ test('the update log tells an event from a look, and when the app went out of si
     window.setVisibility('visible');
   });
   await Promise.all([page.waitForEvent('load'), takeOver(page)]);
-  const log = await page.evaluate(() => JSON.parse(localStorage.getItem('zoolama:update-log')).map(([, e]) => e));
+  const log = await loggedSteps(page);
   expect(log).toEqual(expect.arrayContaining(['app hidden', 'app visible', 'controller changed', 'taken over (event)']));
 });
 
@@ -262,7 +272,7 @@ test('the update log records each download step once, however often the check is
     await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
   }
   await page.evaluate(() => window.install());
-  const log = await page.evaluate(() => JSON.parse(localStorage.getItem('zoolama:update-log')).map(([, e]) => e));
+  const log = await loggedSteps(page);
   expect(log.filter((e) => e === 'download installed')).toHaveLength(1);
 });
 
