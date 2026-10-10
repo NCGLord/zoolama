@@ -7,7 +7,7 @@ import { formatMoney } from '../money.js';
 import { state } from './app-state.js';
 import { h, icon } from './dom.js';
 import { memory, version as memoryVersion } from './price-memory.js';
-import { bareMoney, eachText, signedMoney, tr } from './text.js';
+import { bareKg, bareMoney, eachText, signedMoney, tr } from './text.js';
 
 function photoCell(item) {
   return item.photoId
@@ -41,7 +41,7 @@ function weightControl(item) {
       'data-key': `weight-${id}`,
       inputmode: 'decimal',
       enterkeyhint: 'done',
-      value: formatKg(item.grams, state.lang).replace(' kg', ''),
+      value: bareKg(item.grams),
       'aria-label': tr('editWeight'),
     });
   }

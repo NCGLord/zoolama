@@ -2,7 +2,7 @@
 
 import { linePriceCents, MAX_QTY, validDeal } from '../cart.js';
 import { lastPrice, priceRise } from '../history.js';
-import { formatKg, formatPct, LOCALES } from '../i18n.js';
+import { formatPct, LOCALES } from '../i18n.js';
 import { formatMoney, parseMoney } from '../money.js';
 import { parseGrams } from '../units.js';
 import { state } from './app-state.js';
@@ -11,7 +11,7 @@ import { $ } from './dom.js';
 import { openOfferSheet } from './line-sheet.js';
 import { entryPhotoAdded, entryPhotoId, restoreEntryPhoto } from './photos-ui.js';
 import { memory } from './price-memory.js';
-import { tr } from './text.js';
+import { bareKg, tr } from './text.js';
 
 function readQty() {
   const n = Number.parseInt($('qty').value, 10);
@@ -40,7 +40,7 @@ function renderEntryMode() {
   renderEntryDeal();
   $('price-label').dataset.i18n = weighed ? 'pricePerKg' : 'price';
   $('price-label').textContent = tr($('price-label').dataset.i18n);
-  $('weight').placeholder = formatKg(0, state.lang).replace(' kg', '');
+  $('weight').placeholder = bareKg(0);
   renderWeightPreview();
   renderNameHint();
 }

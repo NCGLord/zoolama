@@ -1,6 +1,6 @@
 // Words and amounts on screen, in the chosen language: translation, price tags and the formats the views share.
 
-import { LOCALES, t } from '../i18n.js';
+import { formatKg, LOCALES, t } from '../i18n.js';
 import { formatMoney, formatMoneyParts } from '../money.js';
 import { lineEach } from '../share.js';
 import { state } from './app-state.js';
@@ -32,10 +32,12 @@ function applyLang() {
 /** An amount the way a money field holds it, without the currency the field already shows: "4,50". */
 const bareMoney = (cents) => formatMoney(cents, state.lang).replace(/^\D+/, '');
 const pricePlaceholder = () => bareMoney(0);
+/** A weight the way a weight field holds it, without the kg its label already shows: "1,250". */
+const bareKg = (grams) => formatKg(grams, state.lang).replace(' kg', '');
 const unitLabel = (unit) => (unit === 'un' ? tr('unitCount') : unit);
 
 const signedMoney = (cents) => `${cents > 0 ? '+' : '−'}${formatMoney(Math.abs(cents), state.lang)}`;
 
 const eachText = (item) => lineEach(item, state.lang);
 
-export { tr, tagPrice, applyLang, bareMoney, pricePlaceholder, unitLabel, signedMoney, eachText };
+export { tr, tagPrice, applyLang, bareMoney, pricePlaceholder, bareKg, unitLabel, signedMoney, eachText };
