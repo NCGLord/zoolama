@@ -120,7 +120,7 @@ npm run e2e                                             # builds the site, serve
 After changing **any precached file** (anything listed in `ASSETS` in `sw.js`), run:
 
 ```sh
-npm run stamp                 # rewrites sw.js VERSION = hash of the precached files
+npm run stamp                 # rewrites sw.js VERSION = hash of the precached files, and index.html's copy of it
 ```
 
 `npm test` fails until you do. This is deliberate: an unchanged `VERSION` would leave phones on the old cache

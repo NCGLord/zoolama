@@ -8,6 +8,11 @@ export const SW = new URL('sw.js', ROOT);
 
 const ASSETS_RE = /\/\* ASSETS:start \*\/([\s\S]*?)\/\* ASSETS:end \*\//;
 export const VERSION_RE = /const VERSION = '([^']*)';/;
+// index.html carries its own version too, so a page knows which one it is (src/ui/pwa.js). Left out of the hash, which
+// it is written from: the hash reads the tag with its content emptied.
+export const PAGE = new URL('index.html', ROOT);
+export const PAGE_VERSION_RE = /<meta name="version" content="([^"]*)" \/>/;
+const unstamped = (html) => html.replace(PAGE_VERSION_RE, '<meta name="version" content="" />');
 
 export function readSw(source = readFileSync(SW, 'utf8')) {
   return {
@@ -19,7 +24,10 @@ export function readSw(source = readFileSync(SW, 'utf8')) {
 
 export function assetsHash(assets) {
   const hash = createHash('sha256');
-  for (const a of assets) hash.update(a).update('\0').update(readFileSync(new URL(a, ROOT))).update('\0');
+  for (const a of assets) {
+    const bytes = readFileSync(new URL(a, ROOT));
+    hash.update(a).update('\0').update(a === './index.html' ? unstamped(bytes.toString('utf8')) : bytes).update('\0');
+  }
   return hash.digest('hex').slice(0, 12);
 }
 

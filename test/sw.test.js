@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { sep } from 'node:path';
-import { ROOT, readSw, assetsHash } from '../tools/sw-assets.mjs';
+import { PAGE_VERSION_RE, ROOT, readSw, assetsHash } from '../tools/sw-assets.mjs';
 
 const { version, assets } = readSw();
 const read = (path) => readFileSync(new URL(path, ROOT), 'utf8');
@@ -31,4 +31,8 @@ test('every local file referenced by index.html, the manifest and the stylesheet
 
 test('VERSION matches the hash of the precached files — run `npm run stamp` after changing any asset', () => {
   assert.equal(version, assetsHash(assets));
+});
+
+test("index.html carries the same version as sw.js, so a page knows which version it is", () => {
+  assert.equal(read('index.html').match(PAGE_VERSION_RE)?.[1], version);
 });
