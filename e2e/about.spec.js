@@ -58,6 +58,8 @@ test('when an update takes over, About keeps naming the version still running un
     // The new worker takes over, and would answer with its own version if asked.
     const worker = { postMessage: (_, [port]) => port.postMessage('new000000000') };
     Object.defineProperty(navigator.serviceWorker, 'controller', { get: () => worker });
+    // active before it claims the page, as a real takeover goes
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'active', { configurable: true, get: () => worker });
     navigator.serviceWorker.dispatchEvent(new Event('controllerchange'));
     // Messages arrive in the order they were sent: once this one is in, any answer from the worker has been shown.
     await new Promise((resolve) => {
@@ -80,6 +82,8 @@ test("a new version waiting to go on screen shows in About at once, and About's 
   await page.evaluate(() => {
     const worker = { postMessage: (_, [port]) => port.postMessage('new000000000') };
     Object.defineProperty(navigator.serviceWorker, 'controller', { get: () => worker });
+    // active before it claims the page, as a real takeover goes
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'active', { configurable: true, get: () => worker });
     navigator.serviceWorker.dispatchEvent(new Event('controllerchange'));
   });
   await expect(page.locator('#about-update-result')).toHaveText('Nova versão pronta: new000000000');
@@ -137,6 +141,8 @@ test('a download that fails says so, and the next version is not put on screen u
   await page.evaluate(() => {
     const worker = { postMessage: (_, [port]) => port.postMessage('new000000000') };
     Object.defineProperty(navigator.serviceWorker, 'controller', { get: () => worker });
+    // active before it claims the page, as a real takeover goes
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'active', { configurable: true, get: () => worker });
     navigator.serviceWorker.dispatchEvent(new Event('controllerchange'));
   });
   await expect(page.locator('#about-update-result')).toHaveText('Nova versão pronta: new000000000'); // waiting, not reloaded

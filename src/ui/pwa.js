@@ -291,6 +291,16 @@ function appVersion() {
   return versionOf(navigator.serviceWorker?.controller);
 }
 
+/**
+ * The version installed to go on screen next: the active worker's, which a reload runs. Not the controller's, which
+ * stays the old worker when no controllerchange came (a look noticed the takeover); and not via register(), which
+ * waits while a download is under way.
+ */
+async function installedVersion() {
+  const current = await navigator.serviceWorker?.getRegistration();
+  return versionOf(current?.active ?? null);
+}
+
 /** The version a service worker was built as, or null where none answers. */
 function versionOf(worker) {
   if (!worker) return Promise.resolve(null);
@@ -374,5 +384,6 @@ export {
   reloadIntoUpdate,
   checkForUpdate,
   appVersion,
+  installedVersion,
   onUpdateState,
 };

@@ -6,7 +6,15 @@
 import { formatBytes } from '../i18n.js';
 import { state } from './app-state.js';
 import { $ } from './dom.js';
-import { appVersion, checkForUpdate, onUpdateLog, onUpdateState, reloadIntoUpdate, updateLog } from './pwa.js';
+import {
+  appVersion,
+  checkForUpdate,
+  installedVersion,
+  onUpdateLog,
+  onUpdateState,
+  reloadIntoUpdate,
+  updateLog,
+} from './pwa.js';
 import { shareList } from './share-sheet.js';
 import { tr } from './text.js';
 
@@ -55,7 +63,8 @@ function renderUpdate() {
 
 onUpdateState(async (next) => {
   updateState = next;
-  if (next === 'waiting' || next === 'updated') shownVersion = (await appVersion()) ?? ''; // the new one answers now
+  if (next === 'waiting') shownVersion = (await installedVersion()) ?? ''; // the one a reload puts on screen
+  if (next === 'updated') shownVersion = (await appVersion()) ?? ''; // the one now on screen
   renderUpdate();
 });
 

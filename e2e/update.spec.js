@@ -62,6 +62,8 @@ async function takeOver(page) {
     window.oldPage = true; // gone once the page reloads
     const worker = { postMessage: (_, [port]) => port.postMessage('new000000000') };
     Object.defineProperty(navigator.serviceWorker, 'controller', { get: () => worker });
+    // active before it claims the page, as a real takeover goes
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'active', { configurable: true, get: () => worker });
     navigator.serviceWorker.dispatchEvent(new Event('controllerchange'));
   });
 }
@@ -293,4 +295,18 @@ test('a check that hangs gives up after 20 seconds, says it could not check, and
   await page.clock.runFor('00:02');
   await expect(page.locator('#about-update-result')).toHaveText('Não foi possível procurar agora.');
   await expect(page.locator('#about-update')).toBeEnabled();
+});
+
+// A takeover a look noticed (no controllerchange came, so the controller is still the old worker): About must name the
+// version that's waiting, the installed one, not the one on screen.
+test('a waiting version noticed by a look is named by its own number in About', async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Sobre' }).click(); // touched: a new version waits
+  await page.evaluate(() => {
+    window.oldPage = true;
+    const newer = { postMessage: (_, [port]) => port.postMessage('new000000000') };
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'active', { get: () => newer });
+  });
+  await page.clock.runFor('07:01'); // the app's own look (no further: past 20 s, a look gives up)
+  await expect(page.locator('#about-update-result')).toHaveText('Nova versão pronta: new000000000');
+  expect(await stillOld(page)).toBe(true);
 });
