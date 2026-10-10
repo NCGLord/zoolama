@@ -190,7 +190,8 @@ async function look({ asking = false } = {}) {
     await registration.update();
   } catch {
     asked = false;
-    setUpdateState('offline');
+    // With the signal fine, it's the server that failed (sw.js answered 404 or 500): no use asking for signal.
+    setUpdateState(navigator.onLine ? 'unavailable' : 'offline');
     return;
   }
   const incoming = registration.installing ?? registration.waiting;

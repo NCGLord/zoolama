@@ -120,7 +120,7 @@ test('a download that fails says so, and the next version is not put on screen u
   await page.getByRole('button', { name: 'Procurar atualização' }).click();
   await expect(page.locator('#about-update-result')).toHaveText('Nova versão encontrada. Baixando…');
   await page.evaluate(() => window.failDownload());
-  await expect(page.locator('#about-update-result')).toHaveText('Não foi possível baixar a nova versão. Tente de novo com sinal.');
+  await expect(page.locator('#about-update-result')).toHaveText('Não foi possível baixar a nova versão. Tente de novo.');
   await expect(page.locator('#about-update')).toHaveText('Procurar atualização');
 
   await page.evaluate(() => {
@@ -137,6 +137,7 @@ test("the app's own looks keep About current: with the signal back, the no-signa
   await page.evaluate(() => {
     const { update } = ServiceWorkerRegistration.prototype;
     window.signal = false;
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => window.signal });
     ServiceWorkerRegistration.prototype.update = function () {
       return window.signal ? update.call(this) : Promise.reject(new TypeError('Failed to fetch'));
     };
@@ -157,11 +158,24 @@ test("the app's own looks keep About current: with the signal back, the no-signa
 
 test('with no signal, the check says so', async ({ app: page }) => {
   await page.evaluate(() => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false });
     ServiceWorkerRegistration.prototype.update = () => Promise.reject(new TypeError('Failed to fetch'));
   });
   await page.getByRole('tab', { name: 'Sobre' }).click();
   await page.getByRole('button', { name: 'Procurar atualização' }).click();
   await expect(page.locator('#about-update-result')).toHaveText('Sem conexão. Tente de novo com sinal.');
+});
+
+// A check can fail with the signal fine: the server answers 404 or 500 for sw.js. Then it's no use asking for signal.
+test('a check that fails with the signal fine says it could not check, not that there is no signal', async ({ app: page }) => {
+  await page.evaluate(() => {
+    ServiceWorkerRegistration.prototype.update = () =>
+      Promise.reject(new TypeError('A bad HTTP response code (404) was received when fetching the script.'));
+  });
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(page.locator('#about-update-result')).toHaveText('Não foi possível procurar agora.');
+  await expect(page.locator('#about-update')).toBeEnabled();
 });
 
 test('About says your data stays on this phone, and how much space zoolama takes on it', async ({ app: page }) => {
