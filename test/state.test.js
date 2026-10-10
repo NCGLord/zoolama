@@ -12,6 +12,7 @@ const defaults = {
   lang: 'en',
   tab: 'cart',
   theme: null,
+  doubleHeight: false, // Altura dupla: off unless turned on
   checking: false,
   budgetCents: null,
   sort: { key: 'added', dir: 'desc' },
@@ -37,6 +38,7 @@ test('a state the app saved comes back unchanged', () => {
     lang: 'pt',
     tab: 'history',
     theme: 'dark',
+    doubleHeight: true,
     checking: true,
     budgetCents: 20000,
     sort: { key: 'name', dir: 'asc' },
@@ -113,11 +115,12 @@ test('Compare needs at least two options; a bad field in one falls back on its o
   ]);
 });
 
-test('unknown language, tab, theme, sort, budget or checkout flag fall back to their defaults', () => {
+test('unknown language, tab, theme, sort, budget, checkout or Altura dupla flag fall back to their defaults', () => {
   const restored = restore({
     lang: 'fr',
     tab: 'nowhere',
     theme: 'blue',
+    doubleHeight: 'yes',
     checking: 'yes',
     budgetCents: 150.5,
     sort: { key: 'price', dir: 'asc' },

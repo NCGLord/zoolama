@@ -9,6 +9,13 @@
   font-display: swap;
 }
 
+/* Roboto at double height (tools/double-height.py), for Altura dupla. */
+@font-face {
+  font-family: 'Zoolama Altura Dupla';
+  src: url('./fonts/zoolama-double-400.woff2') format('woff2');
+  font-display: swap;
+}
+
 :root {
   --paper: #f4faef;
   --surface: #ffffff;
@@ -216,6 +223,7 @@ button {
 }
 
 .theme-btn,
+.double-height-btn,
 .magnifier-btn,
 .magnifier-torch,
 .about-close {
@@ -229,6 +237,7 @@ button {
 }
 
 .theme-btn svg,
+.double-height-btn svg,
 .magnifier-btn svg,
 .magnifier-torch svg,
 .about-close svg {
@@ -239,6 +248,28 @@ button {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Under 412px the header holds every tool but one while the browser offers Install, before the app is installed:
+   Altura dupla steps aside until then. Installed, Install is gone and it always shows. */
+@media (max-width: 411px) {
+  .bar-tools:has(#install:not([hidden])) .double-height-btn {
+    display: none;
+  }
+}
+
+/* Altura dupla on: its button pressed, as a sort button is. */
+.double-height-btn[aria-pressed='true'] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Altura dupla (src/ui/double-height.js): the reading text twice as tall at the same width; with the font's own line
+   height, lines and fields make room for it. Buttons, tabs, labels and prices stay as they are. */
+:root[data-double-height] :is(.line-name, .entry-name, .option-label, .plan-chip, .trip-item-name) {
+  font-family: 'Zoolama Altura Dupla', var(--text);
+  line-height: normal;
 }
 
 /* The icon shows the theme you would switch to. */
@@ -273,9 +304,9 @@ button {
   stroke-linejoin: round;
 }
 
-/* Most phones: icon only, the label stays for screen readers. With the magnifier, theme and language tools beside it,
-   the labelled button needs about 420px of header. */
-@media (max-width: 429px) {
+/* Most phones: icon only, the label stays for screen readers. With the magnifier, Altura dupla, theme and language
+   tools beside it, the labelled button needs about 480px of header. */
+@media (max-width: 479px) {
   .install-btn {
     width: 44px;
     padding: 0;

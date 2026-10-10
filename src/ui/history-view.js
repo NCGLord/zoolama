@@ -173,7 +173,7 @@ function tripBody(trip) {
         h(
           'li',
           {},
-          h('span', { text: item.name || tr('itemN', { n: i + 1 }) }),
+          h('span', { class: 'trip-item-name', text: item.name || tr('itemN', { n: i + 1 }) }),
           h('span', { class: 'each', text: eachText(item) }),
           h('span', { class: 'sub', text: amount(lineTotal(item)) }),
         ),

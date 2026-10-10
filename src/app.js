@@ -15,6 +15,7 @@ import { renderCart } from './ui/cart-view.js';
 import { renderHistory, reloadTrips, undoFinish, undoDeleteTrip, undoImport } from './ui/history-view.js';
 import { renderOptions } from './ui/compare-view.js';
 import { renderTab, renderTheme } from './ui/shell.js';
+import { renderDoubleHeight } from './ui/double-height.js';
 import { reloadIntoUpdate, renderInstall, registerServiceWorker, resumeAfterUpdate } from './ui/pwa.js';
 import { openMagnifier } from './ui/magnifier-ui.js';
 import './ui/about-screen.js';
@@ -26,6 +27,7 @@ import { onPricesChanged } from './ui/price-memory.js';
 function renderAll() {
   applyLang();
   renderTheme();
+  renderDoubleHeight();
   renderEntryMode();
   renderCart();
   renderOptions();
@@ -90,6 +92,7 @@ resumeAfterUpdate(); // before the tabs are drawn: an update asked for in About 
 
 applyLang();
 renderTheme();
+renderDoubleHeight();
 renderCart();
 renderOptions();
 renderTab();

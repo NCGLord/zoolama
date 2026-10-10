@@ -62,9 +62,11 @@ Offline supermarket helper for your phone:
   waiting to go on screen shows there at once, *Nova versão pronta* with its number, the button turning into
   *Atualizar*). *Contato*: links to the source code, to report a problem and to e-mail the author, and *Compartilhar
   o Zoolama*, which sends the app's link through the share sheet. *Direitos autorais*, last: the app's copyright
-  (MIT) and its font's (SIL OFL 1.1). Tapping the logo opens the same page full screen, with the 🇧🇷/🇬🇧 flags still
+  (MIT) and its fonts' (SIL OFL 1.1). Tapping the logo opens the same page full screen, with the 🇧🇷/🇬🇧 flags still
   at hand.
-- PT/EN and light/dark toggles in the header.
+- PT/EN and light/dark toggles in the header, and **Altura dupla**: the reading text (item names in the cart, the list,
+  History and Compare, and the name being typed) twice as tall at the same width, as a thermal printer's double-height
+  mode prints it, for easy reading at any age. Kept like the theme; buttons, tabs and prices stay as they are.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and
 no runtime dependencies. Your data stays in the phone's browser storage, and a Content Security Policy lets only the
@@ -160,7 +162,7 @@ needs the same `pip install fonttools brotli`; run `npm run stamp` afterwards.
 | `src/money.js`, `units.js`, `compare.js`, `cart.js`, `budget.js`, `history.js`, `plan.js`, `backup.js`, `share.js`, `store.js`, `state.js`, `i18n.js`, `theme.js`, `tabs.js`, `keyboard.js`, `install.js`, `update.js`, `usage.js`, `launch.js`, `delight.js`, `magnifier.js` | Pure logic, unit-tested |
 | `src/photos.js` | Shelf-tag photos: shrinks them on a canvas and keeps them in IndexedDB; its pure helpers are unit-tested |
 | `src/app.js` | Entry point: wires the views together and boots them |
-| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `till-field` (money and weight fields key in like a till), `photo-cache`, `price-memory` (what an item cost last time), `cart-store` (every cart change), `share-sheet`, `wake-lock` (the screen stays on at the till), `photos-ui`, `line-sheet` (a line's price and offer), `entry`, `plan-view` (the shopping list), `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker), `magnifier-ui`, `about-view`, `about-screen` (About full screen, from the logo) |
+| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `till-field` (money and weight fields key in like a till), `photo-cache`, `price-memory` (what an item cost last time), `cart-store` (every cart change), `share-sheet`, `wake-lock` (the screen stays on at the till), `photos-ui`, `line-sheet` (a line's price and offer), `entry`, `plan-view` (the shopping list), `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `double-height` (Altura dupla), `pwa` (install, service worker), `magnifier-ui`, `about-view`, `about-screen` (About full screen, from the logo) |
 | `sw.js` | Service worker: atomic precache, cache-first |
 | `test/` | Unit tests (`node --test`) |
 | `e2e/`, `playwright.config.js` | Browser tests (`npm run e2e`) |

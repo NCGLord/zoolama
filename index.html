@@ -11,7 +11,7 @@
       content="default-src 'self'; script-src 'self' 'sha256-XatwtviGIGeg8RYg6E24agMCzRLuXUS3ORZfdiZPhUU='; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <!-- This page's own version, written by `npm run stamp` (src/ui/pwa.js reads it). -->
-    <meta name="version" content="514bf5960593" />
+    <meta name="version" content="5978627f5414" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f4faef" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e1a11" media="(prefers-color-scheme: dark)" />
@@ -59,6 +59,7 @@
     <link rel="modulepreload" href="./src/usage.js" />
     <link rel="modulepreload" href="./src/ui/about-screen.js" />
     <link rel="modulepreload" href="./src/ui/about-view.js" />
+    <link rel="modulepreload" href="./src/ui/double-height.js" />
     <link rel="modulepreload" href="./src/ui/app-state.js" />
     <link rel="modulepreload" href="./src/ui/cart-lines.js" />
     <link rel="modulepreload" href="./src/ui/cart-store.js" />
@@ -104,6 +105,10 @@
         <!-- Shown only where the browser gives camera access (see src/ui/magnifier-ui.js). -->
         <button type="button" id="magnifier-btn" class="magnifier-btn" data-i18n-aria-label="magnifier" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l5 5" /></svg>
+        </button>
+        <!-- Altura dupla: the reading text twice as tall, like a thermal printer's double height (src/ui/double-height.js). -->
+        <button type="button" id="double-height" class="double-height-btn" aria-pressed="false" data-i18n-aria-label="doubleHeight">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 21 9 3l4.5 18M6.4 14h5.2M19 4v16M16.5 6.5 19 4l2.5 2.5M16.5 17.5 19 20l2.5-2.5" /></svg>
         </button>
         <button type="button" id="theme" class="theme-btn">
           <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" /></svg>
@@ -313,7 +318,11 @@
               </li>
               <li>
                 <span data-i18n="aboutCopyrightFont"></span>
-                <a href="https://github.com/NCGLord/zoolama/blob/main/fonts/OFL.txt" target="_blank" rel="noopener" data-i18n="aboutFontLicence">Licença SIL OFL 1.1</a>
+                <a href="https://github.com/NCGLord/zoolama/blob/main/fonts/OFL.txt" target="_blank" rel="noopener" data-i18n="aboutFontLicence">Licença SIL OFL 1.1 da Barlow</a>
+              </li>
+              <li>
+                <span data-i18n="aboutCopyrightRoboto"></span>
+                <a href="https://github.com/NCGLord/zoolama/blob/main/fonts/Roboto-OFL.txt" target="_blank" rel="noopener" data-i18n="aboutRobotoLicence">Licença SIL OFL 1.1 da Roboto</a>
               </li>
             </ul>
           </section>

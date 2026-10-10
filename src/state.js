@@ -81,6 +81,7 @@ export function restoreState(saved, { lang }) {
     lang: Object.hasOwn(STRINGS, saved?.lang) ? saved.lang : lang,
     tab: TABS.includes(saved?.tab) ? saved.tab : 'cart',
     theme: THEMES.includes(saved?.theme) ? saved.theme : null, // null: follow the system
+    doubleHeight: saved?.doubleHeight === true, // Altura dupla (src/ui/double-height.js)
     checking: saved?.checking === true, // checkout mode ("Conferir no caixa")
     budgetCents: isPositive(saved?.budgetCents) ? saved.budgetCents : null, // the shopper's limit; survives Clear
     sort: validSort ? { key: sort.key, dir: sort.dir } : { ...DEFAULT_SORT },

@@ -28,7 +28,7 @@ test('the About tab says what zoolama is, its licence, and where its code and it
   await expect(page.locator('#panel-about')).toBeVisible(); // the tab is remembered, like the others
 });
 
-// Framed sections, the copyrights last: the app's and its font's (the prices and the logo), each with its licence.
+// Framed sections, the copyrights last: the app's and its fonts' (the prices and logo; Altura dupla), each with its licence.
 test('About is in framed sections, in order, with every copyright in the last', async ({ app: page }) => {
   await page.getByRole('tab', { name: 'Sobre' }).click();
   const sections = page.locator('#about-content > section.about-card');
@@ -38,9 +38,11 @@ test('About is in framed sections, in order, with every copyright in the last', 
   const copyright = sections.last();
   await expect(copyright).toContainText('Zoolama © 2026 Geraldo Viana');
   await expect(copyright).toContainText('Barlow Condensed © 2017 The Barlow Project Authors');
-  const licence = (name) => copyright.getByRole('link', { name });
+  await expect(copyright).toContainText('Roboto © 2011 The Roboto Project Authors');
+  const licence = (name) => copyright.getByRole('link', { name, exact: true });
   await expect(licence('Texto da licença MIT')).toHaveAttribute('href', `${REPO}/blob/main/LICENSE`);
-  await expect(licence('Licença SIL OFL 1.1')).toHaveAttribute('href', `${REPO}/blob/main/fonts/OFL.txt`);
+  await expect(licence('Licença SIL OFL 1.1 da Barlow')).toHaveAttribute('href', `${REPO}/blob/main/fonts/OFL.txt`);
+  await expect(licence('Licença SIL OFL 1.1 da Roboto')).toHaveAttribute('href', `${REPO}/blob/main/fonts/Roboto-OFL.txt`);
 
   await page.getByRole('button', { name: 'English' }).click();
   await expect(sections.locator('h2')).toHaveText(['Your data', 'Version', 'Contact', 'Copyright']);

@@ -32,11 +32,11 @@ export function assetsHash(assets, root = ROOT) {
   return hash.digest('hex').slice(0, 12);
 }
 
-// Published but not precached: the font's licence travels with the font (SIL OFL 1.1), and install-sheet screenshots
+// Published but not precached: each font's licence travels with it (SIL OFL 1.1), and install-sheet screenshots
 // are only read by the browser's install UI, so no phone should carry them in its cache.
 export function siteExtras() {
   const manifest = JSON.parse(readFileSync(new URL('manifest.webmanifest', ROOT), 'utf8'));
-  return ['./fonts/OFL.txt', ...(manifest.screenshots ?? []).map((s) => s.src)];
+  return ['./fonts/OFL.txt', './fonts/Roboto-OFL.txt', ...(manifest.screenshots ?? []).map((s) => s.src)];
 }
 
 /** Every file GitHub Pages serves: the service worker, what it precaches, and the extras above. Nothing else. */
