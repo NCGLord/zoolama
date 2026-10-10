@@ -3,7 +3,7 @@ import { test, expect, brl, addItem, line } from './fixtures.js';
 async function fillCart(page) {
   await addItem(page, { price: '4,50', name: 'Leite' });
   await addItem(page, { price: '8,99', name: 'Café', qty: 2 });
-  await addItem(page, { price: '12', name: 'Arroz' });
+  await addItem(page, { price: '12,00', name: 'Arroz' });
   await line(page, 'Leite').getByRole('button', { name: 'Mais um' }).click();
 }
 
@@ -16,6 +16,38 @@ test('adds up three items and a changed quantity', async ({ app: page }) => {
   await expect(page.locator('#cart-badge')).toHaveText('5');
   // The list is rebuilt on every change; focus must come back to the button that was tapped.
   await expect(line(page, 'Leite').getByRole('button', { name: 'Mais um' })).toBeFocused();
+});
+
+test('a price is keyed like a till: digits only, the last two being the cents', async ({ app: page }) => {
+  const price = page.locator('#price');
+  await expect(price).toHaveAttribute('inputmode', 'numeric'); // the digit keypad
+  for (const [key, shown] of [['8', '0,08'], ['9', '0,89'], ['9', '8,99']]) {
+    await price.press(key);
+    await expect(price).toHaveValue(shown);
+  }
+  await price.press('Backspace');
+  await expect(price).toHaveValue('0,89');
+  await price.press('Backspace');
+  await price.press('Backspace');
+  await expect(price).toHaveValue(''); // the 0,00 placeholder shows
+  await price.pressSequentially('129990');
+  await expect(price).toHaveValue('1.299,90');
+  await price.press('a');
+  await expect(price).toHaveValue('1.299,90');
+
+  // A pasted price is read as written, not digit by digit: "8,9" is R$ 8,90, not R$ 0,89.
+  await price.evaluate((el) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData('text/plain', 'R$ 8,9');
+    el.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }));
+  });
+  await expect(price).toHaveValue('8,90');
+  await page.locator('#entry button[type="submit"]').click();
+  await expect(page.locator('#lines .line-sub')).toHaveText('R$ 8,90');
+
+  await page.getByRole('button', { name: 'English' }).click();
+  await price.pressSequentially('899');
+  await expect(price).toHaveValue('8.99');
 });
 
 test('the cart survives a reload', async ({ app: page }) => {

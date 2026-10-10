@@ -40,7 +40,7 @@ function optionView(opt, i, removable) {
           'span',
           { class: 'money-field' },
           h('span', { 'aria-hidden': 'true', text: 'R$' }),
-          h('input', { 'data-field': 'price', 'data-key': `price-${i}`, inputmode: 'decimal', value: opt.price, placeholder: pricePlaceholder() }),
+          h('input', { 'data-field': 'price', 'data-key': `price-${i}`, 'data-money': true, inputmode: 'numeric', value: opt.price, placeholder: pricePlaceholder() }),
         ),
       ),
       h(

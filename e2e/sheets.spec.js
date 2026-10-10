@@ -4,7 +4,7 @@ test('a tap on the backdrop closes a sheet like Cancel; a tap on its padding doe
   const sheet = page.locator('#budget-sheet');
   await page.getByRole('button', { name: '+ Orçamento' }).click();
   await expect(sheet).toBeVisible();
-  await page.locator('#budget-input').fill('50');
+  await page.locator('#budget-input').fill('50,00');
 
   const box = await sheet.boundingBox();
   await page.touchscreen.tap(box.x + 4, box.y + box.height / 2); // inside, on the sheet's padding

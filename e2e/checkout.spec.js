@@ -120,10 +120,12 @@ test('the receipt total is checked against the cart, and the lines can account f
   await chargeLine(page, 'Café', '10,00');
   await expect(page.locator('#receipt-note')).toHaveText('As diferenças anotadas nas linhas explicam o total');
 
-  await receipt.fill('abc');
-  await receipt.press('Enter');
-  await expect(page.locator('#toast-text')).toHaveText('Valor inválido');
+  // Letters never get into a money field: the receipt keeps its amount.
+  await receipt.press('End');
+  await receipt.pressSequentially('abc');
   await expect(receipt).toHaveValue('22,00');
+  await receipt.press('Enter');
+  await expect(page.locator('#receipt-note')).toHaveText('As diferenças anotadas nas linhas explicam o total');
 
   await page.getByRole('button', { name: 'Finalizar compra' }).click();
   await page.getByRole('button', { name: 'Salvar compra' }).click();

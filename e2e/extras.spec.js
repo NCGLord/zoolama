@@ -8,11 +8,11 @@ const names = (page) => page.locator('#lines .line-name').evaluateAll((els) => e
 test('a budget shows what is left, then how far over the cart is', async ({ app: page }) => {
   await addItem(page, { price: '4,50', name: 'Leite' });
   await page.getByRole('button', { name: '+ Orçamento' }).click();
-  await page.locator('#budget-input').fill('20');
+  await page.locator('#budget-input').fill('20,00');
   await page.getByRole('button', { name: 'Salvar', exact: true }).click();
   await expect(page.locator('#budget')).toHaveText('Restam R$ 15,50 de R$ 20,00');
 
-  await addItem(page, { price: '20', name: 'Queijo' });
+  await addItem(page, { price: '20,00', name: 'Queijo' });
   await expect(page.locator('#budget')).toHaveText('R$ 4,50 acima do orçamento');
   await expect(page.locator('#tally')).toHaveClass(/\bover\b/);
 });

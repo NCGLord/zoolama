@@ -66,6 +66,7 @@
     <link rel="modulepreload" href="./src/ui/history-view.js" />
     <link rel="modulepreload" href="./src/ui/line-sheet.js" />
     <link rel="modulepreload" href="./src/ui/magnifier-ui.js" />
+    <link rel="modulepreload" href="./src/ui/money-field.js" />
     <link rel="modulepreload" href="./src/ui/photo-cache.js" />
     <link rel="modulepreload" href="./src/ui/photos-ui.js" />
     <link rel="modulepreload" href="./src/ui/plan-view.js" />
@@ -143,7 +144,7 @@
             <label for="price" id="price-label" data-i18n="price">Preço</label>
             <div class="money-field">
               <span aria-hidden="true">R$</span>
-              <input id="price" inputmode="decimal" enterkeyhint="done" placeholder="0,00" aria-describedby="price-error" />
+              <input id="price" data-money inputmode="numeric" enterkeyhint="done" placeholder="0,00" aria-describedby="price-error" />
             </div>
             <p id="price-error" class="field-error" aria-live="polite"></p>
           </div>
@@ -205,7 +206,7 @@
           <label for="receipt-input" data-i18n="receiptTotal">Total do cupom</label>
           <div class="money-field">
             <span aria-hidden="true">R$</span>
-            <input id="receipt-input" inputmode="decimal" enterkeyhint="done" autocomplete="off" aria-describedby="receipt-verdict" />
+            <input id="receipt-input" data-money inputmode="numeric" enterkeyhint="done" autocomplete="off" aria-describedby="receipt-verdict" />
           </div>
           <p id="receipt-verdict" class="receipt-verdict" aria-live="polite"></p>
           <p id="receipt-note" class="receipt-note"></p>
@@ -381,7 +382,7 @@
           <label for="sheet-price" id="sheet-price-label" data-i18n="price">Preço</label>
           <div class="money-field">
             <span aria-hidden="true">R$</span>
-            <input id="sheet-price" inputmode="decimal" enterkeyhint="done" autocomplete="off" />
+            <input id="sheet-price" data-money inputmode="numeric" enterkeyhint="done" autocomplete="off" />
           </div>
         </div>
         <fieldset id="deal-fields" class="deal-fields">
@@ -397,7 +398,7 @@
             <input id="deal-min" class="deal-num" inputmode="numeric" enterkeyhint="next" autocomplete="off" />
             <div class="money-field">
               <span aria-hidden="true">R$</span>
-              <input id="deal-each" inputmode="decimal" enterkeyhint="done" autocomplete="off" />
+              <input id="deal-each" data-money inputmode="numeric" enterkeyhint="done" autocomplete="off" />
             </div>
           </div>
           <div id="multibuy-fields" class="deal-row" hidden>
@@ -421,7 +422,7 @@
         <h2 id="budget-title" data-i18n="budgetTitle">Orçamento da compra</h2>
         <div class="money-field budget-field">
           <span aria-hidden="true">R$</span>
-          <input id="budget-input" inputmode="decimal" enterkeyhint="done" data-i18n-aria-label="budgetTitle" aria-describedby="budget-error" />
+          <input id="budget-input" data-money inputmode="numeric" enterkeyhint="done" data-i18n-aria-label="budgetTitle" aria-describedby="budget-error" />
         </div>
         <p id="budget-error" class="field-error" aria-live="polite"></p>
         <div class="sheet-actions">

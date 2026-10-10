@@ -33,8 +33,8 @@ test('finds the cheaper pack per kg and adds it to the cart', async ({ page }) =
 });
 
 test('refuses to compare weight with volume', async ({ page }) => {
-  await fillOption(page, 1, { price: '5', qty: '500', unit: 'g' });
-  await fillOption(page, 2, { price: '5', qty: '500', unit: 'ml' });
+  await fillOption(page, 1, { price: '5,00', qty: '500', unit: 'g' });
+  await fillOption(page, 2, { price: '5,00', qty: '500', unit: 'ml' });
   await expect(page.locator('#compare-msg')).toHaveClass(/\berror\b/);
   await expect(page.locator('#compare-msg')).toHaveText('Não dá para comparar peso, volume e unidade entre si.');
   await expect(page.locator('#options .winner')).toHaveCount(0);
