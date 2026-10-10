@@ -1,7 +1,7 @@
 // Living on the home screen: the Install button, and the service worker that keeps the app offline and up to date.
 
 import { installMode, isIOS } from '../install.js';
-import { UPDATE_POLL_MS, dueForUpdateCheck, nextUpdateState, reloadsForUpdate } from '../update.js';
+import { UPDATE_GIVE_UP_MS, UPDATE_POLL_MS, dueForUpdateCheck, nextUpdateState, reloadsForUpdate } from '../update.js';
 import { persist, state } from './app-state.js';
 import { $, isTextField } from './dom.js';
 import { keepDraft } from './entry.js';
@@ -174,6 +174,15 @@ function resumeAfterUpdate() {
 
 }
 
+/** `promise`, or a failure once `ms` have passed without it settling. */
+function withinTime(promise, ms) {
+  let timer;
+  const late = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('timed out')), ms);
+  });
+  return Promise.race([promise, late]).finally(() => clearTimeout(timer)); // cleared, `late` never fails unheard
+}
+
 /** One look for a new version, the app's own or the shopper's (`asking`); its outcome goes into the update state. */
 async function look({ asking = false } = {}) {
   if (!registration || !controlled) {
@@ -187,7 +196,7 @@ async function look({ asking = false } = {}) {
   }
   lastCheck = Date.now();
   try {
-    await registration.update();
+    await withinTime(registration.update(), UPDATE_GIVE_UP_MS);
   } catch {
     asked = false;
     // With the signal fine, it's the server that failed (sw.js answered 404 or 500): no use asking for signal.

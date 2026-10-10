@@ -265,3 +265,22 @@ test('the update log records each download step once, however often the check is
   const log = await page.evaluate(() => JSON.parse(localStorage.getItem('zoolama:update-log')).map(([, e]) => e));
   expect(log.filter((e) => e === 'download installed')).toHaveLength(1);
 });
+
+// The browser sets no time limit on fetching sw.js: a server that never answers once left "Procurando…" and the button
+// disabled for as long as it held on.
+test('a check that hangs gives up after 20 seconds, says it could not check, and can be tried again', async ({
+  app: page,
+}) => {
+  await page.evaluate(() => {
+    ServiceWorkerRegistration.prototype.update = () => new Promise(() => {}); // the server never answers
+  });
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(page.locator('#about-update-result')).toHaveText('Procurando…');
+  await expect(page.locator('#about-update')).toBeDisabled();
+  await page.clock.runFor('00:19');
+  await expect(page.locator('#about-update-result')).toHaveText('Procurando…');
+  await page.clock.runFor('00:02');
+  await expect(page.locator('#about-update-result')).toHaveText('Não foi possível procurar agora.');
+  await expect(page.locator('#about-update')).toBeEnabled();
+});

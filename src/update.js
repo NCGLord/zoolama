@@ -4,6 +4,7 @@
 
 export const UPDATE_CHECK_MS = 7 * 60 * 1000;
 export const UPDATE_POLL_MS = 60 * 1000; // how often an open app looks whether a check is due
+export const UPDATE_GIVE_UP_MS = 20 * 1000; // the browser sets no limit on fetching sw.js; a look that long has failed
 
 export function dueForUpdateCheck(now, lastCheck, interval = UPDATE_CHECK_MS) {
   return now - lastCheck >= interval;
