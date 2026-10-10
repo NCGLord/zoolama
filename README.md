@@ -97,7 +97,10 @@ lost: if it arrives before you've touched the app (just opened, or just brought 
 *Procurar atualização* (in the About tab or full screen), or as you leave the app. It never interrupts a field being
 typed in or an open sheet: then *Nova versão disponível · Atualizar* (and About) offer it, and it goes on screen when
 you tap, or when you next leave the app. An item half-entered in the form, photo and offer included, comes across the
-reload, and the app says *App atualizado*.
+reload, and the app says *App atualizado*. About then reads *Atualizado agora para* and the new version, so even a
+quiet reload onto the same screen shows that it happened. Under its button, *Registro de atualizações* (closed until
+tapped) keeps the last 40 update steps on the phone (each check, the download, the takeover, the reload), so a
+screenshot of it shows where an update stopped.
 
 ## Develop
 
