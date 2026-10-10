@@ -66,16 +66,21 @@ $('about-update').addEventListener('click', () => {
   else checkForUpdate();
 });
 
-// The update log, drawn when opened and redrawn with each step while it stays open: time, then what happened.
+// The update log, drawn when opened and redrawn with each step while it stays open: time, then what happened. Its box
+// scrolls (styles.css): it opens on the newest step, at the bottom, and follows each new one, unless scrolled up to read
+// an older one.
 const clock = (t) => new Date(t).toLocaleTimeString('en-GB');
-function renderLog() {
+function renderLog({ opened = false } = {}) {
   if (!$('about-log').open) return;
-  $('about-log').querySelector('pre').textContent = updateLog()
+  const box = $('about-log').querySelector('pre');
+  const atNewest = opened || box.scrollHeight - box.scrollTop - box.clientHeight < 1;
+  box.textContent = updateLog()
     .map(([t, e]) => `${clock(t)} ${e}`)
     .join('\n');
+  if (atNewest) box.scrollTop = box.scrollHeight;
 }
-$('about-log').addEventListener('toggle', renderLog);
-onUpdateLog(renderLog);
+$('about-log').addEventListener('toggle', () => renderLog({ opened: true }));
+onUpdateLog(() => renderLog());
 
 /* ---------- what else changes ---------- */
 

@@ -299,6 +299,53 @@ test('the update log, while open, shows each new step as it happens', async ({ a
   await expect(page.locator('#about-log pre')).toContainText('latest');
 });
 
+/** A full log: the 40 steps About keeps, taken an hour ago by another copy of the app. */
+const fillLog = (page) =>
+  page.evaluate(() => {
+    const hourAgo = Date.now() - 3600_000;
+    const steps = Array.from({ length: 40 }, (_, i) => [hourAgo + i * 1000, `look own ${i}`]);
+    localStorage.setItem('zoolama:update-log:other', JSON.stringify(steps));
+  });
+
+/** The open log's box: the rows it shows, whether it scrolls, and where it's scrolled to. */
+const logBox = (page) =>
+  page.locator('#about-log pre').evaluate((pre) => {
+    const style = getComputedStyle(pre);
+    const inner = pre.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    return {
+      rows: inner / parseFloat(style.lineHeight),
+      scrolls: pre.scrollHeight > pre.clientHeight,
+      atNewest: pre.scrollHeight - pre.scrollTop - pre.clientHeight < 1,
+      top: pre.scrollTop,
+    };
+  });
+
+// The log keeps 40 steps, near a whole screen of them: a box nine rows tall holds it, opening on the latest.
+test('a long update log opens in a box nine rows tall, at its newest step, and scrolls', async ({ app: page }) => {
+  await fillLog(page);
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.locator('#about-log summary').click();
+  await expect(page.locator('#about-log pre')).toContainText('look own 39');
+  const box = await logBox(page);
+  expect(box.rows).toBeCloseTo(9);
+  expect(box).toMatchObject({ scrolls: true, atNewest: true });
+});
+
+test('a new step keeps the log at its newest, unless it was scrolled up to read an older one', async ({ app: page }) => {
+  await fillLog(page);
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.locator('#about-log summary').click();
+  const log = page.locator('#about-log pre');
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(log).toContainText('latest');
+  expect(await logBox(page)).toMatchObject({ scrolls: true, atNewest: true });
+
+  await log.evaluate((pre) => (pre.scrollTop = 0));
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(log).toHaveText(/look asked[\s\S]*look asked/);
+  expect((await logBox(page)).top).toBe(0);
+});
+
 // The installed app and a browser tab, open at once, each keep their own update log: one log written by both lost
 // about half the steps. About shows them merged, in time order.
 test('with two copies open, each keeps its own update log, and About shows both', async ({ app: page, context }) => {
