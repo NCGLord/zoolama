@@ -31,6 +31,21 @@ export function parseMoney(input) {
   return Number.isSafeInteger(cents) && cents > 0 ? cents : null;
 }
 
+const TILL_DIGITS = 8; // R$ 999.999,99: past any shelf price or budget
+
+/**
+ * A money field's text read the way a till reads its keys: every digit typed, the last two being the cents ("899" →
+ * R$ 8,99), and the field's own formatting read back unchanged ("1.299,90" → R$ 1.299,90). Leading zeros don't count,
+ * and a digit past eight is ignored, as a till ignores a key past its display. Returns 0 when there are no digits.
+ */
+export function tillCents(input) {
+  const digits = String(input ?? '')
+    .replace(/\D/g, '')
+    .replace(/^0+/, '')
+    .slice(0, TILL_DIGITS);
+  return Number(digits);
+}
+
 const currencyFormat = (lang) =>
   new Intl.NumberFormat(LOCALES[lang] ?? LOCALES.pt, { style: 'currency', currency: 'BRL' });
 
