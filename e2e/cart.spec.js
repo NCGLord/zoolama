@@ -79,12 +79,18 @@ test('an Undo that can no longer undo anything goes away', async ({ app: page })
   await expect(page.locator('#toast')).toBeHidden();
 });
 
-test('a weighed item is priced per kg, and its weight can be corrected', async ({ app: page }) => {
+test('a weighed item is priced per kg, its weight keyed in grams, and corrected', async ({ app: page }) => {
   await page.getByRole('radio', { name: 'Peso' }).check();
   await expect(page.locator('#price-label')).toHaveText('Preço por kg');
   await expect(page.locator('.entry-qty')).toBeHidden();
   await page.locator('#price').fill('7,99');
-  await page.locator('#weight').fill('1,250');
+  const weight = page.locator('#weight');
+  await expect(weight).toHaveAttribute('inputmode', 'numeric'); // the digit keypad
+  // Keyed like a till, as scale labels print kg: the last three digits are the grams.
+  for (const [key, shown] of [['1', '0,001'], ['2', '0,012'], ['5', '0,125'], ['0', '1,250']]) {
+    await weight.press(key);
+    await expect(weight).toHaveValue(shown);
+  }
   await expect(page.locator('#weight-preview')).toHaveText(/^= R\$\s9,99$/);
   await page.locator('#entry button[type="submit"]').click();
 
@@ -94,8 +100,12 @@ test('a weighed item is priced per kg, and its weight can be corrected', async (
   await expect(page.locator('input[name="entry-mode"][value="weight"]')).toBeChecked(); // weighed items come in runs
 
   await weighed.getByRole('button', { name: 'Corrigir peso: 1,250 kg' }).click();
-  await weighed.locator('.weight-input').fill('0,500');
-  await weighed.locator('.weight-input').press('Enter');
+  const correction = weighed.locator('.weight-input');
+  await expect(correction).toHaveAttribute('inputmode', 'numeric');
+  await correction.fill('');
+  await correction.pressSequentially('500');
+  await expect(correction).toHaveValue('0,500');
+  await correction.press('Enter');
   await expect(weighed.locator('.line-sub')).toHaveText('R$ 4,00');
   await expect(page.locator('#total')).toHaveAttribute('aria-label', brl('4,00'));
 });

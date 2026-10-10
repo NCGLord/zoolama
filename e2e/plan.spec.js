@@ -36,7 +36,7 @@ test('Comprar de novo lists a past trip\'s items, and a tap on one starts enteri
   await expect(page.locator('#price')).toBeFocused();
   await expect(page.locator('#name-hint')).toHaveText(/^Última vez: R\$\s7,99\/kg/);
   await page.locator('#price').fill('7,99');
-  await page.locator('#weight').fill('1');
+  await page.locator('#weight').fill('1,000');
   await page.locator('#entry button[type="submit"]').click();
 
   await expect(page.locator('#plan-progress')).toHaveText('1 de 3');

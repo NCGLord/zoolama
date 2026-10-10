@@ -18,8 +18,9 @@ Offline supermarket helper for your phone:
   offer while adding an item.
 - **Sort**: order the cart by *Adicionado* (when added), *Valor* (line total) or *Nome*; tap the active one again to
   flip ascending/descending. The choice is remembered and applies in checkout mode too.
-- **Weighed items**: switch the entry to *Peso*, type the price per kg and the weight from the scale label
-  (`1,250`), and see the line price before adding it. Tap a line's weight to correct it.
+- **Weighed items**: switch the entry to *Peso*, type the price per kg and the weight from the scale label, keyed like
+  a till too, with the last three digits being the grams (1250 → `1,250`), and see the line price before adding it.
+  Tap a line's weight to correct it.
 - **Shelf-tag photos**: tap 📷 to photograph the price tag as you add an item, or later from its line. Tap the
   thumbnail at checkout to show the photo full-screen with the price you noted. By law (Lei 10.962/2004, art. 5º),
   when the shelf and the checkout disagree, you pay the lower price. Photos stay on the phone and are deleted
@@ -146,7 +147,7 @@ font's real letter outlines and needs `pip install fonttools brotli`. Run `npm r
 | `src/money.js`, `units.js`, `compare.js`, `cart.js`, `budget.js`, `history.js`, `plan.js`, `backup.js`, `share.js`, `store.js`, `state.js`, `i18n.js`, `theme.js`, `tabs.js`, `keyboard.js`, `install.js`, `update.js`, `launch.js`, `delight.js`, `magnifier.js` | Pure logic, unit-tested |
 | `src/photos.js` | Shelf-tag photos: shrinks them on a canvas and keeps them in IndexedDB; its pure helpers are unit-tested |
 | `src/app.js` | Entry point: wires the views together and boots them |
-| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `till-field` (money fields key in like a till), `photo-cache`, `price-memory` (what an item cost last time), `cart-store` (every cart change), `share-sheet`, `wake-lock` (the screen stays on at the till), `photos-ui`, `line-sheet` (a line's price and offer), `entry`, `plan-view` (the shopping list), `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker), `magnifier-ui`, `about-view`, `about-screen` (About full screen, from the logo) |
+| `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `till-field` (money and weight fields key in like a till), `photo-cache`, `price-memory` (what an item cost last time), `cart-store` (every cart change), `share-sheet`, `wake-lock` (the screen stays on at the till), `photos-ui`, `line-sheet` (a line's price and offer), `entry`, `plan-view` (the shopping list), `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker), `magnifier-ui`, `about-view`, `about-screen` (About full screen, from the logo) |
 | `sw.js` | Service worker: atomic precache, cache-first |
 | `test/` | Unit tests (`node --test`) |
 | `e2e/`, `playwright.config.js` | Browser tests (`npm run e2e`) |
