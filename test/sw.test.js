@@ -36,3 +36,11 @@ test('VERSION matches the hash of the precached files — run `npm run stamp` af
 test("index.html carries the same version as sw.js, so a page knows which version it is", () => {
   assert.equal(read('index.html').match(PAGE_VERSION_RE)?.[1], version);
 });
+
+test("sw.js refuses to install unless the page it cached carries its version, in the tag stamp writes", () => {
+  const source = read('sw.js');
+  const checked = source.match(/page\.includes\(`([^`]+)`\)/)?.[1];
+  assert.ok(checked, 'the install checks the cached page');
+  assert.match(checked.replace('${VERSION}', version), PAGE_VERSION_RE);
+  assert.equal(checked.replace('${VERSION}', version).match(PAGE_VERSION_RE)[1], version);
+});

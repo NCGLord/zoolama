@@ -61,12 +61,18 @@ const ASSETS = /* ASSETS:start */ [
 ] /* ASSETS:end */;
 
 // Install is all-or-nothing: a flaky in-store signal can't leave a half-updated mix of files.
-// cache: 'reload' skips the HTTP cache, so a new version never precaches stale copies.
+// cache: 'reload' skips the HTTP cache, so a new version never precaches stale copies. And the page must be this
+// version's own (its <meta name="version">): a CDN midway through a deploy can still hand out the last one, and a page
+// that isn't this version's would be taken for one left behind (src/ui/pwa.js) every time it opens.
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(ASSETS.map((a) => new Request(a, { cache: 'reload' }))))
+      .then(async (cache) => {
+        await cache.addAll(ASSETS.map((a) => new Request(a, { cache: 'reload' })));
+        const page = await (await cache.match('./index.html')).text();
+        if (!page.includes(`<meta name="version" content="${VERSION}" />`)) throw new Error(`index.html isn't ${VERSION}`);
+      })
       .then(() => self.skipWaiting()),
   );
 });
