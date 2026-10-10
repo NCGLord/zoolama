@@ -2106,9 +2106,18 @@ button.line-each {
   text-align: center;
 }
 
+/* Each section a framed card, its head inside (index.html): the copyrights the last. */
+.about-card {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
 /* Section heads as in History's summary. */
 .about h2 {
-  margin: 20px 0 2px;
+  margin: 0 0 2px;
   color: var(--muted);
   font: 700 15px/1.2 var(--text);
 }
@@ -2185,6 +2194,11 @@ button.line-each {
   color: inherit;
   font-weight: 600;
   text-underline-offset: 3px;
+}
+
+/* Each copyright is a sentence and its licence's link: a gap keeps one from running into the next. */
+.about-copyrights li + li {
+  margin-top: 12px;
 }
 
 .about-share {

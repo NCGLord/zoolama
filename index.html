@@ -11,7 +11,7 @@
       content="default-src 'self'; script-src 'self' 'sha256-XatwtviGIGeg8RYg6E24agMCzRLuXUS3ORZfdiZPhUU='; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <!-- This page's own version, written by `npm run stamp` (src/ui/pwa.js reads it). -->
-    <meta name="version" content="0bb24a9d35df" />
+    <meta name="version" content="2571e915fbb4" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f4faef" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e1a11" media="(prefers-color-scheme: dark)" />
@@ -263,49 +263,60 @@
           <!-- A copy of the header logo goes here (src/ui/about-view.js), so tools/wordmark.py stays its one source. -->
           <div id="about-logo" class="about-logo"></div>
           <p class="about-lede" data-i18n="aboutLede"></p>
-          <h2 data-i18n="aboutDataTitle">Seus dados</h2>
-          <p data-i18n="aboutPrivacy"></p>
-          <!-- What the browser says of the space and memory in use; a line it can't fill stays hidden (about-view.js). -->
-          <div class="about-usage">
-            <p id="about-storage" hidden></p>
-            <dl id="about-storage-parts" class="about-storage-parts" hidden>
-              <div><dt data-i18n="storageApp">App, para usar offline</dt><dd id="about-storage-app"></dd></div>
-              <div><dt data-i18n="storagePhotos">Fotos das etiquetas</dt><dd id="about-storage-photos"></dd></div>
-              <div><dt data-i18n="storageLists">Listas e histórico</dt><dd id="about-storage-lists"></dd></div>
-            </dl>
-            <p id="about-storage-free" hidden></p>
-            <p id="about-storage-kept" hidden></p>
-            <p id="about-memory" hidden></p>
-          </div>
-          <h2 data-i18n="aboutVersionTitle">Versão</h2>
-          <p id="about-version" class="about-version" hidden></p>
-          <div class="about-update">
-            <button type="button" id="about-update" class="secondary" data-i18n="aboutCheckUpdate">Procurar atualização</button>
-            <p id="about-update-result" class="about-update-result" aria-live="polite"></p>
-            <details id="about-log" class="about-log">
-              <summary data-i18n="updateLog">Registro de atualizações</summary>
-              <ol id="about-log-steps" class="about-log-steps" tabindex="0"></ol>
-            </details>
-          </div>
-          <h2 data-i18n="aboutLicenceTitle">Licença</h2>
-          <p data-i18n="aboutLicence"></p>
-          <ul class="about-links">
-            <li><a href="https://github.com/NCGLord/zoolama/blob/main/LICENSE" target="_blank" rel="noopener" data-i18n="aboutLicenceText">Texto da licença MIT</a></li>
-            <li>
-              <span data-i18n="aboutFont">Fonte dos preços:</span>
-              <a href="https://github.com/NCGLord/zoolama/blob/main/fonts/OFL.txt" target="_blank" rel="noopener">Barlow Condensed, SIL OFL 1.1</a>
-            </li>
-          </ul>
-          <h2 data-i18n="aboutLinksTitle">Links</h2>
-          <ul class="about-links">
-            <li><a href="https://github.com/NCGLord/zoolama" target="_blank" rel="noopener" data-i18n="aboutSource">Código-fonte no GitHub</a></li>
-            <li><a href="https://github.com/NCGLord/zoolama/issues/new" target="_blank" rel="noopener" data-i18n="aboutIssue">Relatar um problema</a></li>
-            <li><a href="mailto:nulaya@gmail.com"><span data-i18n="aboutContact">Contato</span>: nulaya@gmail.com</a></li>
-          </ul>
-          <button type="button" id="about-share" class="secondary share-btn about-share">
-            <svg class="share-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M7 11H5.5v9.5h13V11H17" /></svg>
-            <span data-i18n="aboutShare">Compartilhar o Zoolama</span>
-          </button>
+          <!-- Each section a framed card (styles.css), the copyrights the last. -->
+          <section class="about-card">
+            <h2 data-i18n="aboutDataTitle">Seus dados</h2>
+            <p data-i18n="aboutPrivacy"></p>
+            <!-- What the browser says of the space and memory in use; a line it can't fill stays hidden (about-view.js). -->
+            <div class="about-usage">
+              <p id="about-storage" hidden></p>
+              <dl id="about-storage-parts" class="about-storage-parts" hidden>
+                <div><dt data-i18n="storageApp">App, para usar offline</dt><dd id="about-storage-app"></dd></div>
+                <div><dt data-i18n="storagePhotos">Fotos das etiquetas</dt><dd id="about-storage-photos"></dd></div>
+                <div><dt data-i18n="storageLists">Listas e histórico</dt><dd id="about-storage-lists"></dd></div>
+              </dl>
+              <p id="about-storage-free" hidden></p>
+              <p id="about-storage-kept" hidden></p>
+              <p id="about-memory" hidden></p>
+            </div>
+          </section>
+          <section class="about-card">
+            <h2 data-i18n="aboutVersionTitle">Versão</h2>
+            <p id="about-version" class="about-version" hidden></p>
+            <div class="about-update">
+              <button type="button" id="about-update" class="secondary" data-i18n="aboutCheckUpdate">Procurar atualização</button>
+              <p id="about-update-result" class="about-update-result" aria-live="polite"></p>
+              <details id="about-log" class="about-log">
+                <summary data-i18n="updateLog">Registro de atualizações</summary>
+                <ol id="about-log-steps" class="about-log-steps" tabindex="0"></ol>
+              </details>
+            </div>
+          </section>
+          <section class="about-card">
+            <h2 data-i18n="aboutContactTitle">Contato</h2>
+            <ul class="about-links">
+              <li><a href="https://github.com/NCGLord/zoolama" target="_blank" rel="noopener" data-i18n="aboutSource">Código-fonte no GitHub</a></li>
+              <li><a href="https://github.com/NCGLord/zoolama/issues/new" target="_blank" rel="noopener" data-i18n="aboutIssue">Relatar um problema</a></li>
+              <li><a href="mailto:nulaya@gmail.com"><span data-i18n="aboutEmail">E-mail</span>: nulaya@gmail.com</a></li>
+            </ul>
+            <button type="button" id="about-share" class="secondary share-btn about-share">
+              <svg class="share-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M7 11H5.5v9.5h13V11H17" /></svg>
+              <span data-i18n="aboutShare">Compartilhar o Zoolama</span>
+            </button>
+          </section>
+          <section class="about-card">
+            <h2 data-i18n="aboutCopyrightTitle">Direitos autorais</h2>
+            <ul class="about-links about-copyrights">
+              <li>
+                <span data-i18n="aboutCopyrightApp"></span>
+                <a href="https://github.com/NCGLord/zoolama/blob/main/LICENSE" target="_blank" rel="noopener" data-i18n="aboutLicenceText">Texto da licença MIT</a>
+              </li>
+              <li>
+                <span data-i18n="aboutCopyrightFont"></span>
+                <a href="https://github.com/NCGLord/zoolama/blob/main/fonts/OFL.txt" target="_blank" rel="noopener" data-i18n="aboutFontLicence">Licença SIL OFL 1.1</a>
+              </li>
+            </ul>
+          </section>
         </div>
       </section>
     </main>

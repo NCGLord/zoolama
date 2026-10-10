@@ -1,7 +1,7 @@
-// The About tab: what zoolama is, what it keeps on this phone and the space and memory that takes, the version this
-// phone runs and whether a newer one is waiting (with a check for one), its licence, where its code and its author are,
-// and a way to share it. The logo is a copy of the header one, so tools/wordmark.py stays its one source; the rest is
-// plain markup in index.html.
+// The About tab: what zoolama is, then its sections: what it keeps on this phone and the space and memory that takes,
+// the version this phone runs and whether a newer one is waiting (with a check for one), where its code and its author
+// are (and a way to share it), and the copyrights. The logo is a copy of the header one, so tools/wordmark.py stays its
+// one source; the rest is plain markup in index.html.
 
 import { formatBytes } from '../i18n.js';
 import { savedBytes, storageUsage } from '../usage.js';

@@ -55,13 +55,15 @@ Offline supermarket helper for your phone:
   prints them: *1.000 g* is a thousand grams, while *1,250 kg* keeps its decimals. For a multipack, type the count,
   tap **×** and the size (*12×350* ml): the card shows what it adds up to (*= 4,2 L*). Tap **Add to cart** on the
   winner; a pack goes in named the way it prints (*12 × 350 ml*).
-- **About (Sobre)**: the fourth tab says what zoolama is, that what you enter stays on this phone (how much space it
-  takes there, split into the app, the photos and the lists, the space left, whether the phone has agreed to keep it,
-  and the JavaScript memory in use, each where the browser says), the version this phone runs (*Procurar atualização* checks for a newer one right away, and a new
-  version waiting to go on screen shows there at once, *Nova versão pronta* with its number, the button turning into
-  *Atualizar*), its MIT licence, and links to the source code, to report a problem and to e-mail the author.
-  *Compartilhar o Zoolama* sends the app's link through the share sheet. Tapping the logo opens the same page full
-  screen, with the 🇧🇷/🇬🇧 flags still at hand.
+- **About (Sobre)**: the fourth tab says what zoolama is, then goes in framed sections. *Seus dados*: what you enter
+  stays on this phone, and how much space it takes there, split into the app, the photos and the lists, the space
+  left, whether the phone has agreed to keep it, and the JavaScript memory in use, each where the browser says.
+  *Versão*: the version this phone runs (*Procurar atualização* checks for a newer one right away, and a new version
+  waiting to go on screen shows there at once, *Nova versão pronta* with its number, the button turning into
+  *Atualizar*). *Contato*: links to the source code, to report a problem and to e-mail the author, and *Compartilhar
+  o Zoolama*, which sends the app's link through the share sheet. *Direitos autorais*, last: the app's copyright
+  (MIT) and its font's (SIL OFL 1.1). Tapping the logo opens the same page full screen, with the 🇧🇷/🇬🇧 flags still
+  at hand.
 - PT/EN and light/dark toggles in the header.
 
 It runs entirely offline as an installable web app (PWA), with no account, no tracking, no build step and

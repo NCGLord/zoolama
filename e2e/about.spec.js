@@ -28,6 +28,24 @@ test('the About tab says what zoolama is, its licence, and where its code and it
   await expect(page.locator('#panel-about')).toBeVisible(); // the tab is remembered, like the others
 });
 
+// Framed sections, the copyrights last: the app's and its font's (the prices and the logo), each with its licence.
+test('About is in framed sections, in order, with every copyright in the last', async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  const sections = page.locator('#about-content > section.about-card');
+  await expect(sections.locator('h2')).toHaveText(['Seus dados', 'Versão', 'Contato', 'Direitos autorais']);
+  await expect(sections.first()).toHaveCSS('border-top-style', 'solid');
+  await expect(sections.nth(2).getByRole('button', { name: 'Compartilhar o Zoolama' })).toBeVisible();
+  const copyright = sections.last();
+  await expect(copyright).toContainText('Zoolama © 2026 Geraldo Viana');
+  await expect(copyright).toContainText('Barlow Condensed © 2017 The Barlow Project Authors');
+  const licence = (name) => copyright.getByRole('link', { name });
+  await expect(licence('Texto da licença MIT')).toHaveAttribute('href', `${REPO}/blob/main/LICENSE`);
+  await expect(licence('Licença SIL OFL 1.1')).toHaveAttribute('href', `${REPO}/blob/main/fonts/OFL.txt`);
+
+  await page.getByRole('button', { name: 'English' }).click();
+  await expect(sections.locator('h2')).toHaveText(['Your data', 'Version', 'Contact', 'Copyright']);
+});
+
 test('About speaks English too', async ({ app: page }) => {
   await page.getByRole('button', { name: 'English' }).click();
   await page.getByRole('tab', { name: 'About' }).click();
