@@ -213,3 +213,13 @@ test('About keeps a log of update steps, across restarts', async ({ app: page })
   await expect(page.locator('#about-log pre')).toContainText('latest');
   await expect(page.locator('#about-log pre')).toContainText(`start ${VERSION}`);
 });
+
+// Open, the log keeps up: a step taken while it's on screen shows at once, not on the next opening.
+test('the update log, while open, shows each new step as it happens', async ({ app: page }) => {
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await page.locator('#about-log summary').click();
+  await expect(page.locator('#about-log pre')).not.toContainText('look asked');
+  await page.getByRole('button', { name: 'Procurar atualização' }).click();
+  await expect(page.locator('#about-log pre')).toContainText('look asked');
+  await expect(page.locator('#about-log pre')).toContainText('latest');
+});

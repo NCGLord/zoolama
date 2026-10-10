@@ -6,7 +6,7 @@
 import { formatBytes } from '../i18n.js';
 import { state } from './app-state.js';
 import { $ } from './dom.js';
-import { appVersion, checkForUpdate, onUpdateState, reloadIntoUpdate, updateLog } from './pwa.js';
+import { appVersion, checkForUpdate, onUpdateLog, onUpdateState, reloadIntoUpdate, updateLog } from './pwa.js';
 import { shareList } from './share-sheet.js';
 import { tr } from './text.js';
 
@@ -64,14 +64,16 @@ $('about-update').addEventListener('click', () => {
   else checkForUpdate();
 });
 
-// The update log, drawn when opened: time, then what happened.
+// The update log, drawn when opened and redrawn with each step while it stays open: time, then what happened.
 const clock = (t) => new Date(t).toLocaleTimeString('en-GB');
-$('about-log').addEventListener('toggle', () => {
+function renderLog() {
   if (!$('about-log').open) return;
   $('about-log').querySelector('pre').textContent = updateLog()
     .map(([t, e]) => `${clock(t)} ${e}`)
     .join('\n');
-});
+}
+$('about-log').addEventListener('toggle', renderLog);
+onUpdateLog(renderLog);
 
 /* ---------- what else changes ---------- */
 

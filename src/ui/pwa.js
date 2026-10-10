@@ -49,6 +49,11 @@ let pageVersion = null; // the version on screen: that of the worker that served
 // A short record of what the update machinery did, kept across restarts (About shows it), to see on the phone where an
 // update stopped. Never breaks anything: without storage it just isn't kept.
 const LOG = 'zoolama:update-log';
+let logListener = () => {}; // About, which redraws the log while it's open
+
+function onUpdateLog(listener) {
+  logListener = listener;
+}
 
 function note(event) {
   try {
@@ -58,6 +63,7 @@ function note(event) {
   } catch {
     // not kept
   }
+  logListener();
 }
 
 function updateLog() {
@@ -296,6 +302,7 @@ export {
   registerServiceWorker,
   resumeAfterUpdate,
   updateLog,
+  onUpdateLog,
   reloadIntoUpdate,
   checkForUpdate,
   appVersion,
