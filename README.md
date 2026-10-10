@@ -110,7 +110,9 @@ python3 -m http.server 8765   # then open http://localhost:8765
 ```
 
 The browser tests (`e2e/*.spec.js`) drive the app in Chromium at phone size (390×844, pt-BR) and fail on any console
-error. They are the only thing that needs an install, the pinned `@playwright/test` dev dependency:
+error. `e2e/deploy.spec.js` goes further: each test serves its own copy of the site (`e2e/site-server.js`) and deploys
+new versions under the running app, with the real service worker installing them. They are the only thing that needs an
+install, the pinned `@playwright/test` dev dependency:
 
 ```sh
 npm ci && npx playwright install --only-shell chromium   # once
