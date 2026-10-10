@@ -22,10 +22,11 @@ export function readSw(source = readFileSync(SW, 'utf8')) {
   };
 }
 
-export function assetsHash(assets) {
+/** The VERSION of `assets` as found under `root` (a directory URL ending in /): the repo, or a copy of the site. */
+export function assetsHash(assets, root = ROOT) {
   const hash = createHash('sha256');
   for (const a of assets) {
-    const bytes = readFileSync(new URL(a, ROOT));
+    const bytes = readFileSync(new URL(a, root));
     hash.update(a).update('\0').update(a === './index.html' ? unstamped(bytes.toString('utf8')) : bytes).update('\0');
   }
   return hash.digest('hex').slice(0, 12);
