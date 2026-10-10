@@ -52,7 +52,15 @@ let registration = null;
 let controlled = false; // a version of the app runs here: before that, a download is its first install, not an update
 let lastCheck = 0;
 let takenOver = false; // a newer version took over after this page loaded; the page runs it once reloaded
-let pageVersion = null; // the version on screen: that of the worker that served this page, asked at start
+// The version on screen: this page's own, which `npm run stamp` writes into index.html. Not asked of the controller: a
+// new version can take the page over while it's still loading, before anything here listens, and answer for a page it
+// never served.
+const pageVersion = document.querySelector('meta[name="version"]')?.content || null;
+
+// A page that reloaded for being behind and came back as the same version can't catch up by reloading again (a cache
+// whose page isn't its version's): it stops taking a version comparison for a takeover, so it never reloads in a loop.
+const BEHIND = 'zoolama:behind-from';
+let stuckBehind = false;
 
 // A short record of what the update machinery did, kept across restarts (About shows it), to see on the phone where an
 // update stopped. Each open copy (the installed app, a browser tab) keeps its own, as two copies writing one log lose
@@ -266,6 +274,15 @@ async function look({ asking = false } = {}) {
  * (Android) can miss the event and must not stay behind for want of it.
  */
 function noticeTakeover(how) {
+  if (how !== 'event') {
+    // seen by comparing versions, not told by the browser: one reload to catch up, never a loop
+    if (stuckBehind) return;
+    try {
+      sessionStorage.setItem(BEHIND, pageVersion);
+    } catch {
+      // no session storage: no guard, and no loop either, as each reload starts afresh
+    }
+  }
   note(`taken over (${how})`);
   takenOver = true;
   if (!applyUpdate()) {
@@ -286,10 +303,6 @@ function checkForUpdate() {
   return look({ asking: true });
 }
 
-/** The version the running service worker was built as (sw.js VERSION), or null where none answers. */
-function appVersion() {
-  return versionOf(navigator.serviceWorker?.controller);
-}
 
 /**
  * The version installed to go on screen next: the active worker's, which a reload runs. Not the controller's, which
@@ -320,9 +333,18 @@ function registerServiceWorker() {
   const firstInstall = !controlled;
   pruneLogs();
   if (controlled) {
-    appVersion().then((version) => {
-      pageVersion = version;
-      note(`start ${version}`);
+    note(`start ${pageVersion}`);
+    try {
+      stuckBehind = sessionStorage.getItem(BEHIND) === pageVersion;
+      sessionStorage.removeItem(BEHIND);
+    } catch {
+      // no session storage: no guard needed, see noticeTakeover
+    }
+    if (stuckBehind) note('back behind after a reload: not again');
+    // Taken over while loading, before the controllerchange listener below existed: the worker now in charge isn't the
+    // one that served this page, and no event will come.
+    versionOf(sw.controller).then((serving) => {
+      if (pageVersion && serving && serving !== pageVersion) noticeTakeover('start');
     });
   } else note('start, first install');
 
@@ -383,7 +405,7 @@ export {
   onUpdateLog,
   reloadIntoUpdate,
   checkForUpdate,
-  appVersion,
+  pageVersion,
   installedVersion,
   onUpdateState,
 };

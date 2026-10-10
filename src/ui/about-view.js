@@ -7,11 +7,11 @@ import { formatBytes } from '../i18n.js';
 import { state } from './app-state.js';
 import { $ } from './dom.js';
 import {
-  appVersion,
   checkForUpdate,
   installedVersion,
   onUpdateLog,
   onUpdateState,
+  pageVersion,
   reloadIntoUpdate,
   updateLog,
 } from './pwa.js';
@@ -22,18 +22,10 @@ $('about-logo').append(document.querySelector('.brand .wordmark').cloneNode(true
 
 /* ---------- the version, and updates ---------- */
 
-/** The version this page runs: that of the worker that served it. */
-async function renderVersion() {
-  const version = await appVersion();
-  $('about-version').hidden = !version;
-  $('about-version').textContent = version ?? '';
-}
-renderVersion();
-// A first visit has no worker to ask until one claims the page. Once the line shows a version, a worker that takes over
-// is a newer one that the page only runs after a reload, so the line stays as it is: the update line says the rest.
-navigator.serviceWorker?.addEventListener('controllerchange', () => {
-  if ($('about-version').hidden) renderVersion();
-});
+// The version this page runs: its own, stamped into index.html. A worker that takes over later is a newer one that the
+// page only runs after a reload, so the line stays as it is: the update line says the rest.
+$('about-version').hidden = !pageVersion;
+$('about-version').textContent = pageVersion ?? '';
 
 // The update line says where updates stand, as the app's one update state has it (see pwa.js): whoever looked, the
 // latest look, and a new version waiting to go on screen above all, with its number.
@@ -64,7 +56,7 @@ function renderUpdate() {
 onUpdateState(async (next) => {
   updateState = next;
   if (next === 'waiting') shownVersion = (await installedVersion()) ?? ''; // the one a reload puts on screen
-  if (next === 'updated') shownVersion = (await appVersion()) ?? ''; // the one now on screen
+  if (next === 'updated') shownVersion = pageVersion ?? ''; // the one now on screen
   renderUpdate();
 });
 

@@ -310,3 +310,23 @@ test('a waiting version noticed by a look is named by its own number in About', 
   await expect(page.locator('#about-update-result')).toHaveText('Nova versão pronta: new000000000');
   expect(await stillOld(page)).toBe(true);
 });
+
+// A new version that took the page over while it was still loading, before the app could listen: no controllerchange
+// comes, and the worker in charge isn't the one that served the page. The page knows its own version (index.html), so
+// it notices at start and reloads into the new one. If that reload can't bring it (a cache whose page isn't its
+// version's), it isn't tried again: the app never reloads in a loop.
+test('a takeover while the page was loading is noticed at start and reloaded into, once only', async ({ app: page }) => {
+  await page.addInitScript(() => {
+    const newer = { postMessage: (_, [port]) => port.postMessage('new000000000') };
+    Object.defineProperty(navigator.serviceWorker, 'controller', { get: () => newer });
+    Object.defineProperty(ServiceWorkerRegistration.prototype, 'active', { get: () => newer });
+  });
+  let loads = 0;
+  page.on('load', () => loads++);
+  await page.reload();
+  await expect.poll(() => loads).toBe(2); // the test's reload, then the app's own
+  await expect.poll(() => loggedSteps(page)).toEqual(expect.arrayContaining(['taken over (start)', 'back behind after a reload: not again']));
+  expect(loads).toBe(2);
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await expect(page.locator('#about-version')).toHaveText(VERSION); // the page's own, not the worker's
+});
