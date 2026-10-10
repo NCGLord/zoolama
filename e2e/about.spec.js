@@ -205,6 +205,50 @@ test('About says your data stays on this phone, and how much space zoolama takes
   await expect(page.locator('#about-storage')).toHaveText(/^Using \d+(\.\d)? (kB|MB|GB) on this phone\.$/);
 });
 
+test('About splits that space into the app, the photos and the lists, and says what is left and the memory in use', async ({
+  app: page,
+}) => {
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  const parts = page.locator('#about-storage-parts');
+  const sizes = async (size) => {
+    for (const part of await parts.locator('dd').all()) await expect(part).toHaveText(new RegExp(`^${size}$`));
+  };
+  let size = '\\d+(,\\d)? (kB|MB|GB)';
+  await expect(parts.locator('dt')).toHaveText(['App, para usar offline', 'Fotos das etiquetas', 'Listas e histórico']);
+  await sizes(size);
+  await expect(page.locator('#about-storage-free')).toHaveText(new RegExp(`^Ainda cabem ${size}\\.$`));
+  // Headless Chromium never agrees to keep a site's data.
+  await expect(page.locator('#about-storage-kept')).toHaveText('Sem proteção: se faltar espaço, o aparelho pode apagar estes dados.');
+  await expect(page.locator('#about-memory')).toHaveText(new RegExp(`^Memória do JavaScript agora: cerca de ${size}\\.$`));
+
+  await page.getByRole('button', { name: 'English' }).click();
+  size = '\\d+(\\.\\d)? (kB|MB|GB)';
+  await expect(parts.locator('dt')).toHaveText(['The app, for offline use', 'Shelf-tag photos', 'Lists and history']);
+  await sizes(size);
+  await expect(page.locator('#about-storage-free')).toHaveText(new RegExp(`^Room for ${size} more\\.$`));
+  await expect(page.locator('#about-storage-kept')).toHaveText('Not protected: if space runs low, the phone may clear this data.');
+  await expect(page.locator('#about-memory')).toHaveText(new RegExp(`^JavaScript memory now: about ${size}\\.$`));
+});
+
+test('About says when the phone has agreed to keep its data', async ({ app: page }) => {
+  await page.evaluate(() => (navigator.storage.persisted = async () => true));
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await expect(page.locator('#about-storage-kept')).toHaveText('Protegido: o aparelho não apaga estes dados para liberar espaço.');
+});
+
+test("About leaves out what the browser doesn't say, as on an iPhone", async ({ app: page }) => {
+  await page.evaluate(() => {
+    navigator.storage.estimate = async () => ({ usage: 421_000 }); // no split, no quota
+    navigator.storage.persisted = undefined;
+    Object.defineProperty(performance, 'memory', { value: undefined });
+  });
+  await page.getByRole('tab', { name: 'Sobre' }).click();
+  await expect(page.locator('#about-storage')).toHaveText(/^Usando \d+(,\d)? (kB|MB|GB) neste aparelho\.$/);
+  for (const id of ['about-storage-parts', 'about-storage-free', 'about-storage-kept', 'about-memory']) {
+    await expect(page.locator(`#${id}`)).toHaveJSProperty('hidden', true);
+  }
+});
+
 test.describe('sharing zoolama', () => {
   test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
 

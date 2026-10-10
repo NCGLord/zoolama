@@ -55,8 +55,9 @@ Offline supermarket helper for your phone:
   prints them: *1.000 g* is a thousand grams, while *1,250 kg* keeps its decimals. For a multipack, type the count,
   tap **×** and the size (*12×350* ml): the card shows what it adds up to (*= 4,2 L*). Tap **Add to cart** on the
   winner; a pack goes in named the way it prints (*12 × 350 ml*).
-- **About (Sobre)**: the fourth tab says what zoolama is, that what you enter stays on this phone (and how much space
-  it takes there), the version this phone runs (*Procurar atualização* checks for a newer one right away, and a new
+- **About (Sobre)**: the fourth tab says what zoolama is, that what you enter stays on this phone (how much space it
+  takes there, split into the app, the photos and the lists, the space left, whether the phone has agreed to keep it,
+  and the JavaScript memory in use, each where the browser says), the version this phone runs (*Procurar atualização* checks for a newer one right away, and a new
   version waiting to go on screen shows there at once, *Nova versão pronta* with its number, the button turning into
   *Atualizar*), its MIT licence, and links to the source code, to report a problem and to e-mail the author.
   *Compartilhar o Zoolama* sends the app's link through the share sheet. Tapping the logo opens the same page full
@@ -149,7 +150,7 @@ font's real letter outlines and needs `pip install fonttools brotli`. Run `npm r
 
 | Path | What |
 |---|---|
-| `src/money.js`, `units.js`, `compare.js`, `cart.js`, `budget.js`, `history.js`, `plan.js`, `backup.js`, `share.js`, `store.js`, `state.js`, `i18n.js`, `theme.js`, `tabs.js`, `keyboard.js`, `install.js`, `update.js`, `launch.js`, `delight.js`, `magnifier.js` | Pure logic, unit-tested |
+| `src/money.js`, `units.js`, `compare.js`, `cart.js`, `budget.js`, `history.js`, `plan.js`, `backup.js`, `share.js`, `store.js`, `state.js`, `i18n.js`, `theme.js`, `tabs.js`, `keyboard.js`, `install.js`, `update.js`, `usage.js`, `launch.js`, `delight.js`, `magnifier.js` | Pure logic, unit-tested |
 | `src/photos.js` | Shelf-tag photos: shrinks them on a canvas and keeps them in IndexedDB; its pure helpers are unit-tested |
 | `src/app.js` | Entry point: wires the views together and boots them |
 | `src/ui/` | The screen, one module per part, importing only downwards (`test/modules.test.js` keeps the graph acyclic): `dom`, `app-state` (the state and `persist()`), `text`, `toast`, `till-field` (money and weight fields key in like a till), `photo-cache`, `price-memory` (what an item cost last time), `cart-store` (every cart change), `share-sheet`, `wake-lock` (the screen stays on at the till), `photos-ui`, `line-sheet` (a line's price and offer), `entry`, `plan-view` (the shopping list), `cart-lines`, `cart-view`, `history-view`, `compare-view`, `shell` (tabs, theme), `pwa` (install, service worker), `magnifier-ui`, `about-view`, `about-screen` (About full screen, from the logo) |

@@ -1,10 +1,11 @@
-// The About tab: what zoolama is, what it keeps on this phone and how much space that takes, the version this phone
-// runs and whether a newer one is waiting (with a check for one), its licence, where its code and its author are, and a
-// way to share it. The logo is a copy of the header one, so tools/wordmark.py stays its one source; the rest is plain
-// markup in index.html.
+// The About tab: what zoolama is, what it keeps on this phone and the space and memory that takes, the version this
+// phone runs and whether a newer one is waiting (with a check for one), its licence, where its code and its author are,
+// and a way to share it. The logo is a copy of the header one, so tools/wordmark.py stays its one source; the rest is
+// plain markup in index.html.
 
 import { formatBytes } from '../i18n.js';
-import { state } from './app-state.js';
+import { savedBytes, storageUsage } from '../usage.js';
+import { state, storage } from './app-state.js';
 import { $ } from './dom.js';
 import {
   checkForUpdate,
@@ -78,12 +79,32 @@ onUpdateLog(renderLog);
 
 /* ---------- what else changes ---------- */
 
-/** What the About tab says that changes: the update line, and the space in use (photos grow); if unknown, nothing. */
+/** Shows the line `id` saying `text`, or hides it when there's nothing to say (null). */
+function say(id, text) {
+  $(id).hidden = text === null;
+  if (text !== null) $(id).textContent = text;
+}
+
+/**
+ * What the About tab says that changes: the update line; the space in use (photos grow), split, and the space left;
+ * whether the phone has agreed to keep it all; and the memory in use. What the browser doesn't say is left out.
+ */
 async function renderAbout() {
   renderUpdate();
-  const usage = await navigator.storage?.estimate?.().then((e) => e.usage).catch(() => undefined);
-  $('about-storage').hidden = usage === undefined;
-  if (usage !== undefined) $('about-storage').textContent = tr('aboutStorage', { size: formatBytes(usage, state.lang) });
+  const size = (bytes) => formatBytes(bytes, state.lang);
+  const [estimate, kept] = await Promise.all([
+    navigator.storage?.estimate?.().catch(() => undefined),
+    navigator.storage?.persisted?.().catch(() => undefined),
+  ]);
+  const usage = storageUsage(estimate, savedBytes(storage));
+  say('about-storage', usage ? tr('aboutStorage', { size: size(usage.total) }) : null);
+  $('about-storage-parts').hidden = !usage?.parts;
+  for (const [part, bytes] of Object.entries(usage?.parts ?? {})) $(`about-storage-${part}`).textContent = size(bytes);
+  say('about-storage-free', usage?.free == null ? null : tr('storageFree', { size: size(usage.free) }));
+  say('about-storage-kept', typeof kept === 'boolean' ? tr(kept ? 'storageKept' : 'storageNotKept') : null);
+  // Chromium's own figure, for this page's JavaScript alone and rounded: far below what the phone counts for the app.
+  const heap = performance.memory?.usedJSHeapSize;
+  say('about-memory', typeof heap === 'number' ? tr('memoryInUse', { size: size(heap) }) : null);
 }
 renderAbout();
 $('tab-about').addEventListener('click', renderAbout);

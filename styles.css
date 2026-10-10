@@ -2117,6 +2117,38 @@ button.line-each {
   margin: 0;
 }
 
+/* The space in use, then its parts, each size at the right edge, then the rest of what the browser says. */
+.about-usage {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.about-usage p,
+.about-storage-parts {
+  margin: 0;
+}
+
+.about-storage-parts {
+  padding-left: 12px;
+  border-left: 2px solid var(--rule);
+}
+
+.about-storage-parts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.about-storage-parts dt {
+  color: var(--muted);
+}
+
+.about-storage-parts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 .about-version {
   margin: 0;
   font: 600 15px/1.4 ui-monospace, 'Roboto Mono', monospace;

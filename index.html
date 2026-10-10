@@ -11,7 +11,7 @@
       content="default-src 'self'; script-src 'self' 'sha256-XatwtviGIGeg8RYg6E24agMCzRLuXUS3ORZfdiZPhUU='; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'"
     />
     <!-- This page's own version, written by `npm run stamp` (src/ui/pwa.js reads it). -->
-    <meta name="version" content="938c9b7ea26f" />
+    <meta name="version" content="9a202f85ac9f" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#f4faef" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e1a11" media="(prefers-color-scheme: dark)" />
@@ -56,6 +56,7 @@
     <link rel="modulepreload" href="./src/theme.js" />
     <link rel="modulepreload" href="./src/units.js" />
     <link rel="modulepreload" href="./src/update.js" />
+    <link rel="modulepreload" href="./src/usage.js" />
     <link rel="modulepreload" href="./src/ui/about-screen.js" />
     <link rel="modulepreload" href="./src/ui/about-view.js" />
     <link rel="modulepreload" href="./src/ui/app-state.js" />
@@ -264,7 +265,18 @@
           <p class="about-lede" data-i18n="aboutLede"></p>
           <h2 data-i18n="aboutDataTitle">Seus dados</h2>
           <p data-i18n="aboutPrivacy"></p>
-          <p id="about-storage" class="about-storage" hidden></p>
+          <!-- What the browser says of the space and memory in use; a line it can't fill stays hidden (about-view.js). -->
+          <div class="about-usage">
+            <p id="about-storage" hidden></p>
+            <dl id="about-storage-parts" class="about-storage-parts" hidden>
+              <div><dt data-i18n="storageApp">App, para usar offline</dt><dd id="about-storage-app"></dd></div>
+              <div><dt data-i18n="storagePhotos">Fotos das etiquetas</dt><dd id="about-storage-photos"></dd></div>
+              <div><dt data-i18n="storageLists">Listas e histórico</dt><dd id="about-storage-lists"></dd></div>
+            </dl>
+            <p id="about-storage-free" hidden></p>
+            <p id="about-storage-kept" hidden></p>
+            <p id="about-memory" hidden></p>
+          </div>
           <h2 data-i18n="aboutVersionTitle">Versão</h2>
           <p id="about-version" class="about-version" hidden></p>
           <div class="about-update">
