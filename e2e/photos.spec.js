@@ -39,3 +39,39 @@ test('a line can be photographed after it was added, and the photo survives a re
   await page.reload();
   await expect(line(page, 'Café').locator('.line-photo img')).toHaveAttribute('src', /^blob:/);
 });
+
+// Two copies open (the installed app and a browser tab): the shot one copy holds in its entry form, waiting for Add,
+// is a photo the other copy has never seen in use. The other copy's cleanup once deleted it.
+test("a shot waiting in one copy's entry form survives the other copy's cleanup", async ({ app: page, context }) => {
+  await photograph(page, page.getByRole('button', { name: 'Fotografar a etiqueta' }));
+  await expect(page.locator('#entry-photo-img')).toHaveAttribute('src', /^blob:/);
+
+  const tab = await context.newPage();
+  await tab.goto('./');
+  await addItem(tab, { price: '3,00', name: 'Pão' }); // a cart change: the tab cleans up its photos
+
+  await addItem(page, { price: '4,50', name: 'Leite' });
+  const thumb = line(page, 'Leite').getByRole('button', { name: 'Ver foto da etiqueta' });
+  await expect(thumb.locator('img')).toHaveAttribute('src', /^blob:/);
+  await page.reload(); // drawn from storage, not from the entry form's copy
+  await expect(line(page, 'Leite').getByRole('button', { name: 'Ver foto da etiqueta' }).locator('img')).toHaveAttribute('src', /^blob:/);
+});
+
+// A photo this copy saw in use goes as soon as nothing uses it: a retake leaves only the new shot stored.
+test('a retaken shot is the only one stored: the first goes at once', async ({ app: page }) => {
+  await photograph(page, page.getByRole('button', { name: 'Fotografar a etiqueta' }));
+  await expect(page.locator('#entry-photo-img')).toHaveAttribute('src', /^blob:/);
+  await photograph(page, page.getByRole('button', { name: 'Tirar outra foto' }));
+  const stored = () =>
+    page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const req = indexedDB.open('zoolama-photos');
+          req.onsuccess = () => {
+            const keys = req.result.transaction('photos').objectStore('photos').getAllKeys();
+            keys.onsuccess = () => resolve(keys.result.length);
+          };
+        }),
+    );
+  await expect.poll(stored).toBe(1);
+});

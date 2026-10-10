@@ -17,6 +17,17 @@ export function orphans(storedIds, keep) {
   return storedIds.filter((id) => !keep.has(id));
 }
 
+export const PHOTO_GRACE_MS = 60 * 60 * 1000; // longer than any shot waits in an entry form for Add
+
+/**
+ * Of the photos nothing here keeps (`orphanIds`), the ones to delete: each this copy has `seen` in use (its item went,
+ * or a retake replaced it), and each other once PHOTO_GRACE_MS old (by `takenAt`, an id → time Map; unknown counts as
+ * old). A younger one this copy never saw in use may be another open copy's shot, waiting in its entry form for Add.
+ */
+export function collectable(orphanIds, { seen, takenAt, now }) {
+  return orphanIds.filter((id) => seen.has(id) || now - (takenAt.get(id) ?? 0) >= PHOTO_GRACE_MS);
+}
+
 /** Decode a camera file and re-encode it small. An <img> applies the EXIF rotation on every engine. */
 export async function shrinkPhoto(file) {
   const url = URL.createObjectURL(file);
@@ -76,6 +87,17 @@ export async function getPhoto(id) {
 
 export function photoIds() {
   return transact('readonly', (store) => store.getAllKeys());
+}
+
+/** When each of `ids` was taken, in one transaction: an id → takenAt Map of the ones stored. */
+export async function takenTimes(ids) {
+  const times = new Map();
+  if (ids.length) {
+    await transact('readonly', (store) => {
+      for (const id of ids) store.get(id).onsuccess = (e) => e.target.result && times.set(id, e.target.result.takenAt);
+    });
+  }
+  return times;
 }
 
 export async function deletePhotos(ids) {

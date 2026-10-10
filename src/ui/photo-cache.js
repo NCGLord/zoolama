@@ -1,11 +1,14 @@
 // Shelf-tag photos as the screen sees them: object URLs made once per photo, and cleanup of photos nothing uses.
 
 import { referencedPhotos } from '../cart.js';
-import { deletePhotos, getPhoto, orphans, photoIds } from '../photos.js';
+import { collectable, deletePhotos, getPhoto, orphans, photoIds, takenTimes } from '../photos.js';
 import { state } from './app-state.js';
 
 // Saving now, or waiting in the entry form for Add: cleanup must never delete these.
 const pendingPhotos = new Set();
+// Every photo this copy has seen in use: once unused, they go at once. One it never saw may be another open copy's
+// shot, waiting in that copy's entry form for Add, so it goes only once it's old (see collectable).
+const seenPhotos = new Set();
 const photoUrls = new Map(); // photo id → Promise of an object URL (or null)
 
 function photoUrl(id) {
@@ -25,11 +28,14 @@ function hydratePhotos(root) {
 async function collectPhotos() {
   try {
     const stored = await photoIds();
-    const keep = referencedPhotos(state.cart); // read after the await, so it sees the latest cart
+    const takenAt = await takenTimes(stored.filter((id) => !seenPhotos.has(id)));
+    const keep = referencedPhotos(state.cart); // read after the awaits, so it sees the latest cart
     for (const id of pendingPhotos) keep.add(id);
-    const dead = orphans(stored, keep);
+    for (const id of keep) seenPhotos.add(id);
+    const dead = collectable(orphans(stored, keep), { seen: seenPhotos, takenAt, now: Date.now() });
     await deletePhotos(dead);
     for (const id of dead) {
+      seenPhotos.delete(id);
       photoUrls.get(id)?.then((url) => url && URL.revokeObjectURL(url));
       photoUrls.delete(id);
     }
