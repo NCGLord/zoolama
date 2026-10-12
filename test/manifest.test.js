@@ -34,7 +34,9 @@ test('index.html links the manifest and the iOS home-screen icon, and they exist
 // which One UI in dark mode ignores, drawing light buttons anyway. A light theme_color (#f4faef, until 2026-09-25) so
 // gave Samsung M51/M52 phones a near-white bar with near-invisible controls. White must reach 3:1 on the bar: then
 // Chrome asks for light buttons, and One UI's light ones stay visible too. The status bar is unaffected: it follows
-// the app's theme through the page's theme-color metas.
+// the app's theme through the page's theme-color metas. The background_color reaches the bar too: on 2026-10-12, Chrome
+// 155 on an Android 13 M52 (3-button navigation) painted it the light background_color (#f4faef), although the WebAPK
+// had the dark theme_color baked in (chrome://webapks shows both). So both colours must pass the same rule.
 const channel = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 const luminance = (hex) => {
   const [r, g, b] = [1, 3, 5].map((i) => channel(parseInt(hex.slice(i, i + 2), 16) / 255));
@@ -50,9 +52,11 @@ test('the rule behind the navigation bar test is Chrome\'s: light buttons on dar
   assert.equal(chromeUsesLightButtons('#ffcf33'), false, 'the mango tag would not');
 });
 
-test('the manifest theme colour is dark enough for light navigation-bar buttons, which Samsung phones need', () => {
-  assert.match(manifest.theme_color ?? '', /^#[0-9a-f]{6}$/i, 'a theme_color Chrome can paint the bar with');
-  assert.ok(chromeUsesLightButtons(manifest.theme_color), `${manifest.theme_color}: white on it is under 3:1`);
+test('the manifest colours are dark enough for light navigation-bar buttons, which Samsung phones need', () => {
+  for (const key of ['theme_color', 'background_color']) {
+    assert.match(manifest[key] ?? '', /^#[0-9a-f]{6}$/i, `a ${key} Chrome can paint the bar with`);
+    assert.ok(chromeUsesLightButtons(manifest[key]), `${key} ${manifest[key]}: white on it is under 3:1`);
+  }
 });
 
 test('every manifest shortcut opens something the app knows, inside its scope', () => {
