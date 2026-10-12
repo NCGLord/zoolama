@@ -7,8 +7,16 @@ const root = new URL('../', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('manifest.webmanifest', root), 'utf8'));
 const html = readFileSync(new URL('index.html', root), 'utf8');
 
-test('start_url, scope and id are relative, so the app works under /zoolama/ on GitHub Pages', () => {
-  for (const key of ['start_url', 'scope', 'id']) assert.equal(manifest[key], './', key);
+test('start_url and scope are relative, so the app works under /zoolama/ on GitHub Pages', () => {
+  for (const key of ['start_url', 'scope']) assert.equal(manifest[key], './', key);
+});
+
+// The id is the app's identity to Chrome, and it resolves against the origin, not the manifest's folder: "./" (until
+// 2026-10-12) made it the whole site, https://ncglord.github.io/ (chrome://webapks, "Manifest Id"). It must name the
+// app's own folder, the URL start_url resolves to on the live site.
+test('the manifest id names the app itself, not the whole ncglord.github.io site', () => {
+  const start = new URL(manifest.start_url, 'https://ncglord.github.io/zoolama/manifest.webmanifest');
+  assert.equal(new URL(manifest.id, start.origin).href, start.href);
 });
 
 test('every manifest icon exists on disk', () => {
