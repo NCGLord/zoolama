@@ -8,7 +8,7 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f4faef",
+  "background_color": "#0e1a11",
   "theme_color": "#0e1a11",
   "categories": ["shopping", "finance"],
   "screenshots": [
