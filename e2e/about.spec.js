@@ -250,6 +250,25 @@ test('About splits that space into the app, the photos and the lists, and says w
   await expect(page.locator('#about-memory')).toHaveText(new RegExp(`^JavaScript memory now: about ${size}\\.$`));
 });
 
+// Without the request the data stays where the phone may clear it to free up space, and nothing on screen would show
+// it missing. Chrome answers from how the app is used and whether it's installed, so a phone that refused at first can
+// agree later: the app asks again at every start.
+test('every start asks the phone to keep the data', async ({ page }) => {
+  await page.addInitScript(() => {
+    const ask = navigator.storage.persist.bind(navigator.storage);
+    window.persistAsked = 0;
+    navigator.storage.persist = () => {
+      window.persistAsked++;
+      return ask();
+    };
+  });
+  const asked = () => page.evaluate(() => window.persistAsked);
+  await page.goto('./');
+  await expect.poll(asked).toBe(1);
+  await page.reload();
+  await expect.poll(asked).toBe(1);
+});
+
 test('About says when the phone has agreed to keep its data', async ({ app: page }) => {
   await page.evaluate(() => (navigator.storage.persisted = async () => true));
   await page.getByRole('tab', { name: 'Sobre' }).click();
